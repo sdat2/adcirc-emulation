@@ -1,7 +1,9 @@
 """Download tidal guages."""
 from typing import List
+from dateutil import parser
 from noaa_coops.noaa_coops import stationid_from_bbox, Station
 from src.constants import NEW_ORLEANS
+
 
 def bbox_from_loc(loc: List[float]=NEW_ORLEANS, buffer: float=1) -> List[float]:
     """
@@ -24,24 +26,49 @@ def print_station_details(stationid_list: List[str]) -> None:
         stationid_list (List[str]): list of stations
     """
     for stationid in stationid_list:
-        print(Station(stationid), "\n \n")
+        station = Station(stationid)
+        print(station)
+        print("After 2005::\t",
+              is_after("2005", station.metadata["details"]["origyear"]))
 
+
+def is_after(time_a: str, time_b: str) -> bool:
+    """
+    Is time_a after time_b?
+
+    Args:
+        time_a (str): First time string
+        time_b (str): Second time string.
+
+    Returns:
+        bool: the answer.
+    """
+    time_a = parser.parse(time_a)
+    time_b = parser.parse(time_b)
+    # print("time_a", time_a)
+    # print("time_b", time_b)
+    return time_a > time_b
 
 if __name__ == "__main__":
     #print(stationid_from_bbox([-74.4751,40.389,-73.7432,40.9397]))
-    #print_station_details(stationid_from_bbox(bbox_from_loc()))
+    print_station_details(stationid_from_bbox(bbox_from_loc()))
     #print(bbox_from_loc())
     station = Station(8762483)
-    print(station.metadata["details"]["origyear"])
     # print(station.metadata)
-    for key in station.metadata:
-        print(key, "::", station.metadata[key])
+    # for key in station.metadata:
+    #     print(key, "::", station.metadata[key])
 
     print(station.metadata["id"],
-    station.metadata["name"], station.metadata["lng"],
-    station.metadata["lat"], station.metadata["details"]["origyear"])
-    for product in station.metadata["products"]["products"]:
-        print(product["name"])
+          station.metadata["name"],
+          station.metadata["lng"],
+          station.metadata["lat"],
+          station.metadata["details"]["origyear"],
+          type(station.metadata["details"]["origyear"])
+          )
 
+    print(is_after(station.metadata["details"]["origyear"], "2016"))
+    print(is_after(station.metadata["details"]["origyear"], "2014"))
+    print(is_after("2005", station.metadata["details"]["origyear"]))
 
-
+    # for product in station.metadata["products"]["products"]:
+    #     print(product["name"])
