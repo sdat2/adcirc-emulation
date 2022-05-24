@@ -34,7 +34,9 @@ def filter_by_age(stationid_list: List[str]) -> List[str]:
         station = Station(stationid)
         # print(station)
         print(
-            stationid, "After 2005::\t", is_after("2005", station.metadata["details"]["origyear"])
+            stationid,
+            "After 2005::\t",
+            is_after("2005", station.metadata["details"]["origyear"]),
         )
 
         if is_after("2005", station.metadata["details"]["origyear"]):
@@ -105,28 +107,6 @@ def is_after(time_a: str, time_b: str) -> bool:
     # print("time_a", time_a)
     # print("time_b", time_b)
     return time_a > time_b
-
-
-def old_test():
-    #print_station_details(stationid_from_bbox(bbox_from_loc()))
-    # print(bbox_from_loc())
-    station = Station(8762483)
-    # print(station.metadata)
-    # for key in station.metadata:
-    #     print(key, "::", station.metadata[key])
-
-    print(
-        station.metadata["id"],
-        station.metadata["name"],
-        station.metadata["lng"],
-        station.metadata["lat"],
-        station.metadata["details"]["origyear"],
-        type(station.metadata["details"]["origyear"]),
-    )
-
-    print(is_after(station.metadata["details"]["origyear"], "2016"))
-    print(is_after(station.metadata["details"]["origyear"], "2014"))
-    print(is_after("2005", station.metadata["details"]["origyear"]))
 
 
 if __name__ == "__main__":
