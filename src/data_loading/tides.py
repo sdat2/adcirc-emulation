@@ -5,6 +5,8 @@ from noaa_coops.noaa_coops import stationid_from_bbox, Station
 from src.constants import NEW_ORLEANS
 
 
+GUAGES = ['8761724', '8761927', '8761955', '8762075', '8762482']
+
 def bbox_from_loc(loc: List[float]=NEW_ORLEANS, buffer: float=1) -> List[float]:
     """
     Get bbox padding a central location.
@@ -25,11 +27,23 @@ def print_station_details(stationid_list: List[str]) -> None:
     Args:
         stationid_list (List[str]): list of stations
     """
+    station_list = []
+    station_id_list = []
+
     for stationid in stationid_list:
         station = Station(stationid)
-        print(station)
+        # print(station)
         print("After 2005::\t",
               is_after("2005", station.metadata["details"]["origyear"]))
+
+        if is_after("2005", station.metadata["details"]["origyear"]):
+           station_list.append(station)
+           station_id_list.append(stationid)
+
+    print(station_list)
+    print(station_id_list)
+
+    return station_list
 
 
 def is_after(time_a: str, time_b: str) -> bool:
@@ -72,3 +86,4 @@ if __name__ == "__main__":
 
     # for product in station.metadata["products"]["products"]:
     #     print(product["name"])
+    # python src/data_loading/tides.py
