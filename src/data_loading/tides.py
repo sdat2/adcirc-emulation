@@ -6,7 +6,7 @@ from noaa_coops.noaa_coops import stationid_from_bbox, Station
 from src.constants import NEW_ORLEANS, DEFAULT_GUAGES, KATRINA_TIDE_NC
 
 
-def bbox_from_loc(loc: List[float] = NEW_ORLEANS, buffer: float = 1) -> List[float]:
+def bbox_from_loc(loc: List[float] = NEW_ORLEANS, buffer: float = 3) -> List[float]:
     """
     Get bbox padding a central location.
 
@@ -20,12 +20,12 @@ def bbox_from_loc(loc: List[float] = NEW_ORLEANS, buffer: float = 1) -> List[flo
     return [loc[0] - buffer, loc[1] - buffer, loc[0] + buffer, loc[1] + buffer]
 
 
-def print_station_details(stationid_list: List[str]) -> None:
+def filter_by_age(stationid_list: List[str]) -> List[str]:
     """
-    Print the station details.
+    Katrina_stations
 
     Args:
-        stationid_list (List[str]): list of stations
+        stationid_list (List[str]): list of stations.
     """
     station_list = []
     station_id_list = []
@@ -34,17 +34,14 @@ def print_station_details(stationid_list: List[str]) -> None:
         station = Station(stationid)
         # print(station)
         print(
-            "After 2005::\t", is_after("2005", station.metadata["details"]["origyear"])
+            stationid, "After 2005::\t", is_after("2005", station.metadata["details"]["origyear"])
         )
 
         if is_after("2005", station.metadata["details"]["origyear"]):
             station_list.append(station)
             station_id_list.append(stationid)
 
-    print(station_list)
-    print(station_id_list)
-
-    return station_list
+    return station_id_list
 
 
 def katrina_data(stationid_list: List[str] = DEFAULT_GUAGES) -> xr.Dataset:
@@ -87,9 +84,9 @@ def katrina_data(stationid_list: List[str] = DEFAULT_GUAGES) -> xr.Dataset:
     return xr.merge(data_list)
 
 
-def save_katrina_nc() -> None:
+def save_katrina_nc(stationid_list: List[str] = DEFAULT_GUAGES) -> None:
     """Katrina tidal data."""
-    katrina_data().to_netcdf(KATRINA_TIDE_NC)
+    katrina_data(stationid_list).to_netcdf(KATRINA_TIDE_NC)
 
 
 def is_after(time_a: str, time_b: str) -> bool:
@@ -111,7 +108,7 @@ def is_after(time_a: str, time_b: str) -> bool:
 
 
 def old_test():
-    print_station_details(stationid_from_bbox(bbox_from_loc()))
+    #print_station_details(stationid_from_bbox(bbox_from_loc()))
     # print(bbox_from_loc())
     station = Station(8762483)
     # print(station.metadata)
@@ -138,4 +135,5 @@ if __name__ == "__main__":
     # for product in station.metadata["products"]["products"]:
     #     print(product["name"])
     # python src/data_loading/tides.py
-    save_katrina_nc()
+    # save_katrina_nc()
+    save_katrina_nc(filter_by_age(stationid_from_bbox(bbox_from_loc())))
