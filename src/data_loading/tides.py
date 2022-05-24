@@ -1,5 +1,6 @@
 """Download tidal guages."""
-from typing import List
+from typing import List # import pandas as pd
+import xarray as xr
 from dateutil import parser
 from noaa_coops.noaa_coops import stationid_from_bbox, Station
 from src.constants import NEW_ORLEANS
@@ -46,6 +47,38 @@ def print_station_details(stationid_list: List[str]) -> None:
     return station_list
 
 
+def katrina_data(stationid_list: List[str]=GUAGES) -> xr.Dataset:
+    """Return Katrina Data.
+
+    Args:
+        stationid_list (List[str], optional): Stationid list. Defaults to default GUAGES.
+
+    Returns:
+        xr.Dataset: Gauge data for Katrina including latitude, longitude, and name.
+    """
+    data_list = []
+    for stationid in stationid_list:
+        station = Station(stationid)
+        try:
+            data = station.get_data(
+                    begin_date="20050820",
+                    end_date="20050902",
+                    product="water_level",
+                    datum="MSL", # "MLLW",
+                    units="metric",
+                    time_zone="gmt",
+                )
+            xr_data = data.to_xarray().expand_dims(dim="stationid").assign_coords(coords={"stationid": (["stationid"], [stationid])})
+            xr_data = xr_data.assign_coords(coords={"lon": (["stationid"], [station.lat_lon["lon"]]), 
+                                                    "lat": (["stationid"], [station.lat_lon["lat"]]),
+                                                    "name": (["stationid"], [station.metadata["name"]])})
+
+            data_list.append(xr_data) # .expand_dims(dim="stationid")
+        except Exception as e:
+            print(stationid, "problem", e)
+    return xr.merge(data_list)
+
+
 def is_after(time_a: str, time_b: str) -> bool:
     """
     Is time_a after time_b?
@@ -63,8 +96,8 @@ def is_after(time_a: str, time_b: str) -> bool:
     # print("time_b", time_b)
     return time_a > time_b
 
-if __name__ == "__main__":
-    #print(stationid_from_bbox([-74.4751,40.389,-73.7432,40.9397]))
+
+def old_test():
     print_station_details(stationid_from_bbox(bbox_from_loc()))
     #print(bbox_from_loc())
     station = Station(8762483)
@@ -84,6 +117,10 @@ if __name__ == "__main__":
     print(is_after(station.metadata["details"]["origyear"], "2014"))
     print(is_after("2005", station.metadata["details"]["origyear"]))
 
+if __name__ == "__main__":
+    #print(stationid_from_bbox([-74.4751,40.389,-73.7432,40.9397]))
+
     # for product in station.metadata["products"]["products"]:
     #     print(product["name"])
     # python src/data_loading/tides.py
+    print(katrina_data())
