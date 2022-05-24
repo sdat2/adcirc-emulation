@@ -1,14 +1,12 @@
 """Download tidal guages."""
-from typing import List # import pandas as pd
+from typing import List  # import pandas as pd
 import xarray as xr
 from dateutil import parser
 from noaa_coops.noaa_coops import stationid_from_bbox, Station
-from src.constants import NEW_ORLEANS
+from src.constants import NEW_ORLEANS, DEFAULT_GUAGES, KATRINA_TIDE_NC
 
 
-GUAGES = ['8761724', '8761927', '8761955', '8762075', '8762482']
-
-def bbox_from_loc(loc: List[float]=NEW_ORLEANS, buffer: float=1) -> List[float]:
+def bbox_from_loc(loc: List[float] = NEW_ORLEANS, buffer: float = 1) -> List[float]:
     """
     Get bbox padding a central location.
 
@@ -20,6 +18,7 @@ def bbox_from_loc(loc: List[float]=NEW_ORLEANS, buffer: float=1) -> List[float]:
         List[Float]: A bounding box like [-91.0715, 28.9511, -89.0715, 30.9511].
     """
     return [loc[0] - buffer, loc[1] - buffer, loc[0] + buffer, loc[1] + buffer]
+
 
 def print_station_details(stationid_list: List[str]) -> None:
     """
@@ -34,12 +33,13 @@ def print_station_details(stationid_list: List[str]) -> None:
     for stationid in stationid_list:
         station = Station(stationid)
         # print(station)
-        print("After 2005::\t",
-              is_after("2005", station.metadata["details"]["origyear"]))
+        print(
+            "After 2005::\t", is_after("2005", station.metadata["details"]["origyear"])
+        )
 
         if is_after("2005", station.metadata["details"]["origyear"]):
-           station_list.append(station)
-           station_id_list.append(stationid)
+            station_list.append(station)
+            station_id_list.append(stationid)
 
     print(station_list)
     print(station_id_list)
@@ -47,7 +47,7 @@ def print_station_details(stationid_list: List[str]) -> None:
     return station_list
 
 
-def katrina_data(stationid_list: List[str]=GUAGES) -> xr.Dataset:
+def katrina_data(stationid_list: List[str] = DEFAULT_GUAGES) -> xr.Dataset:
     """Return Katrina Data.
 
     Args:
@@ -61,22 +61,35 @@ def katrina_data(stationid_list: List[str]=GUAGES) -> xr.Dataset:
         station = Station(stationid)
         try:
             data = station.get_data(
-                    begin_date="20050820",
-                    end_date="20050902",
-                    product="water_level",
-                    datum="MSL", # "MLLW",
-                    units="metric",
-                    time_zone="gmt",
-                )
-            xr_data = data.to_xarray().expand_dims(dim="stationid").assign_coords(coords={"stationid": (["stationid"], [stationid])})
-            xr_data = xr_data.assign_coords(coords={"lon": (["stationid"], [station.lat_lon["lon"]]), 
-                                                    "lat": (["stationid"], [station.lat_lon["lat"]]),
-                                                    "name": (["stationid"], [station.metadata["name"]])})
+                begin_date="20050820",
+                end_date="20050902",
+                product="water_level",
+                datum="MSL",  # "MLLW",
+                units="metric",
+                time_zone="gmt",
+            )
+            xr_data = (
+                data.to_xarray()
+                .expand_dims(dim="stationid")
+                .assign_coords(coords={"stationid": (["stationid"], [stationid])})
+            )
+            xr_data = xr_data.assign_coords(
+                coords={
+                    "lon": (["stationid"], [station.lat_lon["lon"]]),
+                    "lat": (["stationid"], [station.lat_lon["lat"]]),
+                    "name": (["stationid"], [station.metadata["name"]]),
+                }
+            )
 
-            data_list.append(xr_data) # .expand_dims(dim="stationid")
+            data_list.append(xr_data)  # .expand_dims(dim="stationid")
         except Exception as e:
             print(stationid, "problem", e)
     return xr.merge(data_list)
+
+
+def save_katrina_nc() -> None:
+    """Katrina tidal data."""
+    katrina_data().to_netcdf(KATRINA_TIDE_NC)
 
 
 def is_after(time_a: str, time_b: str) -> bool:
@@ -99,28 +112,30 @@ def is_after(time_a: str, time_b: str) -> bool:
 
 def old_test():
     print_station_details(stationid_from_bbox(bbox_from_loc()))
-    #print(bbox_from_loc())
+    # print(bbox_from_loc())
     station = Station(8762483)
     # print(station.metadata)
     # for key in station.metadata:
     #     print(key, "::", station.metadata[key])
 
-    print(station.metadata["id"],
-          station.metadata["name"],
-          station.metadata["lng"],
-          station.metadata["lat"],
-          station.metadata["details"]["origyear"],
-          type(station.metadata["details"]["origyear"])
-          )
+    print(
+        station.metadata["id"],
+        station.metadata["name"],
+        station.metadata["lng"],
+        station.metadata["lat"],
+        station.metadata["details"]["origyear"],
+        type(station.metadata["details"]["origyear"]),
+    )
 
     print(is_after(station.metadata["details"]["origyear"], "2016"))
     print(is_after(station.metadata["details"]["origyear"], "2014"))
     print(is_after("2005", station.metadata["details"]["origyear"]))
 
+
 if __name__ == "__main__":
-    #print(stationid_from_bbox([-74.4751,40.389,-73.7432,40.9397]))
+    # print(stationid_from_bbox([-74.4751,40.389,-73.7432,40.9397]))
 
     # for product in station.metadata["products"]["products"]:
     #     print(product["name"])
     # python src/data_loading/tides.py
-    print(katrina_data())
+    save_katrina_nc()
