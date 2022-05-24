@@ -3,6 +3,9 @@
 
 # local package
 -e ../.
+-e ../../noaa_coops/
+
+pytest
 
 # external requirements (mostly linters and formatters)
 flake8              # flake8 linter
