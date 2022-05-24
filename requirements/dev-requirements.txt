@@ -6,6 +6,7 @@
 -e ../../noaa_coops/
 
 pytest
+pytest-cov
 
 # external requirements (mostly linters and formatters)
 flake8              # flake8 linter
@@ -14,3 +15,6 @@ mypy                # python type checker
 black               # automatic formatting provider
 isort               # automatic import sorter
 python-dotenv       # environment variable manager
+
+# ECMWF
+cdsapi
