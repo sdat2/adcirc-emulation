@@ -3,8 +3,10 @@
 
 # local package
 -e ../.
+# my local branch of noaa_coops
 -e ../../noaa_coops/
 
+# testing
 pytest
 pytest-cov
 
