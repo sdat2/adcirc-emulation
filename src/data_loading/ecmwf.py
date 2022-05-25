@@ -1,11 +1,47 @@
 """Get ERA5 by CDS API calls."""
+from typing import List
+import numpy as np
 import cdsapi
 from src.constants import GOM, KATRINA_ERA5_NC
+
+
+def month_day_lists(startdate: np.datetime64, enddate: np.datetime64) -> List[List[str], List[str]]:
+    """
+    Month Day lists for running cds api.
+
+    Args:
+        startdate (np.datetime64): Start date.
+        enddate (np.datetime64): End date.
+
+    Returns:
+        List[List[str], List[str]]: [[Month], [Day1, Day2, ...], ...]
+    """
+    return [
+        [
+            ["08"],
+            [
+                "20",
+                "21",
+                "22",
+                "23",
+                "24",
+                "25",
+                "26",
+                "27",
+                "28",
+                "29",
+                "30",
+                "31",
+            ],
+        ]
+    ]
 
 
 def katrina_era5() -> None:
     """
     Get Katrina ERA5.
+
+    # TODO: Add the ability to straddle months.
     """
     c = cdsapi.Client()
     c.retrieve(
