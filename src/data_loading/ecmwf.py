@@ -9,6 +9,8 @@ def month_day_lists(startdate: np.datetime64, enddate: np.datetime64) -> List[Li
     """
     Month Day lists for running cds api.
 
+    Not yet implemented.
+
     Args:
         startdate (np.datetime64): Start date.
         enddate (np.datetime64): End date.
