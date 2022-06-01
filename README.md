@@ -4,13 +4,15 @@
  <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 
 ## Requirements
+
 - Python 3.8+
 
 ## Getting started
 
 
 ## Project Organization
-```
+
+```txt
 ├── LICENSE
 ├── Makefile           <- Makefile with commands like `make init` or `make lint-requirements`
 ├── README.md          <- The top-level README for developers using this project.
@@ -45,6 +47,7 @@
 ```
 
 ## Code formatting
+
 To automatically format your code, make sure you have `black` installed (`pip install black`) and call
 ```black . ``` 
 from within the project directory.

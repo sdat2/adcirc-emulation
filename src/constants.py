@@ -7,6 +7,9 @@ SRC_PATH = os.path.dirname(constants_path)
 PROJECT_PATH = os.path.dirname(SRC_PATH)
 DATA_PATH = os.path.join(PROJECT_PATH, "data")
 
+REPORT_PATH = os.path.join(PROJECT_PATH, "report")
+FIGURE_PATH = os.path.join(REPORT_PATH, "figures")
+
 # Significant places
 NEW_ORLEANS = [-90.0715, 29.9511]  # lon , lat
 
@@ -27,3 +30,4 @@ DEFAULT_GUAGES = [
 # Data files.
 KATRINA_TIDE_NC = os.path.join(DATA_PATH, "katrina_tides.nc")
 KATRINA_ERA5_NC = os.path.join(DATA_PATH, "katrina_era5.nc")
+IBTRACS_NC = os.path.join(DATA_PATH, "IBTrACS.ALL.v04r00.nc")

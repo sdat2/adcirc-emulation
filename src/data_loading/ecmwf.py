@@ -5,7 +5,9 @@ import cdsapi
 from src.constants import GOM, KATRINA_ERA5_NC
 
 
-def month_day_lists(startdate: np.datetime64, enddate: np.datetime64) -> List[List[str], List[str]]:
+def month_day_lists(
+    startdate: np.datetime64, enddate: np.datetime64
+) -> List[List[str], List[str]]:
     """
     Month Day lists for running cds api.
 
@@ -21,20 +23,7 @@ def month_day_lists(startdate: np.datetime64, enddate: np.datetime64) -> List[Li
     return [
         [
             ["08"],
-            [
-                "20",
-                "21",
-                "22",
-                "23",
-                "24",
-                "25",
-                "26",
-                "27",
-                "28",
-                "29",
-                "30",
-                "31",
-            ],
+            ["20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31",],
         ]
     ]
 

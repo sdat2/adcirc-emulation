@@ -5,6 +5,9 @@
 -e ../.
 # my local branch of noaa_coops
 -e ../../noaa_coops/
+# local branch of sithom utilities.
+-e ../../sithom/
+
 
 # testing
 pytest
@@ -20,3 +23,4 @@ python-dotenv       # environment variable manager
 
 # ECMWF
 cdsapi
+netcdf4
