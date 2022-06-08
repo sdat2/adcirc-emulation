@@ -1,4 +1,4 @@
-"""IBTRACS script."""
+"""IBTrACS data loading script."""
 from typing import List, Tuple
 import numpy as np
 import xarray as xr
@@ -67,7 +67,7 @@ def na_tcs() -> xr.Dataset:
     North Atlantic Tropical Cyclones in IBTrACS.
 
     Returns:
-        xr.Dataset: Filtered IBTRACS dataset.
+        xr.Dataset: Filtered IBTrACS dataset.
     """
     return filter_function(xr.open_dataset(IBTRACS_NC))
 
