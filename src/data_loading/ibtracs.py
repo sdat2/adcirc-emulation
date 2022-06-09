@@ -25,7 +25,7 @@ def filter_function(
     xr_obj: xr.Dataset,
     filter: List[Tuple[str, List[str]]] = [
         ("basin", [b"NA"]),
-        ("nature", [b"SS", b"TS"]),
+        ("nature", [b"TS"]),
     ],
 ) -> xr.Dataset:
     """
@@ -41,24 +41,24 @@ def filter_function(
     """
     storm_list = None
     for filter_part in filter:
-        print(filter_part)
+        # print(filter_part)
         storm_list_part = None
         for value in filter_part[1]:
             truth_array = xr_obj[filter_part[0]] == value
-            print(truth_array.values.shape)
+            # print(truth_array.values.shape)
             compressed_array = np.any(truth_array, axis=1)
-            print(compressed_array.shape)
+            # print(compressed_array.shape)
             storm_list_temp = xr_obj.storm.values[compressed_array]
             if storm_list_part is None:
                 storm_list_part = storm_list_temp
             else:
                 storm_list_part = _union(storm_list_temp, storm_list_part)
-            print(len(storm_list_part))
+            # print(len(storm_list_part))
         if storm_list is None:
             storm_list = storm_list_part
         else:
             storm_list = _intersection(storm_list_part, storm_list)
-    print(len(storm_list))
+    # print(len(storm_list))
     return xr_obj.sel(storm=storm_list)
 
 
