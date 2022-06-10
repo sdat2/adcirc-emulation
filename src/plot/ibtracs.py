@@ -53,16 +53,16 @@ def plot_all_storms(ds: xr.Dataset, var="storm_speed", cmap="viridis") -> None:
 
     plt.ylabel(r"Latitude [$^{\circ}$N]")
     plt.xlabel(r"Longitude [$^{\circ}$E]")
-    plt.colorbar(label=var)
+    plt.colorbar(label=var + " [" + ds[var].attrs["units"] + "]")
 
 
 @timeit
-def plot_na_tcs() -> None:
+def plot_na_tcs(var="storm_speed") -> None:
     """
     Plot NA Tropical Cyclones.
     """
-    plot_defaults()
-    plot_all_storms(na_tcs())
+    #plot_defaults()
+    plot_all_storms(na_tcs(), var=var)
     plt.savefig("example.png")
 
 
