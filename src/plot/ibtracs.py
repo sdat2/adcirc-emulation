@@ -61,7 +61,7 @@ def plot_na_tcs(var="storm_speed") -> None:
     """
     Plot NA Tropical Cyclones.
     """
-    #plot_defaults()
+    # plot_defaults()
     plot_all_storms(na_tcs(), var=var)
     plt.savefig("example.png")
 
