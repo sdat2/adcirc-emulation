@@ -111,7 +111,6 @@ def is_after(time_a: str, time_b: str) -> bool:
 
 if __name__ == "__main__":
     # print(stationid_from_bbox([-74.4751,40.389,-73.7432,40.9397]))
-
     # for product in station.metadata["products"]["products"]:
     #     print(product["name"])
     # python src/data_loading/tides.py

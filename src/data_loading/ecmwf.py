@@ -47,8 +47,8 @@ def katrina_era5() -> None:
 
     # TODO: Add the ability to straddle months.
     """
-    c = cdsapi.Client()
-    c.retrieve(
+    client = cdsapi.Client()
+    client.retrieve(
         "reanalysis-era5-single-levels",
         {
             "product_type": "reanalysis",
@@ -114,8 +114,11 @@ def katrina_era5() -> None:
     )
 
 
-def monthly_avgs():
-    c = cdsapi.Client()
+def monthly_avgs() -> None:
+    """
+    Make all the monthly average netctdfs for rthe full time period.
+    """
+    client = cdsapi.Client()
     for var in [
         "10m_u_component_of_wind",
         "10m_v_component_of_wind",
@@ -129,7 +132,7 @@ def monthly_avgs():
         "surface_pressure",
         "total_precipitation",
     ]:
-        c.retrieve(
+        client.retrieve(
             "reanalysis-era5-single-levels-monthly-means",
             {
                 "format": "netcdf",
@@ -218,7 +221,7 @@ def monthly_avgs():
                 ],
                 "area": GOM,
             },
-            var+".nc",
+            var + ".nc",
         )
 
 
