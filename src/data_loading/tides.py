@@ -3,12 +3,14 @@ from typing import List  # import pandas as pd
 import xarray as xr
 from dateutil import parser
 from noaa_coops.noaa_coops import stationid_from_bbox, Station
-from src.constants import NEW_ORLEANS, DEFAULT_GUAGES, KATRINA_TIDE_NC
+from src.constants import NEW_ORLEANS, DEFAULT_GAUGES, KATRINA_TIDE_NC
 
 
 def bbox_from_loc(loc: List[float] = NEW_ORLEANS, buffer: float = 3) -> List[float]:
     """
     Get bbox padding a central location.
+
+    Size of the square is 4 * buffer**2.
 
     Args:
         loc (List[float], optional): [Lon, Lat]. Defaults to NEW_ORLEANS.
@@ -20,20 +22,19 @@ def bbox_from_loc(loc: List[float] = NEW_ORLEANS, buffer: float = 3) -> List[flo
     return [loc[0] - buffer, loc[1] - buffer, loc[0] + buffer, loc[1] + buffer]
 
 
-def filter_by_age(stationid_list: List[str], date: str = "2005") -> List[str]:
+def filter_by_age(stationid_list: List[str], date: str = "2005-06-01") -> List[str]:
     """
     Filter the stations to be active before the date given.
 
     Args:
         stationid_list (List[str]): list of stations.
-        date (optional, str):
+        date (optional, str): Date to go after.
     """
     station_list = []
     station_id_list = []
 
     for stationid in stationid_list:
         station = Station(stationid)
-        # print(station)
         print(
             stationid,
             f"After {date}::\t",
@@ -47,11 +48,11 @@ def filter_by_age(stationid_list: List[str], date: str = "2005") -> List[str]:
     return station_id_list
 
 
-def katrina_data(stationid_list: List[str] = DEFAULT_GUAGES) -> xr.Dataset:
+def katrina_data(stationid_list: List[str] = DEFAULT_GAUGES) -> xr.Dataset:
     """Return Katrina Data.
 
     Args:
-        stationid_list (List[str], optional): Stationid list. Defaults to default GUAGES.
+        stationid_list (List[str], optional): Stationid list. Defaults to DEFAULT_GAUGES.
 
     Returns:
         xr.Dataset: Gauge data for Katrina including latitude, longitude, and name.
@@ -87,8 +88,13 @@ def katrina_data(stationid_list: List[str] = DEFAULT_GUAGES) -> xr.Dataset:
     return xr.merge(data_list)
 
 
-def save_katrina_nc(stationid_list: List[str] = DEFAULT_GUAGES) -> None:
-    """Katrina tidal data."""
+def save_katrina_nc(stationid_list: List[str] = DEFAULT_GAUGES) -> None:
+    """Katrina tidal data.
+
+    Args:
+        stationid_list (List[str], optional): Stationid list.
+            Defaults to DEFAULT_GAUGES.
+    """
     katrina_data(stationid_list).to_netcdf(KATRINA_TIDE_NC)
 
 

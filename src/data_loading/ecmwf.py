@@ -18,7 +18,7 @@ def month_day_lists(
         enddate (np.datetime64): End date.
 
     Returns:
-        List[List[str], List[str]]: [[Month], [Day1, Day2, ...], [Month2]]
+        List[List[str], List[str]]: [[[Month], [Day1, Day2, ...]], [[Month2], ...]]
     """
     return [
         [
@@ -33,25 +33,31 @@ def katrina_era5() -> None:
     Get Katrina ERA5.
 
     """
+
+    air_var = [
+        "10m_u_component_of_wind",
+        "10m_v_component_of_wind",
+        "2m_dewpoint_temperature",
+        "2m_temperature",
+        "mean_sea_level_pressure",
+        "surface_pressure",
+        "total_precipitation",
+    ]
+
+    water_var = [
+        "mean_wave_direction",
+        "mean_wave_period",
+        "sea_surface_temperature",
+        "significant_height_of_combined_wind_waves_and_swell",
+    ]
+
     client = cdsapi.Client()
     client.retrieve(
         "reanalysis-era5-single-levels",
         {
             "product_type": "reanalysis",
             "format": "netcdf",
-            "variable": [
-                "10m_u_component_of_wind",
-                "10m_v_component_of_wind",
-                "2m_dewpoint_temperature",
-                "2m_temperature",
-                "mean_sea_level_pressure",
-                "mean_wave_direction",
-                "mean_wave_period",
-                "sea_surface_temperature",
-                "significant_height_of_combined_wind_waves_and_swell",
-                "surface_pressure",
-                "total_precipitation",
-            ],
+            "variable": air_var + water_var,
             "year": "2005",
             "month": "08",
             "day": [

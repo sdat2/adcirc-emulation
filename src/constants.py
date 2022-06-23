@@ -17,7 +17,7 @@ NEW_ORLEANS = [-90.0715, 29.9511]  # lon , lat
 # Gulf of Mexico
 # lat+, lon-, lat-, lon+
 GOM = [35, -100, 15, -80]
-DEFAULT_GUAGES = [
+DEFAULT_GAUGES = [
     "8729840",
     "8735180",
     "8760922",
