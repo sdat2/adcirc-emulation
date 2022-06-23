@@ -20,12 +20,13 @@ def bbox_from_loc(loc: List[float] = NEW_ORLEANS, buffer: float = 3) -> List[flo
     return [loc[0] - buffer, loc[1] - buffer, loc[0] + buffer, loc[1] + buffer]
 
 
-def filter_by_age(stationid_list: List[str]) -> List[str]:
+def filter_by_age(stationid_list: List[str], date: str = "2005") -> List[str]:
     """
-    Katrina_stations
+    Filter the stations to be active before the date given.
 
     Args:
         stationid_list (List[str]): list of stations.
+        date (optional, str):
     """
     station_list = []
     station_id_list = []
@@ -35,11 +36,11 @@ def filter_by_age(stationid_list: List[str]) -> List[str]:
         # print(station)
         print(
             stationid,
-            "After 2005::\t",
-            is_after("2005", station.metadata["details"]["origyear"]),
+            f"After {date}::\t",
+            is_after(date, station.metadata["details"]["origyear"]),
         )
 
-        if is_after("2005", station.metadata["details"]["origyear"]):
+        if is_after(date, station.metadata["details"]["origyear"]):
             station_list.append(station)
             station_id_list.append(stationid)
 

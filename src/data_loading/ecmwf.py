@@ -18,25 +18,12 @@ def month_day_lists(
         enddate (np.datetime64): End date.
 
     Returns:
-        List[List[str], List[str]]: [[Month], [Day1, Day2, ...], ...]
+        List[List[str], List[str]]: [[Month], [Day1, Day2, ...], [Month2]]
     """
     return [
         [
             ["08"],
-            [
-                "20",
-                "21",
-                "22",
-                "23",
-                "24",
-                "25",
-                "26",
-                "27",
-                "28",
-                "29",
-                "30",
-                "31",
-            ],
+            ["20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31",],
         ]
     ]
 
@@ -45,7 +32,6 @@ def katrina_era5() -> None:
     """
     Get Katrina ERA5.
 
-    # TODO: Add the ability to straddle months.
     """
     client = cdsapi.Client()
     client.retrieve(
@@ -118,20 +104,25 @@ def monthly_avgs() -> None:
     """
     Make all the monthly average netctdfs for rthe full time period.
     """
-    client = cdsapi.Client()
-    for var in [
+    air_var = [
         "10m_u_component_of_wind",
         "10m_v_component_of_wind",
         "2m_dewpoint_temperature",
         "2m_temperature",
         "mean_sea_level_pressure",
+        "surface_pressure",
+        "total_precipitation",
+    ]
+
+    water_var = [
         "mean_wave_direction",
         "mean_wave_period",
         "sea_surface_temperature",
         "significant_height_of_combined_wind_waves_and_swell",
-        "surface_pressure",
-        "total_precipitation",
-    ]:
+    ]
+
+    client = cdsapi.Client()
+    for var in air_var + water_var:
         client.retrieve(
             "reanalysis-era5-single-levels-monthly-means",
             {
