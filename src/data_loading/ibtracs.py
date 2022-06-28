@@ -23,7 +23,10 @@ def _intersection(lst1: list, lst2: list) -> list:
 @timeit
 def filter_function(
     xr_obj: xr.Dataset,
-    filter: List[Tuple[str, List[str]]] = [("basin", [b"NA"]), ("nature", [b"TS"]),],
+    filter: List[Tuple[str, List[str]]] = [
+        ("basin", [b"NA"]),
+        ("nature", [b"TS"]),
+    ],
 ) -> xr.Dataset:
     """
     Filter function for IBTrACS.

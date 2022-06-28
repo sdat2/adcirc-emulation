@@ -31,3 +31,7 @@ DEFAULT_GAUGES = [
 KATRINA_TIDE_NC = os.path.join(DATA_PATH, "katrina_tides.nc")
 KATRINA_ERA5_NC = os.path.join(DATA_PATH, "katrina_era5.nc")
 IBTRACS_NC = os.path.join(DATA_PATH, "IBTrACS.ALL.v04r00.nc")
+
+ZOOMED_IN_LONS = [-92, -86.5]  # zoomed in around New orleans
+ZOOMED_IN_LATS = [28.5, 30.8]
+MID_KATRINA_TIME = "2005-08-29T10:00:00"
