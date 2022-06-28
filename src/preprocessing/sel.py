@@ -1,5 +1,5 @@
 """Functions for selecting xarray parts."""
-from constants import ZOOMED_IN_LATS, ZOOMED_IN_LONS, MID_KATRINA_TIME
+from src.constants import ZOOMED_IN_LATS, ZOOMED_IN_LONS, MID_KATRINA_TIME
 from typing import Union
 import xarray as xr
 
@@ -14,7 +14,7 @@ def mid_katrina(
         xr_obj (Union[xr.DataArray, xr.Dataset]): Full dataset.
 
     Returns:
-        Union[xr.DataArray, xr.Dataset]: zoomed in version.
+        Union[xr.DataArray, xr.Dataset]: zoomed in version midway through.
     """
     lons = ZOOMED_IN_LONS
     lats = ZOOMED_IN_LATS
@@ -23,3 +23,4 @@ def mid_katrina(
         latitude=slice(lats[1], lats[0]),
         time=MID_KATRINA_TIME,
     )
+
