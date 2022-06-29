@@ -53,7 +53,7 @@ def gauges_map(ax: matplotlib.axes.Axes) -> None:
     plt.legend(title="stationid")
 
 
-def era5(ax: matplotlib.axes.Axes, variable: str ="tp") -> None:
+def era5(ax: matplotlib.axes.Axes, variable: str = "tp") -> None:
     """
     Add ERA5 from mid Katrina to the axes.
 
@@ -105,6 +105,7 @@ def triple_input_plot() -> None:
     label_subplots([ax3, ax1, ax2], override="outside")
     plt.savefig(os.path.join(FIGURE_PATH, "inputs.pdf"))
     plt.savefig(os.path.join(FIGURE_PATH, "inputs.png"))
+
 
 if __name__ == "__main__":
     # python src/plot/katrina_input.py

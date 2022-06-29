@@ -1,6 +1,7 @@
 """IBTrACS data loading script."""
 from typing import Optional, List, Tuple
 import numpy as np
+from numba import njit
 import xarray as xr
 from sithom.time import timeit
 from src.constants import IBTRACS_NC, GOM
@@ -63,19 +64,67 @@ def filter_by_labels(
 
 
 def _track_in_bbox(lons: np.ndarray, lats: np.ndarray, bbox: List[float]) -> bool:
-    if np.any([x < bbox[0] and x > bbox[2] for x in lats]) and np.any([x < bbox[3] and x > bbox[1] for x in lons]):
+    """
+    Test if track intersects with bounding box.
+
+    Args:
+        lons (np.ndarray): Longitude array.
+        lats (np.ndarray): Latitude array.
+        bbox (List[float]): bounding box.
+
+    Returns:
+        bool: _description_
+
+    Example of tracking:
+        >>> _track_in_bbox(np.array([0, 2]), np.array([0, 1]), [0.5, -0.5, -0.5, 0.5])
+            True
+        >>> _track_in_bbox(np.array([1, 2]), np.array([1, 1]), [0.5, -0.5, -0.5, 0.5])
+            False
+    """
+    if np.any([x < bbox[0] and x > bbox[2] for x in lats]) and np.any(
+        [x < bbox[3] and x > bbox[1] for x in lons]
+    ):
+        return True
+    else:
+        return False
+
+
+@np.ndarray
+def _point_in_bbox(lon: float, lat: float, bbox: List[float]) -> bool:
+    """
+    Test if track intersects with bounding box.
+
+    Args:
+        lon (float): Longitude.
+        lat (float): Latitude.
+        bbox (List[float]): bounding box.
+
+    Returns:
+        bool: _description_
+
+    Example of tracking:
+        >>> _point_in_bbox(0.0, 0.0, [0.5, -0.5, -0.5, 0.5])
+            True
+        >>> _point_in_bbox(1.0, 1.0, [0.5, -0.5, -0.5, 0.5])
+            False
+    """
+    if lat < bbox[0] and lat > bbox[2] and lon < bbox[3] and lon > bbox[1]:
         return True
     else:
         return False
 
 
 @timeit
-def filter_by_bbox(ds: xr.Dataset, bbox: Optional[List[float]] =  None) -> xr.Dataset:
+def filter_by_bbox(ds: xr.Dataset, bbox: Optional[List[float]] = None) -> xr.Dataset:
     if bbox is not None:
         storm_list = []
         print(bbox)
         for storm in range(ds.storm.shape[0]):
-            if _track_in_bbox(ds.isel(storm=storm)["lon"].values, ds.isel(storm=storm)["lat"].values, bbox):
+            if _track_in_bbox(
+                ds.isel(storm=storm)["lon"].values,
+                ds.isel(storm=storm)["lat"].values,
+                bbox,
+            ):
                 storm_list.append(storm)
         ds = ds.isel(storm=storm_list)
     return ds
@@ -89,6 +138,7 @@ def na_tcs() -> xr.Dataset:
         xr.Dataset: Filtered IBTrACS dataset.
     """
     return filter_by_labels(xr.open_dataset(IBTRACS_NC))
+
 
 def gom_tcs() -> xr.Dataset:
     return filter_by_bbox(na_tcs(), bbox=GOM)

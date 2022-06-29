@@ -23,4 +23,3 @@ def mid_katrina(
         latitude=slice(lats[1], lats[0]),
         time=MID_KATRINA_TIME,
     )
-
