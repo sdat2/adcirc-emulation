@@ -1,9 +1,9 @@
 """IBTrACS data loading script."""
-from typing import List, Tuple
+from typing import Optional, List, Tuple
 import numpy as np
 import xarray as xr
 from sithom.time import timeit
-from src.constants import IBTRACS_NC
+from src.constants import IBTRACS_NC, GOM
 
 
 def _union(lst1: list, lst2: list) -> list:
@@ -21,34 +21,34 @@ def _intersection(lst1: list, lst2: list) -> list:
 
 
 @timeit
-def filter_function(
-    xr_obj: xr.Dataset,
+def filter_by_labels(
+    ds: xr.Dataset,
     filter: List[Tuple[str, List[str]]] = [
         ("basin", [b"NA"]),
         ("nature", [b"TS"]),
     ],
 ) -> xr.Dataset:
     """
-    Filter function for IBTrACS.
+    Filter by labels for IBTrACS.
 
     Args:
-        xr_obj (xr.DataArray): Input ibtracs datarray.
+        ds (xr.DataArray): Input ibtracs datarray.
         filter (List[Tuple[str,List[str]]], optional): Filters to apply.
             Defaults to [("basin", [b"NA"]), ("nature", [b"SS", b"TS"])].
 
     Returns:
-        xr.Dataset: Filtered dataarray.
+        xr.Dataset: Filtered dataset.
     """
     storm_list = None
     for filter_part in filter:
         # print(filter_part)
         storm_list_part = None
         for value in filter_part[1]:
-            truth_array = xr_obj[filter_part[0]] == value
+            truth_array = ds[filter_part[0]] == value
             # print(truth_array.values.shape)
             compressed_array = np.any(truth_array, axis=1)
             # print(compressed_array.shape)
-            storm_list_temp = xr_obj.storm.values[compressed_array]
+            storm_list_temp = ds.storm.values[compressed_array]
             if storm_list_part is None:
                 storm_list_part = storm_list_temp
             else:
@@ -59,7 +59,26 @@ def filter_function(
         else:
             storm_list = _intersection(storm_list_part, storm_list)
     # print(len(storm_list))
-    return xr_obj.sel(storm=storm_list)
+    return ds.sel(storm=storm_list)
+
+
+def _track_in_bbox(lons: np.ndarray, lats: np.ndarray, bbox: List[float]) -> bool:
+    if np.any([x < bbox[0] and x > bbox[2] for x in lats]) and np.any([x < bbox[3] and x > bbox[1] for x in lons]):
+        return True
+    else:
+        return False
+
+
+@timeit
+def filter_by_bbox(ds: xr.Dataset, bbox: Optional[List[float]] =  None) -> xr.Dataset:
+    if bbox is not None:
+        storm_list = []
+        print(bbox)
+        for storm in range(ds.storm.shape[0]):
+            if _track_in_bbox(ds.isel(storm=storm)["lon"].values, ds.isel(storm=storm)["lat"].values, bbox):
+                storm_list.append(storm)
+        ds = ds.isel(storm=storm_list)
+    return ds
 
 
 def na_tcs() -> xr.Dataset:
@@ -69,9 +88,13 @@ def na_tcs() -> xr.Dataset:
     Returns:
         xr.Dataset: Filtered IBTrACS dataset.
     """
-    return filter_function(xr.open_dataset(IBTRACS_NC))
+    return filter_by_labels(xr.open_dataset(IBTRACS_NC))
+
+def gom_tcs() -> xr.Dataset:
+    return filter_by_bbox(na_tcs(), bbox=GOM)
 
 
 if __name__ == "__main__":
     # python src/data_loading/ibtracs.py
     print(na_tcs())
+    print(gom_tcs())
