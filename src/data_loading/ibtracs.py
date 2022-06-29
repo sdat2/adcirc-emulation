@@ -1,7 +1,6 @@
 """IBTrACS data loading script."""
 from typing import Optional, List, Tuple
 import numpy as np
-from numba import njit
 import xarray as xr
 from sithom.time import timeit
 from src.constants import IBTRACS_NC, GOM
@@ -89,7 +88,7 @@ def _track_in_bbox(lons: np.ndarray, lats: np.ndarray, bbox: List[float]) -> boo
         return False
 
 
-@np.ndarray
+# @np.ndarray
 def _point_in_bbox(lon: float, lat: float, bbox: List[float]) -> bool:
     """
     Test if track intersects with bounding box.
@@ -141,6 +140,12 @@ def na_tcs() -> xr.Dataset:
 
 
 def gom_tcs() -> xr.Dataset:
+    """
+    Gulf of Mexico Tropical Cyclones in IBTrACS.
+
+    Returns:
+        xr.Dataset: Filtered IBTrACS dataset
+    """
     return filter_by_bbox(na_tcs(), bbox=GOM)
 
 

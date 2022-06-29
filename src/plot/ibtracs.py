@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import xarray as xr
 from sithom.time import timeit
 from sithom.plot import plot_defaults
-from src.data_loading.ibtracs import na_tcs
+from src.data_loading.ibtracs import na_tcs, gom_tcs
 from src.plot.map import map_axes
 
 
@@ -47,7 +47,7 @@ def plot_all_storms(ds: xr.Dataset, var="storm_speed", cmap="viridis") -> None:
         var (str, optional): Variable to plot. Defaults to "storm_speed".
         cmap (str, optional): Colormap. Defaults to "viridis".
     """
-    ax = map_axes()
+    _ = map_axes()
     for num in range(0, ds.storm.shape[0]):
         plot_storm(ds, var=var, storm_num=num, cmap=cmap)
 
@@ -63,9 +63,22 @@ def plot_na_tcs(var="storm_speed") -> None:
     """
     # plot_defaults()
     plot_all_storms(na_tcs(), var=var)
-    plt.savefig("example.png")
+    plt.savefig("na_example.png")
+    plt.clf()
 
+
+@timeit
+def plot_gom_tcs(var="storm_speed") -> None:
+    """
+    Plot GOM Tropical Cyclones.
+    """
+    # plot_defaults()
+    plot_all_storms(gom_tcs(), var=var)
+    plt.savefig("gom_example.png")
+    plt.clf()
 
 if __name__ == "__main__":
     # python src/plot/ibtracs.py
+    plot_defaults()
     plot_na_tcs()
+    plot_gom_tcs()
