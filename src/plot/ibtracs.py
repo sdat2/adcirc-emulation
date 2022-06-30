@@ -1,9 +1,11 @@
 """IBTRACS plotting."""
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
 from sithom.time import timeit
 from sithom.plot import plot_defaults
+from src.constants import FIGURE_PATH, GOM_BBOX, NO_BBOX
 from src.data_loading.ibtracs import na_tcs, gom_tcs
 from src.plot.map import map_axes
 
@@ -63,7 +65,7 @@ def plot_na_tcs(var="storm_speed") -> None:
     """
     # plot_defaults()
     plot_all_storms(na_tcs(), var=var)
-    plt.savefig("na_example.png")
+    plt.savefig(os.path.join(FIGURE_PATH, "na_tc_speed.png"))
     plt.clf()
 
 
@@ -74,7 +76,7 @@ def plot_gom_tcs(var="storm_speed") -> None:
     """
     # plot_defaults()
     plot_all_storms(gom_tcs(), var=var)
-    plt.savefig("gom_example.png")
+    plt.savefig(os.path.join(FIGURE_PATH, "gom_tc_speed.png"))
     plt.clf()
 
 if __name__ == "__main__":
@@ -82,3 +84,5 @@ if __name__ == "__main__":
     plot_defaults()
     plot_na_tcs()
     plot_gom_tcs()
+    print(GOM_BBOX)
+    print(NO_BBOX)
