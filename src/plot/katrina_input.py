@@ -15,8 +15,7 @@ from src.constants import (
     KATRINA_TIDE_NC,
     KATRINA_ERA5_NC,
     NEW_ORLEANS,
-    ZOOMED_IN_LATS,
-    ZOOMED_IN_LONS,
+    NO_BBOX,
 )
 
 
@@ -28,14 +27,12 @@ def gauges_map(ax: matplotlib.axes.Axes) -> None:
     Args:
         ax (matplotlib.axes.Axes):
     """
-    lons = ZOOMED_IN_LONS
-    lats = ZOOMED_IN_LATS
     ds = xr.open_dataset(KATRINA_TIDE_NC)
 
     ax.add_feature(cartopy.feature.LAND)
     add_features(ax)
 
-    ax.set_extent(lons + lats)
+    ax.set_extent(NO_BBOX.cartopy())
 
     for stationid in ds["stationid"].values:
         ax.plot(
@@ -45,9 +42,9 @@ def gauges_map(ax: matplotlib.axes.Axes) -> None:
             label=stationid,
         )
 
-    ax.plot(NEW_ORLEANS[0], NEW_ORLEANS[1], "X", color="black", label="New Orleans")
-    ax.set_xticks(lons, crs=ccrs.PlateCarree())
-    ax.set_yticks(lats, crs=ccrs.PlateCarree())
+    ax.plot(NEW_ORLEANS.lon, NEW_ORLEANS.lat, "X", color="black", label="New Orleans")
+    ax.set_xticks(NO_BBOX.lon, crs=ccrs.PlateCarree())
+    ax.set_yticks(NO_BBOX.lat, crs=ccrs.PlateCarree())
     ax.set_ylabel("Latitude [$^{\circ}$N]")
     ax.set_xlabel("Longitude [$^{\circ}$E]")
     plt.legend(title="stationid")

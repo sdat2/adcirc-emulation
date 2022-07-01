@@ -4,22 +4,7 @@ import xarray as xr
 from dateutil import parser
 from noaa_coops.noaa_coops import stationid_from_bbox, Station
 from src.constants import NEW_ORLEANS, DEFAULT_GAUGES, KATRINA_TIDE_NC
-
-
-def bbox_from_loc(loc: List[float] = NEW_ORLEANS, buffer: float = 3) -> List[float]:
-    """
-    Get bbox padding a central location.
-
-    Size of the square is 4 * buffer**2.
-
-    Args:
-        loc (List[float], optional): [Lon, Lat]. Defaults to NEW_ORLEANS.
-        buffer (float, optional): How many degrees to go out from loc. Defaults to 1.
-
-    Returns:
-        List[Float]: A bounding box like [-91.0715, 28.9511, -89.0715, 30.9511].
-    """
-    return [loc[0] - buffer, loc[1] - buffer, loc[0] + buffer, loc[1] + buffer]
+from src.place import bbox_from_point
 
 
 def filter_by_age(stationid_list: List[str], date: str = "2005-06-01") -> List[str]:
@@ -122,4 +107,4 @@ if __name__ == "__main__":
     #     print(product["name"])
     # python src/data_loading/tides.py
     # save_katrina_nc()
-    save_katrina_nc(filter_by_age(stationid_from_bbox(bbox_from_loc())))
+    save_katrina_nc(filter_by_age(stationid_from_bbox(bbox_from_point(NEW_ORLEANS))))

@@ -1,5 +1,7 @@
 from setuptools import find_packages, setup
 
+
+["typeguard", "pylint"]
 setup(
     name="src",
     version="0.0.1",

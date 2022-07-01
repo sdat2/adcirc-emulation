@@ -2,7 +2,7 @@
 from typing import List
 import numpy as np
 import cdsapi
-from src.constants import GOM, KATRINA_ERA5_NC
+from src.constants import GOM_BBOX, KATRINA_ERA5_NC
 
 
 def month_day_lists(
@@ -229,7 +229,7 @@ def monthly_avgs() -> None:
                     "11",
                     "12",
                 ],
-                "area": GOM,
+                "area": GOM_BBOX.ecmwf(),
             },
             var + ".nc",
         )

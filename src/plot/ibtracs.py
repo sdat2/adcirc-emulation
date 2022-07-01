@@ -1,6 +1,5 @@
 """IBTRACS plotting."""
 import os
-import numpy as np
 import matplotlib.pyplot as plt
 import xarray as xr
 from sithom.time import timeit
@@ -78,6 +77,7 @@ def plot_gom_tcs(var="storm_speed") -> None:
     plot_all_storms(gom_tcs(), var=var)
     plt.savefig(os.path.join(FIGURE_PATH, "gom_tc_speed.png"))
     plt.clf()
+
 
 if __name__ == "__main__":
     # python src/plot/ibtracs.py
