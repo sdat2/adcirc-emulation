@@ -113,7 +113,7 @@ def katrina_era5() -> None:
                 "22:00",
                 "23:00",
             ],
-            "area": GOM,
+            "area": GOM_BBOX.ecmwf(),
         },
         KATRINA_ERA5_NC,
     )
