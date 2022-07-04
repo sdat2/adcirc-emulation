@@ -7,7 +7,7 @@ from src.constants import GOM_BBOX, KATRINA_ERA5_NC
 
 def month_day_lists(
     startdate: np.datetime64, enddate: np.datetime64
-) -> List[List[str], List[str]]:
+) -> List[List[str]]:
     """
     Month Day lists for running cds api.
 
@@ -18,7 +18,7 @@ def month_day_lists(
         enddate (np.datetime64): End date.
 
     Returns:
-        List[List[str], List[str]]: [[[Month], [Day1, Day2, ...]], [[Month2], ...]]
+        List[List[str]]: [[[Month], [Day1, Day2, ...]], [[Month2], ...]]
     """
     return [
         [

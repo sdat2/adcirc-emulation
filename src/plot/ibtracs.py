@@ -1,5 +1,6 @@
 """IBTRACS plotting."""
 import os
+import matplotlib.axes
 import matplotlib.pyplot as plt
 import xarray as xr
 from sithom.misc import in_notebook
@@ -11,7 +12,7 @@ from src.plot.map import map_axes
 
 
 def plot_storm(
-    ax,
+    ax: matplotlib.axes.Axes,
     ds: xr.Dataset,
     var: str = "storm_speed",
     storm_num: int = 0,

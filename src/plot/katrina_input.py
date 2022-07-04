@@ -1,7 +1,7 @@
 """Katrina."""
 import os
 import xarray as xr
-import matplotlib
+import matplotlib.axes
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import cartopy

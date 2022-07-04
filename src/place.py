@@ -1,6 +1,6 @@
 """Place objects."""
 from typing import List
-import matplotlib
+import matplotlib.axes
 from typeguard import typechecked
 
 # import matplotlib.pyplot as plt
@@ -15,7 +15,7 @@ class BoundingBox:
     Example::
         >>> from src.place import BoundingBox
         >>> bbox = BoundingBox([-30, 30], [10, 30], desc="")
-        >>> bbox.ax_lim()
+        >>> bbox.cartopy()
         [-30, 30, 10, 30]
         >>> bbox.ecmwf() # [lat+, lon-, lat-, lon+]
         [30, -30, 10, 30]
@@ -34,7 +34,6 @@ class BoundingBox:
         self.lon = lon
         self.lat = lat
         self.desc = desc
-        print(lon, lat)
 
     def __repr__(self) -> str:
         """
