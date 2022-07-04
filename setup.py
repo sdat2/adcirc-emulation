@@ -1,8 +1,7 @@
 from setuptools import find_packages, setup
 
 
-REQUIRED = ["typeguard", "pylint", "sithom", "cdsapi", "xarray", "uncertianties", r"git+https://github.com/sdat2/noaa_coops.git@bbox", "cartopy"
-]
+REQUIRED = ["typeguard", "pylint", "sithom", "cdsapi", "xarray", "uncertainties",]
 
 setup(
     name="src",
@@ -13,6 +12,7 @@ setup(
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
     include_package_data=True,
     install_requires=REQUIRED,
+    dependency_links=["https://github.com/sdat2/noaa_coops.git@bbox"],
     license="MIT",
     tests_require=["flake8", "pytest"],
     url="https://github.com/sdat2/new-orleans",

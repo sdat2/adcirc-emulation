@@ -1,8 +1,11 @@
 """Function to plot maps using cartopy."""
 import matplotlib
 import matplotlib.pyplot as plt
-import cartopy
-import cartopy.crs as ccrs
+try:
+    import cartopy
+    import cartopy.crs as ccrs
+except ImportError:
+    print("cartopy not installed")
 
 
 def add_features(ax: matplotlib.axes.Axes):

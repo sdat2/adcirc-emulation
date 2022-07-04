@@ -4,7 +4,10 @@ import xarray as xr
 from dateutil import parser
 from src.constants import NEW_ORLEANS, DEFAULT_GAUGES, KATRINA_TIDE_NC
 from src.place import bbox_from_point
-from noaa_coops.noaa_coops import stationid_from_bbox, Station
+try:
+    from noaa_coops.noaa_coops import stationid_from_bbox, Station
+except ImportError:
+    print("no noaa_coops available")
 
 
 def filter_by_age(stationid_list: List[str], date: str = "2005-06-01") -> List[str]:
