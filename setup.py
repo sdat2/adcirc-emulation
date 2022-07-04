@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 
-REQUIRED = ["typeguard", "pylint", "sithom", "cdsapi", "xarray", "uncertianties", "git+https://github.com/sdat2/noaa_coops.git@bbox", "cartopy"
+REQUIRED = ["typeguard", "pylint", "sithom", "cdsapi", "xarray", "uncertianties", r"git+https://github.com/sdat2/noaa_coops.git@bbox", "cartopy"
 ]
 
 setup(
