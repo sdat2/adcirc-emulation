@@ -6,10 +6,19 @@ from typeguard import typechecked
 # import matplotlib.pyplot as plt
 
 
+@typechecked
 class BoundingBox:
     """
     BoundingBox class to deal with the varying output requirments often needed to
     describe the same geographical box to different APIs.
+
+    Example::
+        >>> from src.place import BoundingBox
+        >>> bbox = BoundingBox([-30, 30], [10, 30], desc="")
+        >>> bbox.ax_lim()
+        [-30, 30, 10, 30]
+        >>> bbox.ecmwf() # [lat+, lon-, lat-, lon+]
+        [30, -30, 10, 30]
     """
 
     def __init__(self, lon: List[float], lat: List[float], desc: str = "NONE") -> None:
@@ -31,7 +40,7 @@ class BoundingBox:
         """
         Representation string.
         """
-        return str(self.ecmwf())
+        return [str(self.ecmwf()), self.desc]
 
     def cartopy(self) -> List[float]:
         """

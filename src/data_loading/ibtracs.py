@@ -75,6 +75,7 @@ def _track_in_bbox(lons: np.ndarray, lats: np.ndarray, bbox: List[float]) -> boo
         bool: _description_
 
     Example of tracking:
+        >>> from src.data_loading.ibtracs import
         >>> _track_in_bbox(np.array([0, 2]), np.array([0, 1]), [0.5, -0.5, -0.5, 0.5])
             True
         >>> _track_in_bbox(np.array([1, 2]), np.array([1, 1]), [0.5, -0.5, -0.5, 0.5])
@@ -102,6 +103,7 @@ def _point_in_bbox(lon: float, lat: float, bbox: List[float]) -> bool:
         bool: _description_
 
     Example of tracking:
+        >>> from src.data_loading.ibtracs import _point_in_bbox
         >>> _point_in_bbox(0.0, 0.0, [0.5, -0.5, -0.5, 0.5])
             True
         >>> _point_in_bbox(1.0, 1.0, [0.5, -0.5, -0.5, 0.5])
