@@ -13,7 +13,7 @@ from src.plot.map import map_axes
 
 def plot_storm(
     ax: matplotlib.axes.Axes,
-    ds: xr.Dataset,
+    ibtracs_ds: xr.Dataset,
     var: str = "storm_speed",
     storm_num: int = 0,
     cmap="viridis",
@@ -23,22 +23,22 @@ def plot_storm(
     Plot storm.
 
     Args:
-        ds (xr.Dataset): IBTRACS dataset.
+        ibtracs_ds (xr.Dataset): IBTRACS dataset.
         var (str, optional): Variable to plot. Defaults to "storm_speed".
         storm_num (int, optional): Which storm to plot. Defaults to 0.
         cmap (str, optional): Which cmap to use. Defaults to "viridis".
     """
     ax.plot(
-        ds[var].isel(storm=storm_num)["lon"].values,
-        ds[var].isel(storm=storm_num)["lat"].values,
+        ibtracs_ds[var].isel(storm=storm_num)["lon"].values,
+        ibtracs_ds[var].isel(storm=storm_num)["lat"].values,
         color="black",
         linewidth=0.1,
         alpha=0.5,
     )
     ax.scatter(
-        ds[var].isel(storm=storm_num)["lon"].values,
-        ds[var].isel(storm=storm_num)["lat"].values,
-        c=ds[var].isel(storm=storm_num).values,
+        ibtracs_ds[var].isel(storm=storm_num)["lon"].values,
+        ibtracs_ds[var].isel(storm=storm_num)["lat"].values,
+        c=ibtracs_ds[var].isel(storm=storm_num).values,
         marker=".",
         s=scatter_size,
         cmap=cmap,
@@ -46,45 +46,48 @@ def plot_storm(
 
 
 @timeit
-def plot_all_storms(
-    ds: xr.Dataset, var="storm_speed", cmap="viridis", scatter_size: float = 1.6
+def plot_multiple_storms(
+    ibtracs_ds: xr.Dataset, var="storm_speed", cmap="viridis", scatter_size: float = 1.6
 ) -> None:
     """
     Plot all the storms in an IBTRACS dataset.
 
     Args:
-        ds (xr.Dataset): IBTRACS dataset.
+        ibtracs_ds (xr.Dataset): IBTRACS dataset.
         var (str, optional): Variable to plot. Defaults to "storm_speed".
         cmap (str, optional): Colormap. Defaults to "viridis".
     """
     ax = map_axes()
-    for num in range(0, ds.storm.shape[0]):
-        plot_storm(ds, var=var, storm_num=num, cmap=cmap, scatter_size=scatter_size)
+    print(ibtracs_ds)
+    for num in range(0, ibtracs_ds.storm.shape[0]):
+        plot_storm(
+            ax, ibtracs_ds, var=var, storm_num=num, cmap=cmap, scatter_size=scatter_size
+        )
 
-    plt.ylabel(r"Latitude [$^{\circ}$N]")
-    plt.xlabel(r"Longitude [$^{\circ}$E]")
-    plt.colorbar(label=var + " [" + ds[var].attrs["units"] + "]")
+    ax.set_ylabel(r"Latitude [$^{\circ}$N]")
+    ax.set_xlabel(r"Longitude [$^{\circ}$E]")
+    ax.colorbar(label=var + " [" + ibtracs_ds[var].attrs["units"] + "]")
 
 
 @timeit
-def plot_na_tcs(var="storm_speed") -> None:
+def plot_na_tcs(var="storm_speed", scatter_size: float = 1.6) -> None:
     """
     Plot NA Tropical Cyclones.
     """
     # plot_defaults()
-    plot_all_storms(na_tcs(), var=var)
+    plot_multiple_storms(na_tcs(), var=var, scatter_size=scatter_size)
     plt.savefig(os.path.join(FIGURE_PATH, "na_tc_speed.png"))
     if not in_notebook:
         plt.clf()
 
 
 @timeit
-def plot_gom_tcs(var="storm_speed") -> None:
+def plot_gom_tcs(var="storm_speed", scatter_size: float = 1.6) -> None:
     """
     Plot GOM Tropical Cyclones.
     """
     # plot_defaults()
-    plot_all_storms(gom_tcs(), var=var)
+    plot_multiple_storms(gom_tcs(), var=var, scatter_size=scatter_size)
     plt.savefig(os.path.join(FIGURE_PATH, "gom_tc_speed.png"))
     if not in_notebook:
         plt.clf()

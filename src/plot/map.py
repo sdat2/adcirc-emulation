@@ -1,6 +1,7 @@
 """Function to plot maps using cartopy."""
 import matplotlib
 import matplotlib.pyplot as plt
+
 try:
     import cartopy
     import cartopy.crs as ccrs

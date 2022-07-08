@@ -1,7 +1,14 @@
 from setuptools import find_packages, setup
 
 
-REQUIRED = ["typeguard", "pylint", "sithom", "cdsapi", "xarray", "uncertainties",]
+REQUIRED = [
+    "typeguard",
+    "pylint",
+    "sithom",
+    "cdsapi",
+    "xarray",
+    "uncertainties",
+]
 
 setup(
     name="src",
