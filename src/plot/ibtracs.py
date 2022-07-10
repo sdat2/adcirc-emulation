@@ -47,7 +47,7 @@ def plot_storm(
 
 @timeit
 def plot_multiple_storms(
-    ibtracs_ds: xr.Dataset, var="storm_speed", cmap="viridis", scatter_size: float = 1.6
+    ibtracs_ds: xr.Dataset, ax: matplotlib.axes.Axes=None, var="storm_speed", cmap="viridis", scatter_size: float = 1.6,
 ) -> None:
     """
     Plot all the storms in an IBTRACS dataset.
@@ -66,7 +66,7 @@ def plot_multiple_storms(
 
     ax.set_ylabel(r"Latitude [$^{\circ}$N]")
     ax.set_xlabel(r"Longitude [$^{\circ}$E]")
-    ax.colorbar(label=var + " [" + ibtracs_ds[var].attrs["units"] + "]")
+    # ax.colorbar(label=var + " [" + ibtracs_ds[var].attrs["units"] + "]")
 
 
 @timeit
