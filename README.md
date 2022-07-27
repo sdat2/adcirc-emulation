@@ -7,9 +7,17 @@
 ## Requirements
 
 - Python 3.8+
+- `sithom`
 
 ## Getting started
 
+Clone this repository locally.
+
+Then pip install locally to the python environment you want to use.
+
+```bash
+pip install -e .
+```
 
 ## Project Organization
 
