@@ -95,7 +95,15 @@ def bbox_from_point(point: Point, buffer: float = 3) -> BoundingBox:
 
     Returns:
         BoundingBox: A bounding box like [-91.0715, 28.9511, -89.0715, 30.9511].
+
+    Example::
+        >>> from src.place import bbox_from_point, Point
+        >>> point = Point(20, 30)
+        >>> bbox = bbox_from_point(point, 2)
+        >>> bbox.cartopy()
+        [18, 22, 28, 32]
+
     """
     return BoundingBox(
-        [point.lon - buffer, point + buffer], [point.lat - buffer, point.lat + buffer]
+        [point.lon - buffer, point.lon + buffer], [point.lat - buffer, point.lat + buffer]
     )
