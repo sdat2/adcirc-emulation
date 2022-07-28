@@ -25,8 +25,9 @@ def filter_by_labels(
     ds: xr.Dataset,
     filter: List[Tuple[str, List[str]]] = [
         ("basin", [b"NA"]),
+        ("subbasin", [b"GM"])
         ("nature", [b"TS"]),
-        # ("usa_record", [1, 2, 3, 4, 5])
+        ("usa_record", [b"L"])
     ],
 ) -> xr.Dataset:
     """
