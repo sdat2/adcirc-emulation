@@ -7,6 +7,7 @@ REQUIRED = [
     "sithom",
     "cdsapi",
     "xarray",
+    "netCDF4",
     "uncertainties",
 ]
 
