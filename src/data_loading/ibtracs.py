@@ -20,7 +20,7 @@ def _intersection(lst1: list, lst2: list) -> list:
     return list(set(lst1).intersection(set(lst2)))
 
 
-@timeit
+# @timeit
 def filter_by_labels(
     ds: xr.Dataset,
     filter: List[Tuple[str, List[str]]] = [
@@ -38,6 +38,14 @@ def filter_by_labels(
 
     Returns:
         xr.Dataset: Filtered dataset.
+
+    Example of using it to filter for North Atlantic TCs::
+        >>> import xarray as xr
+        >>> from src.constants import IBTRACS_NC
+        >>> from src.data_loading.ibtracs import filter_by_labels
+        >>> ibts_ds = xr.open_dataset(IBTRACS_NC)
+        >>> natcs_ds = filter_by_labels(ibts_ds, filter=[("basin", [b"NA"]), ("nature", [b"SS", b"TS"])])
+        >>> natcs_ds = filter_by_labels(ibts_ds, filter=[("basin", [b"NA"]), ("nature", [b"TS",]), ("usa_record", [b"L"])])
     """
     storm_list = None
     for filter_part in filter:
@@ -117,6 +125,16 @@ def _point_in_bbox(lon: float, lat: float, bbox: List[float]) -> bool:
 
 @timeit
 def filter_by_bbox(ds: xr.Dataset, bbox: Optional[List[float]] = None) -> xr.Dataset:
+    """
+    Filter ibtracs dataset by bbox (ECMWF CDS style).
+
+    Args:
+        ds (xr.Dataset): _description_
+        bbox (Optional[List[float]], optional): ECMWF style bbox. Defaults to None.
+
+    Returns:
+        xr.Dataset: xarray dataset.
+    """
     if bbox is not None:
         storm_list = []
         print(bbox)
