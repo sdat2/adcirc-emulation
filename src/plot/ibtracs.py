@@ -48,7 +48,11 @@ def plot_storm(
 
 @timeit
 def plot_multiple_storms(
-    ibtracs_ds: xr.Dataset, ax: matplotlib.axes.Axes=None, var="storm_speed", cmap="viridis", scatter_size: float = 1.6,
+    ibtracs_ds: xr.Dataset,
+    ax: matplotlib.axes.Axes = None,
+    var="storm_speed",
+    cmap="viridis",
+    scatter_size: float = 1.6,
 ) -> None:
     """
     Plot all the storms in an IBTRACS dataset.
@@ -98,28 +102,45 @@ def polar_hist(input: np.ndarray) -> None:
     """
     Plot polar histogram.
 
+    Will only work for single plot,
+    as uses plt.hist to create histogram bins.
+
     Args:
         input (np.ndarray): Input array [Degrees].
     """
     output = plt.hist(input)
     points = output[0]
-    rads = output[1] /360 * 2 * np.pi
+    rads = output[1] / 360 * 2 * np.pi
     plt.clf()
     ax = plt.subplot(projection="polar")
-    ax.bar(rads[1:],
+    ax.bar(
+        rads[1:],
         points,
-        width=2*np.pi / len(points),
+        width=2 * np.pi / len(points),
         bottom=0.0,
-        alpha=0.5)
+        alpha=0.5,
+        edgecolor="black",
+    )
     ax.set_theta_zero_location("N")
     ax.set_theta_direction(-1)
-    plt.show()
+    # plt.show()
+
+
+def plot_gom_tc_angles() -> None:
+    """
+    Plot gom tc angles.
+    """
+    polar_hist(gom_tcs().storm_dir.values.ravel())
+    plt.savefig(os.path.join(FIGURE_PATH, "gom_tc_angles.png"))
+    if not in_notebook:
+        plt.clf()
 
 
 if __name__ == "__main__":
     # python src/plot/ibtracs.py
     plot_defaults()
     plot_na_tcs()
+    plot_gom_tc_angles()
     plot_gom_tcs()
     print(GOM_BBOX)
     print(NO_BBOX)

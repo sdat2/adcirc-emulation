@@ -105,5 +105,6 @@ def bbox_from_point(point: Point, buffer: float = 3) -> BoundingBox:
 
     """
     return BoundingBox(
-        [point.lon - buffer, point.lon + buffer], [point.lat - buffer, point.lat + buffer]
+        [point.lon - buffer, point.lon + buffer],
+        [point.lat - buffer, point.lat + buffer],
     )
