@@ -45,6 +45,7 @@ def filter_by_labels(
         >>> from src.data_loading.ibtracs import filter_by_labels
         >>> ibts_ds = xr.open_dataset(IBTRACS_NC)
         >>> natcs_ds = filter_by_labels(ibts_ds, filter=[("basin", [b"NA"]), ("nature", [b"SS", b"TS"])])
+        >>> # landfalling North Atlantic tropical cyclones
         >>> natcs_ds = filter_by_labels(ibts_ds, filter=[("basin", [b"NA"]), ("nature", [b"TS",]), ("usa_record", [b"L"])])
     """
     storm_list = None
