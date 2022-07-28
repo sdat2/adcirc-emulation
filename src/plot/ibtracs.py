@@ -1,5 +1,6 @@
 """IBTRACS plotting."""
 import os
+import numpy as np
 import matplotlib.axes
 import matplotlib.pyplot as plt
 import xarray as xr
@@ -91,6 +92,28 @@ def plot_gom_tcs(var="storm_speed", scatter_size: float = 1.6) -> None:
     plt.savefig(os.path.join(FIGURE_PATH, "gom_tc_speed.png"))
     if not in_notebook:
         plt.clf()
+
+
+def polar_hist(input: np.ndarray) -> None:
+    """
+    Plot polar histogram.
+
+    Args:
+        input (np.ndarray): Input array [Degrees].
+    """
+    output = plt.hist(input)
+    points = output[0]
+    rads = output[1] /360 * 2 * np.pi
+    plt.clf()
+    ax = plt.subplot(projection="polar")
+    ax.bar(rads[1:],
+        points,
+        width=2*np.pi / len(points),
+        bottom=0.0,
+        alpha=0.5)
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction(-1)
+    plt.show()
 
 
 if __name__ == "__main__":
