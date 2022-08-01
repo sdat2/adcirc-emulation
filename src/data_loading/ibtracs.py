@@ -25,7 +25,7 @@ def filter_by_labels(
     ds: xr.Dataset,
     filter: List[Tuple[str, List[str]]] = [
         ("basin", [b"NA"]),
-        ("subbasin", [b"GM"])
+        ("subbasin", [b"GM"]),
         ("nature", [b"TS"]),
         ("usa_record", [b"L"])
     ],
@@ -49,6 +49,7 @@ def filter_by_labels(
         >>> natcs_ds = filter_by_labels(ibts_ds, filter=[("basin", [b"NA"]), ("nature", [b"SS", b"TS"])])
         >>> # landfalling North Atlantic tropical cyclones
         >>> natcs_ds = filter_by_labels(ibts_ds, filter=[("basin", [b"NA"]), ("nature", [b"TS",]), ("usa_record", [b"L"])])
+        >>> katrina_ds = filter_by_labels(ibts_ds, filter=[("name", [b"Katrina"])])
     """
     storm_list = None
     for filter_part in filter:
@@ -175,4 +176,4 @@ def gom_tcs() -> xr.Dataset:
 if __name__ == "__main__":
     # python src/data_loading/ibtracs.py
     print(na_tcs())
-    print(gom_tcs())
+    # print(gom_tcs())
