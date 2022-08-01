@@ -46,9 +46,8 @@ def filter_by_labels(
         >>> from src.constants import IBTRACS_NC
         >>> from src.data_loading.ibtracs import filter_by_labels
         >>> ibts_ds = xr.open_dataset(IBTRACS_NC)
+        >>> diff_ds = filter_by_labels(ibts_ds)
         >>> natcs_ds = filter_by_labels(ibts_ds, filter=[("basin", [b"NA"]), ("nature", [b"SS", b"TS"])])
-        >>> # landfalling North Atlantic tropical cyclones
-        >>> katrina_ds = filter_by_labels(ibts_ds, filter=[("name", [b"Katrina"])])
     """
     storm_list = None
     for filter_part in filter:
