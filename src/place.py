@@ -28,6 +28,7 @@ class BoundingBox:
         Args:
             lon (List[float]): Degrees East.
             lat (List[float]): Degrees North.
+            desc (str): Description of boundary box for debugging. Defaults to "None".
         """
         assert len(lon) == 2
         assert len(lat) == 2
@@ -70,6 +71,7 @@ class BoundingBox:
         ax.set_ylim(self.lat)
 
 
+@typechecked
 class Point:
     def __init__(self, lon: float, lat: float) -> None:
         """
