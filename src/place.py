@@ -82,29 +82,28 @@ class Point:
         self.lon = lon
         self.lat = lat
 
+    def bbox(self, buffer: float = 3) -> BoundingBox:
+        """
+        Get bbox padding a central location.
 
-def bbox_from_point(point: Point, buffer: float = 3) -> BoundingBox:
-    """
-    Get bbox padding a central location.
+        Size of the square is 4 * buffer**2.
 
-    Size of the square is 4 * buffer**2.
+        Args:
+            loc (Point): Defaults to NEW_ORLEANS.
+            buffer (float, optional): How many degrees to go out from loc. Defaults to 1.
 
-    Args:
-        loc (Point): Defaults to NEW_ORLEANS.
-        buffer (float, optional): How many degrees to go out from loc. Defaults to 1.
+        Returns:
+            BoundingBox: A bounding box like [-91.0715, 28.9511, -89.0715, 30.9511].
 
-    Returns:
-        BoundingBox: A bounding box like [-91.0715, 28.9511, -89.0715, 30.9511].
+        Example::
+            >>> from src.place import Point
+            >>> point = Point(20, 30)
+            >>> bbox = point.bbox(2)
+            >>> bbox.cartopy()
+            [18, 22, 28, 32]
 
-    Example::
-        >>> from src.place import bbox_from_point, Point
-        >>> point = Point(20, 30)
-        >>> bbox = bbox_from_point(point, 2)
-        >>> bbox.cartopy()
-        [18, 22, 28, 32]
-
-    """
-    return BoundingBox(
-        [point.lon - buffer, point.lon + buffer],
-        [point.lat - buffer, point.lat + buffer],
-    )
+        """
+        return BoundingBox(
+            [self.lon - buffer, self.lon + buffer],
+            [self.lat - buffer, self.lat + buffer],
+        )

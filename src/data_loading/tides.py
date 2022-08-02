@@ -3,7 +3,6 @@ from typing import List  # import pandas as pd
 import xarray as xr
 from dateutil import parser
 from src.constants import NEW_ORLEANS, DEFAULT_GAUGES, KATRINA_TIDE_NC
-from src.place import bbox_from_point
 
 try:
     from noaa_coops.noaa_coops import stationid_from_bbox, Station
@@ -111,4 +110,4 @@ if __name__ == "__main__":
     #     print(product["name"])
     # python src/data_loading/tides.py
     # save_katrina_nc()
-    save_katrina_nc(filter_by_age(stationid_from_bbox(bbox_from_point(NEW_ORLEANS))))
+    save_katrina_nc(filter_by_age(stationid_from_bbox(NEW_ORLEANS.bbox())))
