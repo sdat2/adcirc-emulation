@@ -27,7 +27,7 @@ def filter_by_labels(
         ("basin", [b"NA"]),
         ("subbasin", [b"GM"]),
         ("nature", [b"TS"]),
-        ("usa_record", [b"L"])
+        ("usa_record", [b"L"]),
     ],
 ) -> xr.Dataset:
     """
