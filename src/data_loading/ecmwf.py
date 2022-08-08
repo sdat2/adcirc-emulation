@@ -5,7 +5,7 @@ import cdsapi
 from src.constants import GOM_BBOX, KATRINA_ERA5_NC
 
 
-def month_day_lists(
+def year_month_day_lists(
     startdate: np.datetime64, enddate: np.datetime64
 ) -> List[List[str]]:
     """
@@ -18,18 +18,20 @@ def month_day_lists(
         enddate (np.datetime64): End date.
 
     Returns:
-        List[List[str]]: [[[Month], [Day1, Day2, ...]], [[Month2], ...]]
+        List[List[str]]: [[Year, Month, [Day1, Day2, ...]], [[Month2], ...]]
 
     Examples of use::
-        >>> month_day_lists("2022-08-20", "2021-09-05")
-            [[['08'], ['20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']]]
+        >>> from src.data_loading.ecmwf import year_month_day_lists
+        >>> year_month_day_lists("2022-08-20", "2021-08-31")
+            [['2005', '08', ['20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']]]
 
     #>>> month_day_lists("2021-08-29", "2021-09-05")
     #    [[["08"], ["29", "30", "31"]], [["09"], ["1", "2", "3", "4", "5"]]]
     """
     return [
         [
-            ["08"],
+            "2005",
+            "08",
             ["20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31"],
         ]
     ]
