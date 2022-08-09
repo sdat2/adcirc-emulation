@@ -59,11 +59,11 @@ def date_to_str(date: any) -> str:
     return str(date.year) + "-" + month_str + "-" + day_str
 
 
-def end_of_year(year) -> str:
+def end_of_year(year: int) -> str:
     return str(year) + "-" + str(12) + "-" + str(31)
 
 
-def start_of_year(year) -> str:
+def start_of_year(year: int) -> str:
     return str(year) + "-" + "01" + "-" + "01"
 
 
@@ -147,7 +147,7 @@ def year_month_day_lists(
     return final_list
 
 
-def katrina_netcdf(vars=ECMWF_AIR_VAR, file_name: str =KATRINA_ERA5_NC) -> None:
+def katrina_netcdf(vars=ECMWF_AIR_VAR, file_name: str = KATRINA_ERA5_NC) -> None:
     """
     ERA5 longer entry.
     """
@@ -188,14 +188,14 @@ def monthly_avgs(vars=ECMWF_AIR_VAR + ECMWF_WATER_VAR) -> None:
             "reanalysis-era5-single-levels-monthly-means",
             {
                 "format": "netcdf",
-                "year": [str(x) for x in range(1959, 2023)],
+                "year": [str(x) for x in range(1959, 2021)],
                 "product_type": "monthly_averaged_reanalysis",
                 "variable": [var],
                 "time": "00:00",
                 "month": MONTHS,
                 "area": GOM_BBOX.ecmwf(),
             },
-            var + ".nc",
+            os.path.join(DATA_PATH, var + ".nc"),
         )
 
 
@@ -204,3 +204,4 @@ if __name__ == "__main__":
     # print(year_month_day_lists("2003-08-11", "2006-01-02"))
     # katrina_netcdf(vars=ECMWF_AIR_VAR, file_name=KATRINA_ERA5_NC)
     katrina_netcdf(vars=ECMWF_WATER_VAR, file_name=KATRINA_WATER_ERA5_NC)
+    # monthly_avgs()
