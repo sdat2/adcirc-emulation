@@ -3,9 +3,35 @@ from typing import List, Union
 from datetime import datetime, date, timedelta
 import numpy as np
 import cdsapi
-from src.constants import GOM_BBOX, KATRINA_ERA5_NC
+from src.constants import GOM_BBOX, KATRINA_ERA5_NC, ECMWF_AIR_VAR, ECWMF_WATER_VAR
 
 DATEFORMAT = "%Y-%m-%d"
+HOURS = [
+    "00:00",
+    "01:00",
+    "02:00",
+    "03:00",
+    "04:00",
+    "05:00",
+    "06:00",
+    "07:00",
+    "08:00",
+    "09:00",
+    "10:00",
+    "11:00",
+    "12:00",
+    "13:00",
+    "14:00",
+    "15:00",
+    "16:00",
+    "17:00",
+    "18:00",
+    "19:00",
+    "20:00",
+    "21:00",
+    "22:00",
+    "23:00",
+]
 
 
 def str_to_date(strdate: Union[str, any], dateformat: str = DATEFORMAT) -> any:
@@ -135,28 +161,12 @@ def year_month_day_lists(
     return final_list
 
 
-def katrina_era5() -> None:
+def katrina_era5(var=ECMWF_AIR_VAR + ECWMF_WATER_VAR) -> None:
     """
     Get Katrina ERA5.
 
     """
 
-    air_var = [
-        "10m_u_component_of_wind",
-        "10m_v_component_of_wind",
-        "2m_dewpoint_temperature",
-        "2m_temperature",
-        "mean_sea_level_pressure",
-        "surface_pressure",
-        "total_precipitation",
-    ]
-
-    water_var = [
-        "mean_wave_direction",
-        "mean_wave_period",
-        "sea_surface_temperature",
-        "significant_height_of_combined_wind_waves_and_swell",
-    ]
     date_list = year_month_day_lists("2005-08-20", "2005-08-31")
 
     client = cdsapi.Client()
@@ -165,65 +175,23 @@ def katrina_era5() -> None:
         {
             "product_type": "reanalysis",
             "format": "netcdf",
-            "variable": air_var + water_var,
+            "variable": var,
             "year": date_list[0][0],
             "month": date_list[0][1],
             "day": date_list[0][2],
-            "time": [
-                "00:00",
-                "01:00",
-                "02:00",
-                "03:00",
-                "04:00",
-                "05:00",
-                "06:00",
-                "07:00",
-                "08:00",
-                "09:00",
-                "10:00",
-                "11:00",
-                "12:00",
-                "13:00",
-                "14:00",
-                "15:00",
-                "16:00",
-                "17:00",
-                "18:00",
-                "19:00",
-                "20:00",
-                "21:00",
-                "22:00",
-                "23:00",
-            ],
+            "time": HOURS,
             "area": GOM_BBOX.ecmwf(),
         },
         KATRINA_ERA5_NC,
     )
 
 
-def monthly_avgs() -> None:
+def monthly_avgs(var=ECMWF_AIR_VAR + ECWMF_WATER_VAR) -> None:
     """
     Make all the monthly average netctdfs for rthe full time period.
     """
-    air_var = [
-        "10m_u_component_of_wind",
-        "10m_v_component_of_wind",
-        "2m_dewpoint_temperature",
-        "2m_temperature",
-        "mean_sea_level_pressure",
-        "surface_pressure",
-        "total_precipitation",
-    ]
-
-    water_var = [
-        "mean_wave_direction",
-        "mean_wave_period",
-        "sea_surface_temperature",
-        "significant_height_of_combined_wind_waves_and_swell",
-    ]
-
     client = cdsapi.Client()
-    for var in air_var + water_var:
+    for var in var:
         client.retrieve(
             "reanalysis-era5-single-levels-monthly-means",
             {

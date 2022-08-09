@@ -35,3 +35,20 @@ GOM_BBOX = BoundingBox([-100, -80], [15, 35])
 NO_BBOX = BoundingBox([-92, -86.5], [28.5, 30.8])  # zoomed in around New orleans
 # Significant places
 NEW_ORLEANS = Point(-90.0715, 29.9511)  # lon , lats
+
+ECMWF_AIR_VAR = [
+    "10m_u_component_of_wind",
+    "10m_v_component_of_wind",
+    "2m_dewpoint_temperature",
+    "2m_temperature",
+    "mean_sea_level_pressure",
+    "surface_pressure",
+    "total_precipitation",
+]
+
+ECMWF_WATER_VAR = [
+    "mean_wave_direction",
+    "mean_wave_period",
+    "sea_surface_temperature",
+    "significant_height_of_combined_wind_waves_and_swell",
+]
