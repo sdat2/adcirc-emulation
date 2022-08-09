@@ -222,7 +222,7 @@ def era5_longer():
                 "time": HOURS,
                 "area": GOM_BBOX.ecmwf(),
             },
-            file_name_list[i]
+            file_name_list[i],
         )
     xr.open_mfdataset(file_name_list).to_netcdf(KATRINA_ERA5_NC)
 

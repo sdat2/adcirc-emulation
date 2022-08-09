@@ -10,6 +10,7 @@ try:
     import cartopy.crs as ccrs
 except ImportError:
     print("no cartopy available")
+
 from sithom.time import timeit
 from sithom.plot import plot_defaults, label_subplots
 from src.preprocessing.sel import mid_katrina

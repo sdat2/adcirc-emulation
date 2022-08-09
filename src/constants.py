@@ -1,5 +1,6 @@
 # Place all your constants here
 import os
+from typing import List
 from src.place import BoundingBox, Point
 
 # Note: constants should be UPPER_CASE
@@ -25,7 +26,7 @@ DEFAULT_GAUGES = [
 KATRINA_TIDE_NC = os.path.join(DATA_PATH, "katrina_tides.nc")
 KATRINA_ERA5_NC = os.path.join(DATA_PATH, "katrina_era5.nc")
 IBTRACS_NC = os.path.join(DATA_PATH, "IBTrACS.ALL.v04r00.nc")
-MID_KATRINA_TIME = "2005-08-29T10:00:00"
+MID_KATRINA_TIME: str = "2005-08-29T10:00:00"
 
 # regional bounding boxes for ERA5 download.
 # Gulf of Mexico
@@ -36,7 +37,7 @@ NO_BBOX = BoundingBox([-92, -86.5], [28.5, 30.8])  # zoomed in around New orlean
 # Significant places
 NEW_ORLEANS = Point(-90.0715, 29.9511)  # lon , lats
 
-ECMWF_AIR_VAR = [
+ECMWF_AIR_VAR: List[str] = [
     "10m_u_component_of_wind",
     "10m_v_component_of_wind",
     "2m_dewpoint_temperature",
@@ -46,7 +47,7 @@ ECMWF_AIR_VAR = [
     "total_precipitation",
 ]
 
-ECMWF_WATER_VAR = [
+ECMWF_WATER_VAR: List[str] = [
     "mean_wave_direction",
     "mean_wave_period",
     "sea_surface_temperature",
