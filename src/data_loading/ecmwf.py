@@ -43,6 +43,15 @@ def str_to_date(strdate: Union[str, any], dateformat: str = DATEFORMAT) -> any:
 
 
 def two_char_int(int_input: int) -> str:
+    """
+    Two char int.
+
+    Args:
+        int_input (int): input integer.
+
+    Returns:
+        str: Two char int.
+    """
     ret_str = str(int_input)
     if len(ret_str) == 1:
         ret_str = "0" + ret_str
@@ -67,7 +76,7 @@ def start_of_year(year: int) -> str:
     return str(year) + "-" + "01" + "-" + "01"
 
 
-def end_of_month(date_inp):
+def end_of_month(date_inp: any) -> str:
     if date_inp.month != 12:
         return date_to_str(
             date(int(date_inp.year), int(date_inp.month + 1), 1) - timedelta(days=1)
@@ -76,20 +85,20 @@ def end_of_month(date_inp):
         return end_of_year(date_inp.year)
 
 
-def start_of_month(date_inp):
+def start_of_month(date_inp: any) -> str:
     month_str = two_char_int(date_inp.month)
     return str(date_inp.year) + "-" + month_str + "-" + "01"
 
 
 def year_month_day_lists(
     startdate: Union[np.datetime64, str], enddate: Union[np.datetime64, str]
-) -> List[List[str]]:
+) -> List[Union[str, List[str]]]:
     """
     Month Day lists for running cds api.
 
     !Inclusive counting!
 
-    if str formatted as '%Y-%m-%d'
+    If str formatted as '%Y-%m-%d'
 
     Args:
         startdate (np.datetime64): Start date.
@@ -110,6 +119,10 @@ def year_month_day_lists(
             [['2004', '02', ['28', '29']], ['2004', '03', ['01', '02', '03']]]
         >>> year_month_day_lists("2005-02-28", "2005-03-02")
             [['2005', '02', ['28']], ['2005', '03', ['01', '02']]]
+        >>> year_month_day_lists("2000-02-27", "2000-03-02")
+            [['2000', '02', ['27', '28', '29']], ['2000', '03', ['01', '02']]]
+        >>> year_month_day_lists("1700-02-27", "1700-03-02")
+            [['1700', '02', ['27', '28']], ['1700', '03', ['01', '02']]]
     """
     startdate = str_to_date(startdate)
     enddate = str_to_date(enddate)

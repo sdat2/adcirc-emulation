@@ -8,6 +8,13 @@
 
 - Python 3.8+
 - `sithom`
+- `typeguard`
+- `cdsapi`
+- `xarray`
+- `netCDF4`
+- `dask`
+- `uncertainties`
+- `pylint`
 
 ## Getting started
 
