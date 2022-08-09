@@ -1,22 +1,23 @@
 """Get ERA5 by CDS API calls."""
 from typing import List, Union
-from  datetime import datetime
+from datetime import datetime, date, timedelta
 import numpy as np
 import cdsapi
 from src.constants import GOM_BBOX, KATRINA_ERA5_NC
-DATEFORMAT = '%Y-%m-%d'
+
+DATEFORMAT = "%Y-%m-%d"
 
 
-def str_to_date(strdate: str, dateformat: str = DATEFORMAT):
+def str_to_date(strdate: Union[str, any], dateformat: str = DATEFORMAT) -> any:
     """
     String to date.
 
     Args:
-        strdate (str): _description_
-        dateformat (str, optional): _description_. Defaults to DATEFORMAT.
+        strdate (Union[str, any]): The string date encoded by the dateformat.
+        dateformat (str, optional): The format of the date. Defaults to DATEFORMAT.
 
     Returns:
-        any: _description_
+        any: Datetime object.
 
     Example:
         >>> from src.data_loading.ecmwf import str_to_date
@@ -29,8 +30,43 @@ def str_to_date(strdate: str, dateformat: str = DATEFORMAT):
         25
     """
     if isinstance(strdate, str):
-        date = datetime.strptime(strdate, dateformat)
-    return date
+        strdate = datetime.strptime(strdate, dateformat)
+    return strdate
+
+
+def two_char_int(int) -> str:
+    ret_str = str(int)
+    if len(ret_str) == 1:
+        ret_str = "0" + ret_str
+    return ret_str
+
+
+def date_to_str(date: any) -> str:
+    month_str = two_char_int(date.month)
+    day_str = two_char_int(date.day)
+    return str(date.year) + "-" + month_str + "-" + day_str
+
+
+def end_of_year(year) -> str:
+    return str(year) + "-" + str(12) + "-" + str(31)
+
+
+def start_of_year(year) -> str:
+    return str(year) + "-" + "01" + "-" + "01"
+
+
+def end_of_month(date_inp):
+    if date_inp.month != 12:
+        return date_to_str(
+            date(int(date_inp.year), int(date_inp.month + 1), 1) - timedelta(days=1)
+        )
+    else:
+        return end_of_year(date_inp.year)
+
+
+def start_of_month(date_inp):
+    month_str = two_char_int(date_inp.month)
+    return str(date_inp.year) + "-" + month_str + "-" + "01"
 
 
 def year_month_day_lists(
@@ -38,8 +74,6 @@ def year_month_day_lists(
 ) -> List[List[str]]:
     """
     Month Day lists for running cds api.
-
-    Not yet implemented.
 
     if str formatted as '%Y-%m-%d'
 
@@ -52,22 +86,51 @@ def year_month_day_lists(
 
     Examples of use::
         >>> from src.data_loading.ecmwf import year_month_day_lists
-        >>> year_month_day_lists("2022-08-20", "2021-08-31")
+        >>> year_month_day_lists("2005-08-20", "2005-08-31")
             [['2005', '08', ['20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']]]
-
-    #>>> month_day_lists("2021-08-29", "2021-09-05")
-    #    [[["08"], ["29", "30", "31"]], [["09"], ["1", "2", "3", "4", "5"]]]
+        >>> year_month_day_lists("2021-08-29", "2021-09-05")
+            [['2021', '08', ['29', '30', '31']], ['2021', '09', ['01', '02', '03', '04', '05']]]
     """
     startdate = str_to_date(startdate)
     enddate = str_to_date(enddate)
 
-    return [
-        [
-            "2005",
-            "08",
-            ["20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31"],
+    assert startdate < enddate
+
+    if startdate.year < enddate.year:
+        start_part = year_month_day_lists(startdate, end_of_year(startdate.year))
+        end_part = year_month_day_lists(start_of_year(enddate.year), startdate)
+        if startdate.year < enddate.year - 1:
+            intermediate_piece = []
+            for year in range(startdate.year + 1, enddate.year):
+                intermediate_piece += year_month_day_lists(
+                    start_of_year(year), end_of_year(year)
+                )
+            final_list = start_part + intermediate_piece + end_part
+        else:
+            final_list = start_part + end_part
+    elif startdate.month < enddate.month:
+        start_part = year_month_day_lists(startdate, end_of_month(startdate))
+        end_part = year_month_day_lists(start_of_month(enddate), enddate)
+        if startdate.month < enddate.month - 1:
+            intermediate_piece = []
+            for month in range(startdate.month + 1, enddate.month):
+                date = datetime.date(startdate.year, month, 1)
+                intermediate_piece += year_month_day_lists(
+                    start_of_month(date), end_of_month(date)
+                )
+            final_list = start_part + intermediate_piece + end_part
+        else:
+            final_list = start_part + end_part
+    else:
+        final_list = [
+            [
+                str(startdate.year),
+                two_char_int(startdate.month),
+                [two_char_int(x) for x in range(startdate.day, enddate.day + 1)],
+            ]
         ]
-    ]
+
+    return final_list
 
 
 def katrina_era5() -> None:
