@@ -25,6 +25,7 @@ DEFAULT_GAUGES = [
 # Data files.
 KATRINA_TIDE_NC = os.path.join(DATA_PATH, "katrina_tides.nc")
 KATRINA_ERA5_NC = os.path.join(DATA_PATH, "katrina_era5.nc")
+KATRINA_WATER_ERA5_NC = os.path.join(DATA_PATH, "katrina_water_era5.nc")
 IBTRACS_NC = os.path.join(DATA_PATH, "IBTrACS.ALL.v04r00.nc")
 MID_KATRINA_TIME: str = "2005-08-29T10:00:00"
 
@@ -53,3 +54,5 @@ ECMWF_WATER_VAR: List[str] = [
     "sea_surface_temperature",
     "significant_height_of_combined_wind_waves_and_swell",
 ]
+
+DATEFORMAT = "%Y-%m-%d"

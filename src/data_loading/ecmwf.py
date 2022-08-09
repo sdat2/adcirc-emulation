@@ -1,52 +1,19 @@
 """Get ERA5 by CDS API calls."""
+import os
 from typing import List, Union
 from datetime import datetime, date, timedelta
 import numpy as np
 import xarray as xr
 import cdsapi
-from src.constants import GOM_BBOX, KATRINA_ERA5_NC, ECMWF_AIR_VAR, ECMWF_WATER_VAR
-
-DATEFORMAT = "%Y-%m-%d"
-HOURS = [
-    "00:00",
-    "01:00",
-    "02:00",
-    "03:00",
-    "04:00",
-    "05:00",
-    "06:00",
-    "07:00",
-    "08:00",
-    "09:00",
-    "10:00",
-    "11:00",
-    "12:00",
-    "13:00",
-    "14:00",
-    "15:00",
-    "16:00",
-    "17:00",
-    "18:00",
-    "19:00",
-    "20:00",
-    "21:00",
-    "22:00",
-    "23:00",
-]
-MONTHS = [
-    "01",
-    "02",
-    "03",
-    "04",
-    "05",
-    "06",
-    "07",
-    "08",
-    "09",
-    "10",
-    "11",
-    "12",
-]
+from src.constants import (
+    GOM_BBOX,
+    KATRINA_ERA5_NC,
+    ECMWF_AIR_VAR,
+    ECMWF_WATER_VAR,
+    DATA_PATH,
+    KATRINA_WATER_ERA5_NC,
+    DATEFORMAT,
+)
 
 
 def str_to_date(strdate: Union[str, any], dateformat: str = DATEFORMAT) -> any:
@@ -80,6 +47,10 @@ def two_char_int(int_input: int) -> str:
     if len(ret_str) == 1:
         ret_str = "0" + ret_str
     return ret_str
+
+
+HOURS = [two_char_int(x) + ":00" for x in range(0, 24)]
+MONTHS = [two_char_int(x) for x in range(1, 13)]
 
 
 def date_to_str(date: any) -> str:
@@ -176,39 +147,16 @@ def year_month_day_lists(
     return final_list
 
 
-def katrina_era5(vars: List[str] = ECMWF_AIR_VAR + ECMWF_WATER_VAR) -> None:
-    """
-    Get Katrina ERA5.
-
-    Args:
-        vars (optional, List[str]): Variables.
-    """
-    date_list = year_month_day_lists("2005-08-20", "2005-08-31")
-    client = cdsapi.Client()
-    client.retrieve(
-        "reanalysis-era5-single-levels",
-        {
-            "product_type": "reanalysis",
-            "format": "netcdf",
-            "variable": vars,
-            "year": date_list[0][0],
-            "month": date_list[0][1],
-            "day": date_list[0][2],
-            "time": HOURS,
-            "area": GOM_BBOX.ecmwf(),
-        },
-        KATRINA_ERA5_NC,
-    )
-
-
-def era5_longer():
+def katrina_netcdf(vars=ECMWF_AIR_VAR, file_name: str =KATRINA_ERA5_NC) -> None:
     """
     ERA5 longer entry.
     """
-    vars = ECMWF_AIR_VAR
     date_list = year_month_day_lists("2005-08-20", "2005-09-05")
     client = cdsapi.Client()
-    file_name_list = ["katrina-" + str(i) + ".nc" for i in range(len(date_list))]
+    file_name_list = [
+        os.path.join(DATA_PATH, "katrina-" + str(i) + ".nc")
+        for i in range(len(date_list))
+    ]
     for i in range(len(date_list)):
         client.retrieve(
             "reanalysis-era5-single-levels",
@@ -224,7 +172,7 @@ def era5_longer():
             },
             file_name_list[i],
         )
-    xr.open_mfdataset(file_name_list).to_netcdf(KATRINA_ERA5_NC)
+    xr.open_mfdataset(file_name_list).to_netcdf(file_name)
 
 
 def monthly_avgs(vars=ECMWF_AIR_VAR + ECMWF_WATER_VAR) -> None:
@@ -254,4 +202,5 @@ def monthly_avgs(vars=ECMWF_AIR_VAR + ECMWF_WATER_VAR) -> None:
 if __name__ == "__main__":
     # python src/data_loading/ecmwf.py
     # print(year_month_day_lists("2003-08-11", "2006-01-02"))
-    era5_longer()
+    # katrina_netcdf(vars=ECMWF_AIR_VAR, file_name=KATRINA_ERA5_NC)
+    katrina_netcdf(vars=ECMWF_WATER_VAR, file_name=KATRINA_WATER_ERA5_NC)
