@@ -32,6 +32,20 @@ HOURS = [
     "22:00",
     "23:00",
 ]
+MONTHS = [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
+]
 
 
 def str_to_date(strdate: Union[str, any], dateformat: str = DATEFORMAT) -> any:
@@ -265,20 +279,7 @@ def monthly_avgs(var=ECMWF_AIR_VAR + ECWMF_WATER_VAR) -> None:
                 "product_type": "monthly_averaged_reanalysis",
                 "variable": [var],
                 "time": "00:00",
-                "month": [
-                    "01",
-                    "02",
-                    "03",
-                    "04",
-                    "05",
-                    "06",
-                    "07",
-                    "08",
-                    "09",
-                    "10",
-                    "11",
-                    "12",
-                ],
+                "month": MONTHS,
                 "area": GOM_BBOX.ecmwf(),
             },
             var + ".nc",
