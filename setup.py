@@ -8,6 +8,7 @@ REQUIRED = [
     "cdsapi",
     "xarray",
     "netCDF4",
+    "dask",
     "uncertainties",
 ]
 
