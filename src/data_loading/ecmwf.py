@@ -2,8 +2,9 @@
 from typing import List, Union
 from datetime import datetime, date, timedelta
 import numpy as np
+import xarray as xr
 import cdsapi
-from src.constants import GOM_BBOX, KATRINA_ERA5_NC, ECMWF_AIR_VAR, ECWMF_WATER_VAR
+from src.constants import GOM_BBOX, KATRINA_ERA5_NC, ECMWF_AIR_VAR, ECMWF_WATER_VAR
 
 DATEFORMAT = "%Y-%m-%d"
 HOURS = [
@@ -175,21 +176,21 @@ def year_month_day_lists(
     return final_list
 
 
-def katrina_era5(var=ECMWF_AIR_VAR + ECWMF_WATER_VAR) -> None:
+def katrina_era5(vars: List[str] = ECMWF_AIR_VAR + ECMWF_WATER_VAR) -> None:
     """
     Get Katrina ERA5.
 
+    Args:
+        vars (optional, List[str]): Variables.
     """
-
     date_list = year_month_day_lists("2005-08-20", "2005-08-31")
-
     client = cdsapi.Client()
     client.retrieve(
         "reanalysis-era5-single-levels",
         {
             "product_type": "reanalysis",
             "format": "netcdf",
-            "variable": var,
+            "variable": vars,
             "year": date_list[0][0],
             "month": date_list[0][1],
             "day": date_list[0][2],
@@ -200,82 +201,46 @@ def katrina_era5(var=ECMWF_AIR_VAR + ECWMF_WATER_VAR) -> None:
     )
 
 
-def monthly_avgs(var=ECMWF_AIR_VAR + ECWMF_WATER_VAR) -> None:
+def era5_longer():
+    """
+    ERA5 longer entry.
+    """
+    vars = ECMWF_AIR_VAR
+    date_list = year_month_day_lists("2005-08-20", "2005-09-05")
+    client = cdsapi.Client()
+    file_name_list = ["katrina-" + str(i) + ".nc" for i in range(len(date_list))]
+    for i in range(len(date_list)):
+        client.retrieve(
+            "reanalysis-era5-single-levels",
+            {
+                "product_type": "reanalysis",
+                "format": "netcdf",
+                "variable": vars,
+                "year": date_list[i][0],
+                "month": date_list[i][1],
+                "day": date_list[i][2],
+                "time": HOURS,
+                "area": GOM_BBOX.ecmwf(),
+            },
+            file_name_list[i]
+        )
+    xr.open_mfdataset(file_name_list).to_netcdf(KATRINA_ERA5_NC)
+
+
+def monthly_avgs(vars=ECMWF_AIR_VAR + ECMWF_WATER_VAR) -> None:
     """
     Make all the monthly average netctdfs for rthe full time period.
+
+    Args:
+        vars (optional, List[str]): Variables.
     """
     client = cdsapi.Client()
-    for var in var:
+    for var in vars:
         client.retrieve(
             "reanalysis-era5-single-levels-monthly-means",
             {
                 "format": "netcdf",
-                "year": [
-                    "1959",
-                    "1960",
-                    "1961",
-                    "1962",
-                    "1963",
-                    "1964",
-                    "1965",
-                    "1966",
-                    "1967",
-                    "1968",
-                    "1969",
-                    "1970",
-                    "1971",
-                    "1972",
-                    "1973",
-                    "1974",
-                    "1975",
-                    "1976",
-                    "1977",
-                    "1978",
-                    "1979",
-                    "1980",
-                    "1981",
-                    "1982",
-                    "1983",
-                    "1984",
-                    "1985",
-                    "1986",
-                    "1987",
-                    "1988",
-                    "1989",
-                    "1990",
-                    "1991",
-                    "1992",
-                    "1993",
-                    "1994",
-                    "1995",
-                    "1996",
-                    "1997",
-                    "1998",
-                    "1999",
-                    "2000",
-                    "2001",
-                    "2002",
-                    "2003",
-                    "2004",
-                    "2005",
-                    "2006",
-                    "2007",
-                    "2008",
-                    "2009",
-                    "2010",
-                    "2011",
-                    "2012",
-                    "2013",
-                    "2014",
-                    "2015",
-                    "2016",
-                    "2017",
-                    "2018",
-                    "2019",
-                    "2020",
-                    "2021",
-                    "2022",
-                ],
+                "year": [str(x) for x in range(1959, 2023)],
                 "product_type": "monthly_averaged_reanalysis",
                 "variable": [var],
                 "time": "00:00",
@@ -288,4 +253,5 @@ def monthly_avgs(var=ECMWF_AIR_VAR + ECWMF_WATER_VAR) -> None:
 
 if __name__ == "__main__":
     # python src/data_loading/ecmwf.py
-    print(year_month_day_lists("2003-08-11", "2006-01-02"))
+    # print(year_month_day_lists("2003-08-11", "2006-01-02"))
+    era5_longer()
