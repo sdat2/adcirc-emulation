@@ -1,17 +1,47 @@
 """Get ERA5 by CDS API calls."""
-from typing import List
+from typing import List, Union
+from  datetime import datetime
 import numpy as np
 import cdsapi
 from src.constants import GOM_BBOX, KATRINA_ERA5_NC
+DATEFORMAT = '%Y-%m-%d'
+
+
+def str_to_date(strdate: str, dateformat: str = DATEFORMAT):
+    """
+    String to date.
+
+    Args:
+        strdate (str): _description_
+        dateformat (str, optional): _description_. Defaults to DATEFORMAT.
+
+    Returns:
+        any: _description_
+
+    Example:
+        >>> from src.data_loading.ecmwf import str_to_date
+        >>> date = str_to_date("2005-08-25")
+        >>> date.year
+        2005
+        >>> date.month
+        8
+        >>> date.day
+        25
+    """
+    if isinstance(strdate, str):
+        date = datetime.strptime(strdate, dateformat)
+    return date
 
 
 def year_month_day_lists(
-    startdate: np.datetime64, enddate: np.datetime64
+    startdate: Union[np.datetime64, str], enddate: Union[np.datetime64, str]
 ) -> List[List[str]]:
     """
     Month Day lists for running cds api.
 
     Not yet implemented.
+
+    if str formatted as '%Y-%m-%d'
 
     Args:
         startdate (np.datetime64): Start date.
@@ -28,6 +58,9 @@ def year_month_day_lists(
     #>>> month_day_lists("2021-08-29", "2021-09-05")
     #    [[["08"], ["29", "30", "31"]], [["09"], ["1", "2", "3", "4", "5"]]]
     """
+    startdate = str_to_date(startdate)
+    enddate = str_to_date(enddate)
+
     return [
         [
             "2005",
