@@ -34,8 +34,8 @@ def str_to_date(strdate: Union[str, any], dateformat: str = DATEFORMAT) -> any:
     return strdate
 
 
-def two_char_int(int) -> str:
-    ret_str = str(int)
+def two_char_int(int_input: int) -> str:
+    ret_str = str(int_input)
     if len(ret_str) == 1:
         ret_str = "0" + ret_str
     return ret_str
@@ -98,7 +98,7 @@ def year_month_day_lists(
 
     if startdate.year < enddate.year:
         start_part = year_month_day_lists(startdate, end_of_year(startdate.year))
-        end_part = year_month_day_lists(start_of_year(enddate.year), startdate)
+        end_part = year_month_day_lists(start_of_year(enddate.year), enddate)
         if startdate.year < enddate.year - 1:
             intermediate_piece = []
             for year in range(startdate.year + 1, enddate.year):
@@ -114,9 +114,9 @@ def year_month_day_lists(
         if startdate.month < enddate.month - 1:
             intermediate_piece = []
             for month in range(startdate.month + 1, enddate.month):
-                date = datetime.date(startdate.year, month, 1)
+                temp_date = date(startdate.year, month, 1)
                 intermediate_piece += year_month_day_lists(
-                    start_of_month(date), end_of_month(date)
+                    start_of_month(temp_date), end_of_month(temp_date)
                 )
             final_list = start_part + intermediate_piece + end_part
         else:
@@ -329,4 +329,4 @@ def monthly_avgs() -> None:
 
 if __name__ == "__main__":
     # python src/data_loading/ecmwf.py
-    katrina_era5()
+    print(year_month_day_lists("2003-08-11", "2006-01-02"))
