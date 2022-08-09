@@ -75,6 +75,8 @@ def year_month_day_lists(
     """
     Month Day lists for running cds api.
 
+    !Inclusive counting!
+
     if str formatted as '%Y-%m-%d'
 
     Args:
@@ -155,6 +157,7 @@ def katrina_era5() -> None:
         "sea_surface_temperature",
         "significant_height_of_combined_wind_waves_and_swell",
     ]
+    date_list = year_month_day_lists("2005-08-20", "2005-08-31")
 
     client = cdsapi.Client()
     client.retrieve(
@@ -163,22 +166,9 @@ def katrina_era5() -> None:
             "product_type": "reanalysis",
             "format": "netcdf",
             "variable": air_var + water_var,
-            "year": "2005",
-            "month": "08",
-            "day": [
-                "20",
-                "21",
-                "22",
-                "23",
-                "24",
-                "25",
-                "26",
-                "27",
-                "28",
-                "29",
-                "30",
-                "31",
-            ],
+            "year": date_list[0][0],
+            "month": date_list[0][1],
+            "day": date_list[0][2],
             "time": [
                 "00:00",
                 "01:00",
