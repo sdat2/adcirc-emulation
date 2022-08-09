@@ -104,11 +104,17 @@ def year_month_day_lists(
             [['2005', '08', ['20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']]]
         >>> year_month_day_lists("2021-08-29", "2021-09-05")
             [['2021', '08', ['29', '30', '31']], ['2021', '09', ['01', '02', '03', '04', '05']]]
+        >>> year_month_day_lists("2021-12-29", "2022-01-03")
+            [['2021', '12', ['29', '30', '31']], ['2022', '01', ['01', '02', '03']]]
+        >>> year_month_day_lists("2004-02-28", "2004-03-03")
+            [['2004', '02', ['28', '29']], ['2004', '03', ['01', '02', '03']]]
+        >>> year_month_day_lists("2005-02-28", "2005-03-02")
+            [['2005', '02', ['28']], ['2005', '03', ['01', '02']]]
     """
     startdate = str_to_date(startdate)
     enddate = str_to_date(enddate)
 
-    assert startdate < enddate
+    assert startdate <= enddate # end either the same day, or a later day.
 
     if startdate.year < enddate.year:
         start_part = year_month_day_lists(startdate, end_of_year(startdate.year))
@@ -180,7 +186,7 @@ def monthly_avgs(vars=ECMWF_AIR_VAR + ECMWF_WATER_VAR) -> None:
     Make all the monthly average netctdfs for rthe full time period.
 
     Args:
-        vars (optional, List[str]): Variables.
+        vars (optional, List[str]): Variables for ECMWF ERA5.
     """
     client = cdsapi.Client()
     for var in vars:

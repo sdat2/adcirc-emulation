@@ -12,6 +12,7 @@ DATA_PATH = os.path.join(PROJECT_PATH, "data")
 REPORT_PATH = os.path.join(PROJECT_PATH, "report")
 FIGURE_PATH = os.path.join(REPORT_PATH, "figures")
 
+# Default tidal gauges.
 DEFAULT_GAUGES = [
     "8729840",
     "8735180",
