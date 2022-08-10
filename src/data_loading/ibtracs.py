@@ -52,7 +52,6 @@ def filter_by_labels(
         >>> natcs_ds = filter_by_labels(ibts_ds, filter=[("basin", [b"NA"]), ("nature", [b"SS", b"TS"])])
     """
     storm_list = None
-    print()
     for filter_part in filter:
         # print(filter_part)
         storm_list_part = None
@@ -75,7 +74,6 @@ def filter_by_labels(
         else:
             storm_list = _intersection(storm_list_part, storm_list)
     # print(len(storm_list))
-    print(len(storm_list))
     return ds.sel(storm=storm_list)
 
 
