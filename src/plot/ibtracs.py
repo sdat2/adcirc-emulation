@@ -1,14 +1,17 @@
 """IBTRACS plotting."""
+from typing import Optional
 import os
 import numpy as np
 import matplotlib.axes
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import xarray as xr
 from sithom.misc import in_notebook
 from sithom.time import timeit
 from sithom.plot import plot_defaults
 from src.constants import FIGURE_PATH, GOM_BBOX, NO_BBOX
 from src.data_loading.ibtracs import na_tcs, gom_tcs
+from src.place import BoundingBox
 from src.plot.map import map_axes
 
 
@@ -17,9 +20,9 @@ def plot_storm(
     ibtracs_ds: xr.Dataset,
     var: str = "storm_speed",
     storm_num: int = 0,
-    cmap="viridis",
+    cmap: str ="viridis",
     scatter_size: float = 1.6,
-) -> None:
+) -> any:
     """
     Plot storm.
 
@@ -36,7 +39,7 @@ def plot_storm(
         linewidth=0.1,
         alpha=0.5,
     )
-    ax.scatter(
+    im = ax.scatter(
         ibtracs_ds[var].isel(storm=storm_num)["lon"].values,
         ibtracs_ds[var].isel(storm=storm_num)["lat"].values,
         c=ibtracs_ds[var].isel(storm=storm_num).values,
@@ -44,6 +47,7 @@ def plot_storm(
         s=scatter_size,
         cmap=cmap,
     )
+    return im
 
 
 @timeit
@@ -53,6 +57,7 @@ def plot_multiple_storms(
     var="storm_speed",
     cmap="viridis",
     scatter_size: float = 1.6,
+    bbox: Optional[BoundingBox] = None
 ) -> None:
     """
     Plot all the storms in an IBTRACS dataset.
@@ -61,14 +66,20 @@ def plot_multiple_storms(
         ibtracs_ds (xr.Dataset): IBTRACS dataset.
         var (str, optional): Variable to plot. Defaults to "storm_speed".
         cmap (str, optional): Colormap. Defaults to "viridis".
+        scatter_size (float, optional): Scatter size. Defaults to 1.6
+        bbox (Optional[BoundingBox], optional): `BoundingBox` for plot. Defaults to None.
     """
     if ax is None:
         ax = map_axes()
     for num in range(0, ibtracs_ds.storm.shape[0]):
-        plot_storm(
+        im = plot_storm(
             ax, ibtracs_ds, var=var, storm_num=num, cmap=cmap, scatter_size=scatter_size
         )
-
+    if bbox is not None:
+        bbox.ax_lim(ax)
+    #divider = make_axes_locatable(ax)
+    #cax = divider.append_axes('right', size='5%', pad=0.05)
+    #plt.colorbar(im, cax=cax)
     ax.set_ylabel(r"Latitude [$^{\circ}$N]")
     ax.set_xlabel(r"Longitude [$^{\circ}$E]")
     # ax.colorbar(label=var + " [" + ibtracs_ds[var].attrs["units"] + "]")
