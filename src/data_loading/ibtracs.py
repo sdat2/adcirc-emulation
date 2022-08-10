@@ -41,6 +41,8 @@ def filter_by_labels(
     Returns:
         xr.Dataset: Filtered dataset.
 
+    TODO: Relies to much on the shape of IBTRACS.
+
     Example of using it to filter for North Atlantic TCs::
         >>> import xarray as xr
         >>> from src.constants import IBTRACS_NC
@@ -50,13 +52,17 @@ def filter_by_labels(
         >>> natcs_ds = filter_by_labels(ibts_ds, filter=[("basin", [b"NA"]), ("nature", [b"SS", b"TS"])])
     """
     storm_list = None
+    print()
     for filter_part in filter:
         # print(filter_part)
         storm_list_part = None
         for value in filter_part[1]:
             truth_array = ds[filter_part[0]] == value
             # print(truth_array.values.shape)
-            compressed_array = np.any(truth_array, axis=1)
+            if len(truth_array.shape) != 1:
+                compressed_array = np.any(truth_array, axis=1)
+            else:
+                compressed_array = truth_array
             # print(compressed_array.shape)
             storm_list_temp = ds.storm.values[compressed_array]
             if storm_list_part is None:
@@ -69,6 +75,7 @@ def filter_by_labels(
         else:
             storm_list = _intersection(storm_list_part, storm_list)
     # print(len(storm_list))
+    print(len(storm_list))
     return ds.sel(storm=storm_list)
 
 
@@ -171,6 +178,16 @@ def gom_tcs() -> xr.Dataset:
     return filter_by_bbox(na_tcs(), bbox=GOM_BBOX.ecmwf())
 
 
+def katrina() -> xr.Dataset:
+    """
+    Get Katrina.
+
+    Returns:
+        xr.Dataset: KATRINA ENTRY
+    """
+    return filter_by_labels(na_tcs(), filter=[("name", [b"KATRINA"])])
+
+
 def no_tcs() -> xr.Dataset:
     """
     New Orleans Tropical Cyclones.
@@ -183,5 +200,6 @@ def no_tcs() -> xr.Dataset:
 
 if __name__ == "__main__":
     # python src/data_loading/ibtracs.py
-    print(na_tcs())
+    # print(na_tcs())
     # print(gom_tcs())
+    print(katrina())

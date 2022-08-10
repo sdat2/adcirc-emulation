@@ -6,6 +6,8 @@
 
 ## Requirements
 
+### Necessary
+
 - Python 3.8+
 - `sithom`
 - `typeguard`
@@ -14,7 +16,11 @@
 - `netCDF4`
 - `dask`
 - `uncertainties`
-- `pylint`
+
+### Optional
+
+- `noaa_coops`
+- `cartopy`
 
 ## Getting started
 
