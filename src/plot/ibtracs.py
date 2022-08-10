@@ -4,7 +4,6 @@ import os
 import numpy as np
 import matplotlib.axes
 import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import xarray as xr
 from sithom.misc import in_notebook
 from sithom.time import timeit
@@ -13,6 +12,7 @@ from src.constants import FIGURE_PATH, GOM_BBOX, NO_BBOX
 from src.data_loading.ibtracs import na_tcs, gom_tcs
 from src.place import BoundingBox
 from src.plot.map import map_axes
+from src.preprocessing.labels import sanitize
 
 
 def plot_storm(
@@ -82,7 +82,8 @@ def plot_multiple_storms(
     # plt.colorbar(im, cax=cax)
     ax.set_ylabel(r"Latitude [$^{\circ}$N]")
     ax.set_xlabel(r"Longitude [$^{\circ}$E]")
-    # ax.colorbar(label=var + " [" + ibtracs_ds[var].attrs["units"] + "]")
+    # cax = fig.add_axes([0.27, 0.8, 0.5, 0.05])
+    plt.gcf().colorbar(im, label=str(sanitize(var) + " [" + ibtracs_ds[var].attrs["units"] + "]"), fraction=0.046, pad=0.04)
 
 
 @timeit
