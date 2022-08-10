@@ -3,7 +3,7 @@ from typing import Optional, List, Tuple
 import numpy as np
 import xarray as xr
 from sithom.time import timeit
-from src.constants import IBTRACS_NC, GOM_BBOX
+from src.constants import IBTRACS_NC, GOM_BBOX, NO_BBOX
 
 
 def _union(lst1: list, lst2: list) -> list:
@@ -169,6 +169,16 @@ def gom_tcs() -> xr.Dataset:
         xr.Dataset: Filtered IBTrACS dataset
     """
     return filter_by_bbox(na_tcs(), bbox=GOM_BBOX.ecmwf())
+
+
+def no_tcs() -> xr.Dataset:
+    """
+    New Orleans Tropical Cyclones.
+
+    Returns:
+        xr.Dataset: xarray dataset.
+    """
+    return filter_by_bbox(na_tcs(), bbox=NO_BBOX.ecmwf())
 
 
 if __name__ == "__main__":

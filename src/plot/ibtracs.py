@@ -62,8 +62,8 @@ def plot_multiple_storms(
         var (str, optional): Variable to plot. Defaults to "storm_speed".
         cmap (str, optional): Colormap. Defaults to "viridis".
     """
-    ax = map_axes()
-    print(ibtracs_ds)
+    if ax is None:
+        ax = map_axes()
     for num in range(0, ibtracs_ds.storm.shape[0]):
         plot_storm(
             ax, ibtracs_ds, var=var, storm_num=num, cmap=cmap, scatter_size=scatter_size
