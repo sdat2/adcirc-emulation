@@ -54,8 +54,8 @@ def plot_storm(
 def plot_multiple_storms(
     ibtracs_ds: xr.Dataset,
     ax: matplotlib.axes.Axes = None,
-    var="storm_speed",
-    cmap="viridis",
+    var: str = "storm_speed",
+    cmap: str = "viridis",
     scatter_size: float = 1.6,
     bbox: Optional[BoundingBox] = None
 ) -> None:
@@ -66,7 +66,7 @@ def plot_multiple_storms(
         ibtracs_ds (xr.Dataset): IBTRACS dataset.
         var (str, optional): Variable to plot. Defaults to "storm_speed".
         cmap (str, optional): Colormap. Defaults to "viridis".
-        scatter_size (float, optional): Scatter size. Defaults to 1.6
+        scatter_size (float, optional): Scatter size. Defaults to 1.6.
         bbox (Optional[BoundingBox], optional): `BoundingBox` for plot. Defaults to None.
     """
     if ax is None:
@@ -77,9 +77,9 @@ def plot_multiple_storms(
         )
     if bbox is not None:
         bbox.ax_lim(ax)
-    #divider = make_axes_locatable(ax)
-    #cax = divider.append_axes('right', size='5%', pad=0.05)
-    #plt.colorbar(im, cax=cax)
+    # divider = make_axes_locatable(ax)
+    # cax = divider.append_axes('right', size='5%', pad=0.05)
+    # plt.colorbar(im, cax=cax)
     ax.set_ylabel(r"Latitude [$^{\circ}$N]")
     ax.set_xlabel(r"Longitude [$^{\circ}$E]")
     # ax.colorbar(label=var + " [" + ibtracs_ds[var].attrs["units"] + "]")
