@@ -1,5 +1,5 @@
 """IBTRACS plotting."""
-from typing import Optional
+from typing import Optional, Tuple
 import os
 import numpy as np
 import matplotlib.axes
@@ -9,7 +9,7 @@ import matplotlib.path as mpath
 import xarray as xr
 from sithom.misc import in_notebook
 from sithom.time import timeit
-from sithom.plot import plot_defaults
+from sithom.plot import plot_defaults, lim
 from src.constants import FIGURE_PATH, GOM_BBOX, NO_BBOX
 from src.data_loading.ibtracs import na_tcs, gom_tcs
 from src.place import BoundingBox
@@ -24,6 +24,8 @@ def plot_storm(
     storm_num: int = 0,
     cmap: str = "viridis",
     scatter_size: float = 1.6,
+    vmin: Optional[Tuple[float]] = None,
+    vmax: Optional[Tuple[float]] = None,
 ) -> any:
     """
     Plot storm.
@@ -33,6 +35,10 @@ def plot_storm(
         var (str, optional): Variable to plot. Defaults to "storm_speed".
         storm_num (int, optional): Which storm to plot. Defaults to 0.
         cmap (str, optional): Which cmap to use. Defaults to "viridis".
+        scatter_size (float, optional): Defaults to 1.6.
+        vmin (Optional[Tuple[float]], optional): Defaults to None.
+        vmax (Optional[Tuple[float]], optional): Defaults to None.
+
     """
     ax.plot(
         ibtracs_ds[var].isel(storm=storm_num)["lon"].values,
@@ -41,14 +47,26 @@ def plot_storm(
         linewidth=0.1,
         alpha=0.5,
     )
-    im = ax.scatter(
-        ibtracs_ds[var].isel(storm=storm_num)["lon"].values,
-        ibtracs_ds[var].isel(storm=storm_num)["lat"].values,
-        c=ibtracs_ds[var].isel(storm=storm_num).values,
-        marker=".",
-        s=scatter_size,
-        cmap=cmap,
-    )
+    if vmin is not None and vmax is not None:
+        im = ax.scatter(
+            ibtracs_ds[var].isel(storm=storm_num)["lon"].values,
+            ibtracs_ds[var].isel(storm=storm_num)["lat"].values,
+            c=ibtracs_ds[var].isel(storm=storm_num).values,
+            marker=".",
+            s=scatter_size,
+            cmap=cmap,
+            vmin=vmin,
+            vmax=vmax,
+        )
+    else:
+        im = ax.scatter(
+            ibtracs_ds[var].isel(storm=storm_num)["lon"].values,
+            ibtracs_ds[var].isel(storm=storm_num)["lat"].values,
+            c=ibtracs_ds[var].isel(storm=storm_num).values,
+            marker=".",
+            s=scatter_size,
+            cmap=cmap,
+        )
     return im
 
 
@@ -73,9 +91,18 @@ def plot_multiple_storms(
     """
     if ax is None:
         ax = map_axes()
+
+    vlim = lim(ibtracs_ds[var].values)
     for num in range(0, ibtracs_ds.storm.shape[0]):
         im = plot_storm(
-            ax, ibtracs_ds, var=var, storm_num=num, cmap=cmap, scatter_size=scatter_size
+            ax,
+            ibtracs_ds,
+            var=var,
+            storm_num=num,
+            cmap=cmap,
+            scatter_size=scatter_size,
+            vmin=vlim[0],
+            vmax=vlim[1],
         )
     if bbox is not None:
         bbox.ax_lim(ax)
@@ -163,7 +190,7 @@ def colorline(
     norm=plt.Normalize(0.0, 1.0),
     linewidth: float = 3,
     alpha: float = 1.0,
-):
+) -> mcoll.LineCollection:
     """
     https://stackoverflow.com/a/25941474
 
