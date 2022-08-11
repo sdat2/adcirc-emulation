@@ -15,7 +15,7 @@ class BoundingBox:
     Example::
         >>> from src.place import BoundingBox
         >>> bbox = BoundingBox([-30, 30], [10, 30], desc="")
-        >>> bbox.cartopy()
+        >>> bbox.cartopy() # [lat-, lat+, lon-, lon+]
         [-30, 30, 10, 30]
         >>> bbox.ecmwf() # [lat+, lon-, lat-, lon+]
         [30, -30, 10, 30]
@@ -26,8 +26,8 @@ class BoundingBox:
         Create BBOX.
 
         Args:
-            lon (List[float]): Degrees East.
-            lat (List[float]): Degrees North.
+            lon (List[float]): Longitude bounds. Degrees East.
+            lat (List[float]): Latitude bounds. Degrees North.
             desc (str): Description of boundary box for debugging. Defaults to "None".
         """
         assert len(lon) == 2
@@ -40,7 +40,11 @@ class BoundingBox:
         """
         Representation string.
         """
-        return [str(self.ecmwf()), self.desc]
+        return [
+            ("Latitude bounds", self.lat, "degrees_north"),
+            ("Longitude bounds", self.lon, "degrees_east"),
+            self.desc,
+        ]
 
     def cartopy(self) -> List[float]:
         """
