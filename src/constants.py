@@ -38,6 +38,7 @@ NO_BBOX = BoundingBox([-92, -86.5], [28.5, 30.8])
 # Significant places (lon, lat)
 NEW_ORLEANS = Point(-90.0715, 29.9511)  # lon , lats
 
+# ERA5 atmospheric variables.
 ECMWF_AIR_VAR: List[str] = [
     "10m_u_component_of_wind",
     "10m_v_component_of_wind",
@@ -48,6 +49,7 @@ ECMWF_AIR_VAR: List[str] = [
     "total_precipitation",
 ]
 
+# ERA5 oceanic variables.
 ECMWF_WATER_VAR: List[str] = [
     "mean_wave_direction",
     "mean_wave_period",
@@ -55,4 +57,5 @@ ECMWF_WATER_VAR: List[str] = [
     "significant_height_of_combined_wind_waves_and_swell",
 ]
 
+# dateformat string.
 DATEFORMAT: str = "%Y-%m-%d"
