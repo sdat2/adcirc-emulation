@@ -4,6 +4,8 @@ import os
 import numpy as np
 import matplotlib.axes
 import matplotlib.pyplot as plt
+import matplotlib.collections as mcoll
+import matplotlib.path as mpath
 import xarray as xr
 from sithom.misc import in_notebook
 from sithom.time import timeit
@@ -20,7 +22,7 @@ def plot_storm(
     ibtracs_ds: xr.Dataset,
     var: str = "storm_speed",
     storm_num: int = 0,
-    cmap: str ="viridis",
+    cmap: str = "viridis",
     scatter_size: float = 1.6,
 ) -> any:
     """
@@ -57,7 +59,7 @@ def plot_multiple_storms(
     var: str = "storm_speed",
     cmap: str = "viridis",
     scatter_size: float = 1.6,
-    bbox: Optional[BoundingBox] = None
+    bbox: Optional[BoundingBox] = None,
 ) -> None:
     """
     Plot all the storms in an IBTRACS dataset.
@@ -83,7 +85,12 @@ def plot_multiple_storms(
     ax.set_ylabel(r"Latitude [$^{\circ}$N]")
     ax.set_xlabel(r"Longitude [$^{\circ}$E]")
     # cax = fig.add_axes([0.27, 0.8, 0.5, 0.05])
-    plt.gcf().colorbar(im, label=str(sanitize(var) + " [" + ibtracs_ds[var].attrs["units"] + "]"), fraction=0.046, pad=0.04)
+    plt.gcf().colorbar(
+        im,
+        label=str(sanitize(var) + " [" + ibtracs_ds[var].attrs["units"] + "]"),
+        fraction=0.046,
+        pad=0.04,
+    )
 
 
 @timeit
@@ -146,6 +153,77 @@ def plot_gom_tc_angles() -> None:
     plt.savefig(os.path.join(FIGURE_PATH, "gom_tc_angles.png"))
     if not in_notebook:
         plt.clf()
+
+
+def colorline(
+    x: np.ndarray,
+    y: np.ndarray,
+    z: Optional[np.ndarray] = None,
+    cmap=plt.get_cmap("copper"),
+    norm=plt.Normalize(0.0, 1.0),
+    linewidth: float = 3,
+    alpha: float = 1.0,
+):
+    """
+    https://stackoverflow.com/a/25941474
+
+    http://nbviewer.ipython.org/github/dpsanders/matplotlib-examples/blob/master/colorline.ipynb
+    http://matplotlib.org/examples/pylab_examples/multicolored_line.html
+    Plot a colored line with coordinates x and y
+    Optionally specify colors in the array z
+    Optionally specify a colormap, a norm function and a line width
+    """
+
+    # Default colors equally spaced on [0,1]:
+    if z is None:
+        z = np.linspace(0.0, 1.0, len(x))
+
+    # Special case if a single number:
+    if not hasattr(z, "__iter__"):  # to check for numerical input -- this is a hack
+        z = np.array([z])
+
+    z = np.asarray(z)
+
+    segments = make_segments(x, y)
+    lc = mcoll.LineCollection(
+        segments, array=z, cmap=cmap, norm=norm, linewidth=linewidth, alpha=alpha
+    )
+
+    ax = plt.gca()
+    ax.add_collection(lc)
+
+    return lc
+
+
+def make_segments(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """
+    https://stackoverflow.com/a/25941474
+
+    Create list of line segments from x and y coordinates, in the correct format
+    for LineCollection: an array of the form numlines x (points per line) x 2 (x
+    and y) array
+    """
+
+    points = np.array([x, y]).T.reshape(-1, 1, 2)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+    return segments
+
+
+def test_colorline() -> None:
+    """
+    https://stackoverflow.com/a/25941474
+    """
+    N = 10
+    np.random.seed(101)
+    x = np.random.rand(N)
+    y = np.random.rand(N)
+    fig, ax = plt.subplots()
+    path = mpath.Path(np.column_stack([x, y]))
+    verts = path.interpolated(steps=3).vertices
+    x, y = verts[:, 0], verts[:, 1]
+    z = np.linspace(0, 1, len(x))
+    colorline(x, y, z, cmap=plt.get_cmap("jet"), linewidth=2)
+    plt.show()
 
 
 if __name__ == "__main__":

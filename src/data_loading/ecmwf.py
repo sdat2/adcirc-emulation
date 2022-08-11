@@ -127,7 +127,7 @@ def year_month_day_lists(
     startdate = str_to_date(startdate)
     enddate = str_to_date(enddate)
 
-    assert startdate <= enddate # end either the same day, or a later day.
+    assert startdate <= enddate  # end either the same day, or a later day.
 
     if startdate.year < enddate.year:
         start_part = year_month_day_lists(startdate, end_of_year(startdate.year))
