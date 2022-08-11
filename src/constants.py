@@ -1,7 +1,7 @@
 # Place all your constants here
 import os
 from typing import List
-from src.place import BoundingBox, Point
+from sithom.place import BoundingBox, Point
 
 # Note: constants should be UPPER_CASE
 constants_path = os.path.realpath(__file__)

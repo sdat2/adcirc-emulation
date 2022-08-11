@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 REQUIRED = [
     "typeguard",
     "pylint",
-    "sithom",
+    "sithom>=0.0.2",
     "cdsapi",
     "xarray",
     "netCDF4",

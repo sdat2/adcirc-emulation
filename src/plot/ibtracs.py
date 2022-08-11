@@ -10,9 +10,9 @@ import xarray as xr
 from sithom.misc import in_notebook
 from sithom.time import timeit
 from sithom.plot import plot_defaults, lim
+from sithom.place import BoundingBox
 from src.constants import FIGURE_PATH, GOM_BBOX, NO_BBOX
 from src.data_loading.ibtracs import na_tcs, gom_tcs
-from src.place import BoundingBox
 from src.plot.map import map_axes
 from src.preprocessing.labels import sanitize
 
