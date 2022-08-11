@@ -1,19 +1,19 @@
+"""`src/constants.py`"""
 # Place all your constants here
 import os
 from typing import List
 from sithom.place import BoundingBox, Point
 
 # Note: constants should be UPPER_CASE
-constants_path = os.path.realpath(__file__)
-SRC_PATH = os.path.dirname(constants_path)
-PROJECT_PATH = os.path.dirname(SRC_PATH)
-DATA_PATH = os.path.join(PROJECT_PATH, "data")
-
-REPORT_PATH = os.path.join(PROJECT_PATH, "report")
-FIGURE_PATH = os.path.join(REPORT_PATH, "figures")
+constants_path: str = os.path.realpath(__file__)
+SRC_PATH: str = os.path.dirname(constants_path)
+PROJECT_PATH: str = os.path.dirname(SRC_PATH)
+DATA_PATH: str = os.path.join(PROJECT_PATH, "data")
+REPORT_PATH: str = os.path.join(PROJECT_PATH, "report")
+FIGURE_PATH: str = os.path.join(REPORT_PATH, "figures")
 
 # Default tidal gauges.
-DEFAULT_GAUGES = [
+DEFAULT_GAUGES: List[str] = [
     "8729840",
     "8735180",
     "8760922",
@@ -24,19 +24,18 @@ DEFAULT_GAUGES = [
 ]
 
 # Data files.
-KATRINA_TIDE_NC = os.path.join(DATA_PATH, "katrina_tides.nc")
-KATRINA_ERA5_NC = os.path.join(DATA_PATH, "katrina_era5.nc")
-KATRINA_WATER_ERA5_NC = os.path.join(DATA_PATH, "katrina_water_era5.nc")
-IBTRACS_NC = os.path.join(DATA_PATH, "IBTrACS.ALL.v04r00.nc")
+KATRINA_TIDE_NC: str = os.path.join(DATA_PATH, "katrina_tides.nc")
+KATRINA_ERA5_NC: str = os.path.join(DATA_PATH, "katrina_era5.nc")
+KATRINA_WATER_ERA5_NC: str = os.path.join(DATA_PATH, "katrina_water_era5.nc")
+IBTRACS_NC: str = os.path.join(DATA_PATH, "IBTrACS.ALL.v04r00.nc")
 MID_KATRINA_TIME: str = "2005-08-29T10:00:00"
 
 # regional bounding boxes for ERA5 download.
-# Gulf of Mexico
-# lat+, lon-, lat-, lon+
-GOM = [35, -100, 15, -80]
+# Gulf of Mexico box (lons, lats)
 GOM_BBOX = BoundingBox([-100, -80], [15, 35])
-NO_BBOX = BoundingBox([-92, -86.5], [28.5, 30.8])  # zoomed in around New orleans
-# Significant places
+# New Orleans box (lons, lats)
+NO_BBOX = BoundingBox([-92, -86.5], [28.5, 30.8])
+# Significant places (lon, lat)
 NEW_ORLEANS = Point(-90.0715, 29.9511)  # lon , lats
 
 ECMWF_AIR_VAR: List[str] = [
@@ -56,4 +55,4 @@ ECMWF_WATER_VAR: List[str] = [
     "significant_height_of_combined_wind_waves_and_swell",
 ]
 
-DATEFORMAT = "%Y-%m-%d"
+DATEFORMAT: str = "%Y-%m-%d"
