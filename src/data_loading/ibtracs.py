@@ -212,7 +212,7 @@ def time_steps(input: xr.Dataset) -> xr.Dataset:
         >>> kat_steps["time_step"].values.shape
         (1, 360)
         >>> time_steps(na_tcs())["time_step"].values.shape
-        (465), 360)
+        (465, 360)
     """
     times = input.time.values
     time_steps_list = [
