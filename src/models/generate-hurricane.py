@@ -1,7 +1,7 @@
 """Generate hurricane."""
 
 
-def good():
+def good() -> None:
     print("ok")
 
 

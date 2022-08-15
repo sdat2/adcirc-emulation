@@ -1,7 +1,8 @@
 from setuptools import find_packages, setup
+from typing import List
 
 
-REQUIRED = [
+REQUIRED: List[str] = [
     "typeguard",
     "pylint",
     "sithom>=0.0.2",
@@ -10,6 +11,8 @@ REQUIRED = [
     "netCDF4",
     "dask",
     "uncertainties",
+    "climada",
+    "eccodes==1.3.3"
 ]
 
 setup(
