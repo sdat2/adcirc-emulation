@@ -134,6 +134,8 @@ def filter_by_bbox(ds: xr.Dataset, bbox: Optional[List[float]] = None) -> xr.Dat
     """
     Filter ibtracs dataset by bbox (ECMWF CDS style).
 
+    Takes about 10 seconds to run over Gulf of Mexico subset.
+
     Args:
         ds (xr.Dataset): IBTrACS dataset.
         bbox (Optional[List[float]], optional): ECMWF style bbox. Defaults to None.
@@ -205,12 +207,12 @@ def time_steps(input: xr.Dataset) -> xr.Dataset:
         xr.Dataset: Input with it calculated.
 
     Example:
-        >>> from src.data_loading.ibtracs import katrina, time_steps, no_tcs
+        >>> from src.data_loading.ibtracs import katrina, time_steps, na_tcs
         >>> kat_steps = time_steps(katrina())
-        >>> kat_steps["time_steps"].values.shape
+        >>> kat_steps["time_step"].values.shape
         (1, 360)
-        >>> time_steps(no_tcs())["time_steps"].values.shape
-        (284, 360)
+        >>> time_steps(na_tcs())["time_step"].values.shape
+        (465), 360)
     """
     times = input.time.values
     time_steps_list = [
@@ -218,7 +220,7 @@ def time_steps(input: xr.Dataset) -> xr.Dataset:
     ]
     time_steps_list.append(np.array([np.nan for _ in range(len(times))]))
     time_steps = np.array(time_steps_list).transpose()
-    input["time_steps"] = (["storm", "date_time"], time_steps)
+    input["time_step"] = (["storm", "date_time"], time_steps)
     return input
 
 
