@@ -130,13 +130,12 @@ def _point_in_bbox(lon: float, lat: float, bbox: List[float]) -> bool:
         return False
 
 
-@timeit
 def filter_by_bbox(ds: xr.Dataset, bbox: Optional[List[float]] = None) -> xr.Dataset:
     """
     Filter ibtracs dataset by bbox (ECMWF CDS style).
 
     Args:
-        ds (xr.Dataset): _description_
+        ds (xr.Dataset): IBTrACS dataset.
         bbox (Optional[List[float]], optional): ECMWF style bbox. Defaults to None.
 
     Returns:
@@ -144,7 +143,6 @@ def filter_by_bbox(ds: xr.Dataset, bbox: Optional[List[float]] = None) -> xr.Dat
     """
     if bbox is not None:
         storm_list = []
-        print(bbox)
         for storm in range(ds.storm.shape[0]):
             if _track_in_bbox(
                 ds.isel(storm=storm)["lon"].values,
@@ -194,6 +192,34 @@ def no_tcs() -> xr.Dataset:
         xr.Dataset: xarray dataset.
     """
     return filter_by_bbox(na_tcs(), bbox=NO_BBOX.ecmwf())
+
+
+def time_steps(input: xr.Dataset) -> xr.Dataset:
+    """
+    Add time steps to the IBTrACS dataset.
+
+    Args:
+        input (xr.Dataset): IBTrACS dataset.
+
+    Returns:
+        xr.Dataset: Input with it calculated.
+
+    Example:
+        >>> from src.data_loading.ibtracs import katrina, time_steps, no_tcs
+        >>> kat_steps = time_steps(katrina())
+        >>> kat_steps["time_steps"].values.shape
+        (1, 360)
+        >>> time_steps(no_tcs())["time_steps"].values.shape
+        (284, 360)
+    """
+    times = input.time.values
+    time_steps_list = [
+        (times[:, i + 1] - times[:, i]) / np.timedelta64(1, "h") for i in range(359)
+    ]
+    time_steps_list.append(np.array([np.nan for _ in range(len(times))]))
+    time_steps = np.array(time_steps_list).transpose()
+    input["time_steps"] = (["storm", "date_time"], time_steps)
+    return input
 
 
 if __name__ == "__main__":
