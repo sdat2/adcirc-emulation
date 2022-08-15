@@ -235,8 +235,11 @@ def prep_for_climada(input: xr.Dataset) -> xr.Dataset:
     Returns:
         xr.Dataset:
     """
-    rename_dict = {'radius_max_wind': 'usa_rmw', 'environmental_pressure': 'usa_poci',
-    'central_pressure': 'usa_pres'}
+    rename_dict = {
+        "radius_max_wind": "usa_rmw",
+        "environmental_pressure": "usa_poci",
+        "central_pressure": "usa_pres",
+    }
 
     time_steps(input)
 
@@ -246,6 +249,7 @@ def prep_for_climada(input: xr.Dataset) -> xr.Dataset:
     # required = ['lat', 'lon', 'time_step', 'radius_max_wind','environmental_pressure', 'central_pressure']
 
     return input
+
 
 if __name__ == "__main__":
     # python src/data_loading/ibtracs.py

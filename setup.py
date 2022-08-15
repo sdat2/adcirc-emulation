@@ -12,7 +12,7 @@ REQUIRED: List[str] = [
     "dask",
     "uncertainties",
     "climada",
-    "eccodes==1.3.3"
+    "eccodes==1.3.3",
 ]
 
 setup(
