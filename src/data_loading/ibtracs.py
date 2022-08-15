@@ -221,8 +221,31 @@ def time_steps(input: xr.Dataset) -> xr.Dataset:
     time_steps_list.append(np.array([np.nan for _ in range(len(times))]))
     time_steps = np.array(time_steps_list).transpose()
     input["time_step"] = (["storm", "date_time"], time_steps)
+    input["time_step"].attrs["units"] = "hours"
     return input
 
+
+def prep_for_climada(input: xr.Dataset) -> xr.Dataset:
+    """
+    Prepare IBTrACS for being a climada input.
+
+    Args:
+        input (xr.Dataset):
+
+    Returns:
+        xr.Dataset:
+    """
+    rename_dict = {'radius_max_wind': 'usa_rmw', 'environmental_pressure': 'usa_poci',
+    'central_pressure': 'usa_pres'}
+
+    time_steps(input)
+
+    for key in rename_dict:
+        input[key] = input[rename_dict[key]]
+
+    # required = ['lat', 'lon', 'time_step', 'radius_max_wind','environmental_pressure', 'central_pressure']
+
+    return input
 
 if __name__ == "__main__":
     # python src/data_loading/ibtracs.py
