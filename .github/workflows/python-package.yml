@@ -27,7 +27,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update -y
-        sudo apt-get install -y libgeos++-dev libgeos-3.8.0 libgeos-c1v5 libgeos-dev libgeos-doc python-shapely python-pyshp
+        sudo apt-get install -y libgeos++-dev libgeos-3.8.0 libgeos-c1v5 libgeos-dev libgeos-doc python3-shapely python3-pyshp
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
         pip install -e .
