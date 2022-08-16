@@ -248,6 +248,9 @@ def prep_for_climada(input: xr.Dataset) -> xr.Dataset:
 
     # required = ['lat', 'lon', 'time_step', 'radius_max_wind','environmental_pressure', 'central_pressure']
 
+    if len(input.storm.values) == 1:
+        input = input.isel(storm=0)
+
     return input
 
 
