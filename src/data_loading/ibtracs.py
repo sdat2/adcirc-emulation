@@ -239,6 +239,7 @@ def prep_for_climada(input: xr.Dataset) -> xr.Dataset:
         "radius_max_wind": "usa_rmw",
         "environmental_pressure": "usa_poci",
         "central_pressure": "usa_pres",
+        "max_sustained_wind": "usa_wind",
     }
 
     time_steps(input)

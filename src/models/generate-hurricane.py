@@ -59,4 +59,5 @@ def plot_katrina_windfield_example(model="H08") -> None:
 if __name__ == "__main__":
     for key in MODEL_VANG:
         plot_katrina_windfield_example(model=key)
+    #plot_katrina_windfield_example(model="H08")
     # python src/models/generate-hurricane.py
