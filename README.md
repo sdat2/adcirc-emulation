@@ -16,11 +16,12 @@
 - `netCDF4`
 - `dask`
 - `uncertainties`
+- `climada`
+- `cartopy`
 
 ### Optional
 
 - `noaa_coops`
-- `cartopy`
 
 ## Getting started
 
