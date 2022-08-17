@@ -24,12 +24,24 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install dependencies # https://stackoverflow.com/a/72442088
       run: |
         sudo apt-get update -y
-        sudo apt-get install -y python3-dev libproj-dev proj-data proj-bin libgeos++-dev libgeos-3.8.0 libgeos-c1v5 libgeos-dev libgeos-doc python3-shapely python3-pyshp
+        sudo apt update -y
+        sudo apt-get install -y libgeos-dev
+        sudo apt install -y cmake sqlite3
+        sudo apt install -y curl && apt-get install libcurl4-openssl-dev
+        wget https://download.osgeo.org/proj/proj-9.0.0.tar.gz 
+        tar -xf proj-9.0.0.tar.gz
+        cd proj-9.0.0
+        mkdir build && cd build
+        cmake ..
+        cmake --build .
+        cmake --build . --target install
+        ctest
+        cp ./bin/* /bin
         python -m pip install --upgrade pip
-        python -m pip install flake8 pytest cython
+        python -m pip install flake8 pytest cython cartopy
         pip install -e .
     - name: Lint with flake8
       run: |
