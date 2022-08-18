@@ -1,0 +1,10 @@
+name: base
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - pip
+  - cartopy
+  - pytest
+  - pip:
+    - -e .
