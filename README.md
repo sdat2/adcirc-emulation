@@ -33,6 +33,12 @@ Then pip install locally to the python environment you want to use.
 pip install -e .
 ```
 
+To get cartopy to work properly you might be better off with:
+
+```bash
+conda env update --file environment.yml --name base
+```
+
 ## Project Organization
 
 ```txt
