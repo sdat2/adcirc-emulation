@@ -31,7 +31,7 @@ def make_katrina_windfields(model: str = "H08") -> Tuple[np.ndarray]:
     return tc.compute_windfields(
         prep_for_climada(katrina()),
         centroids,
-        MODEL_VANG[model],  # metric="equirect"
+        tc.MODEL_VANG[model],  # metric="equirect"
     )
 
 
@@ -57,7 +57,7 @@ def plot_katrina_windfield_example(model="H08") -> None:
 
 
 if __name__ == "__main__":
-    for key in MODEL_VANG:
+    for key in tc.MODEL_VANG:
         plot_katrina_windfield_example(model=key)
-    #plot_katrina_windfield_example(model="H08")
+    # plot_katrina_windfield_example(model="H08")
     # python src/models/generate-hurricane.py

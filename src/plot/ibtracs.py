@@ -128,7 +128,7 @@ def plot_na_tcs(var="storm_speed", scatter_size: float = 1.6) -> None:
     # plot_defaults()
     plot_multiple_storms(na_tcs(), var=var, scatter_size=scatter_size)
     plt.savefig(os.path.join(FIGURE_PATH, "na_tc_speed.png"))
-    if not in_notebook:
+    if not in_notebook():
         plt.clf()
 
 
@@ -140,7 +140,7 @@ def plot_gom_tcs(var="storm_speed", scatter_size: float = 1.6) -> None:
     # plot_defaults()
     plot_multiple_storms(gom_tcs(), var=var, scatter_size=scatter_size)
     plt.savefig(os.path.join(FIGURE_PATH, "gom_tc_speed.png"))
-    if not in_notebook:
+    if not in_notebook():
         plt.clf()
 
 
@@ -178,7 +178,7 @@ def plot_gom_tc_angles() -> None:
     """
     polar_hist(gom_tcs().storm_dir.values.ravel())
     plt.savefig(os.path.join(FIGURE_PATH, "gom_tc_angles.png"))
-    if not in_notebook:
+    if not in_notebook():
         plt.clf()
 
 
