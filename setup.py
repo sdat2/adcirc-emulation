@@ -5,7 +5,7 @@ from typing import List
 REQUIRED: List[str] = [
     "typeguard",
     "pylint",
-    "sithom>=0.0.2",
+    "sithom>=0.0.3",
     "cdsapi",
     "xarray",
     "netCDF4",

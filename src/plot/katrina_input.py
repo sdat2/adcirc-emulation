@@ -30,7 +30,7 @@ def gauges_map(ax: matplotlib.axes.Axes) -> None:
     Map of Tidal Gauges near New Orleans.
 
     Args:
-        ax (matplotlib.axes.Axes):
+        ax (matplotlib.axes.Axes): Map axes.
     """
     ds = xr.open_dataset(KATRINA_TIDE_NC)
 
@@ -81,7 +81,6 @@ def tide_timeseries(ax: matplotlib.axes.Axes) -> None:
     ds = xr.open_dataset(KATRINA_TIDE_NC)
     ds.water_level.attrs["long_name"] = "Water level"
     ds.water_level.attrs["units"] = "m"
-    # ds.water_level.attrs["units"] = "m"
     ds["date_time"].attrs["long_name"] = "Time"
     ds.water_level.plot.line(ax=ax, hue="stationid", alpha=0.7)
 
