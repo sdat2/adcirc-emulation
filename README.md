@@ -9,7 +9,7 @@
 ### Necessary
 
 - Python 3.8+
-- `sithom`
+- `sithom>=0.0.3`
 - `typeguard`
 - `cdsapi`
 - `xarray`
@@ -18,6 +18,7 @@
 - `uncertainties`
 - `climada`
 - `cartopy`
+- `eccodes=1.3.3`
 
 ### Optional
 
@@ -43,7 +44,7 @@ conda env update --file environment.yml --name base
 
 ```txt
 ├── LICENSE
-├── Makefile           <- Makefile with commands like `make init` or `make lint-requirements`
+├── Makefile           <- Makefile with commands like `make init` or `make lint-requirements`.
 ├── README.md          <- The top-level README for developers using this project.
 |
 ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
@@ -53,26 +54,26 @@ conda env update --file environment.yml --name base
 │   └── reports        <- Polished notebooks for presentations or intermediate results.
 │
 ├── report             <- Generated analysis as HTML, PDF, LaTeX, etc.
-│   ├── figures        <- Generated graphics and figures to be used in reporting
+│   ├── figures        <- Generated graphics and figures to be used in reporting.
 │   └── sections       <- LaTeX sections. The report folder can be linked to your overleaf
 |                         report with github submodules.
 │
 ├── requirements       <- Directory containing the requirement files.
 │
-├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
+├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported.
 ├── src                <- Source code for use in this project.
-│   ├── __init__.py    <- Makes src a Python module
+│   ├── __init__.py    <- Makes src a Python module.
 │   │
-│   ├── data_loading   <- Scripts to download or generate data
+│   ├── data_loading   <- Scripts to download or generate data.
 │   │
-│   ├── preprocessing  <- Scripts to turn raw data into clean data and features for modeling
+│   ├── preprocessing  <- Scripts to turn raw data into clean data and features for modeling.
 |   |
 │   ├── models         <- Scripts to train models and then use trained models to make
-│   │                     predictions
+│   │                     predictions.
 │   │
 │   └── plot           <- Different plotting scripts for results.
 │
-└── setup.cfg          <- setup configuration file for linting rules
+└── setup.cfg          <- Setup configuration file for linting rules.
 ```
 
 ## Code formatting
