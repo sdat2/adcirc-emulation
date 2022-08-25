@@ -23,6 +23,8 @@ def mid_katrina(
         >>> from src.preprocessing.sel import mid_katrina
         >>> da = xr.open_dataset(KATRINA_ERA5_NC)
         >>> sel_da = mid_katrina(da)
+        >>> sel_da.tp.values.shape
+        (10, 23)
     """
     lons = NO_BBOX.lon
     lats = NO_BBOX.lat
