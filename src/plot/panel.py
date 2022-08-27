@@ -7,7 +7,7 @@ from sithom.misc import in_notebook
 from sithom.plot import label_subplots, set_dim, plot_defaults
 from sithom.xr import plot_units, mon_increase
 from sithom.time import timeit
-from src.data_loading.ecmwf import monthly_air_var_ds
+from src.data_loading.ecmwf import monthly_air_var_ds, monthly_water_var_ds
 from src.constants import KATRINA_ERA5_NC, FIGURE_PATH
 from src.preprocessing.sel import mid_katrina
 
@@ -77,7 +77,21 @@ def no_air() -> None:
         plt.clf()
 
 
+@timeit
+def no_water() -> None:
+    """
+    Katrina ECMWF water variables panel plot mid-Katrina.
+    """
+    plot_defaults()
+    air_ds = monthly_water_var_ds().mean("time")
+    panel_plot(air_ds, np.array([["", ""], ["", ""]]))
+    plt.savefig(os.path.join(FIGURE_PATH, "mean_era5_water_fields.png"))
+    if not in_notebook():
+        plt.clf()
+
+
 if __name__ == "__main__":
     # python src/plot/panel.py
     # katrina_air()
     no_air()
+    no_water()
