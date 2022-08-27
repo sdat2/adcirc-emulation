@@ -231,12 +231,12 @@ def monthly_var_ds(var_list: List[str]) -> xr.Dataset:
     """
     path_list = []
     for var in var_list:
-        path_list.append(os.path.join(DATA_PATH, var +".nc"))
+        path_list.append(os.path.join(DATA_PATH, var + ".nc"))
 
     return plot_units(mon_increase(xr.open_mfdataset(path_list)))
 
 
-def monthly_land_var_ds() -> xr.Dataset:
+def monthly_air_var_ds() -> xr.Dataset:
     """Return monthly land ds."""
     return monthly_var_ds(ECMWF_AIR_VAR)
 

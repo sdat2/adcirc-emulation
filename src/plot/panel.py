@@ -7,6 +7,7 @@ from sithom.misc import in_notebook
 from sithom.plot import label_subplots, set_dim, plot_defaults
 from sithom.xr import plot_units, mon_increase
 from sithom.time import timeit
+from src.data_loading.ecmwf import monthly_air_var_ds
 from src.constants import KATRINA_ERA5_NC, FIGURE_PATH
 from src.preprocessing.sel import mid_katrina
 
@@ -44,21 +45,39 @@ def panel_plot(input_ds: xr.Dataset, panel_array: np.ndarray) -> None:
     set_dim(fig, fraction_of_line_width=2.4)
 
 
+AIR_PANEL_ARRAY = np.array(
+    [["u10", "v10"], ["d2m", "t2m"], ["msl", "sp"], ["tp", None]]
+)
+
+
 @timeit
 def katrina_air() -> None:
-    """Katrina ECMWF AIR variables panel plot mid Katrina."""
+    """
+    Katrina ECMWF air variables panel plot mid-Katrina.
+    """
     plot_defaults()
     ds = xr.open_dataset(KATRINA_ERA5_NC)
     kat_ds = mid_katrina(mon_increase(plot_units(ds)))
-    panel_array = np.array(
-        [["u10", "v10"], ["d2m", "t2m"], ["msl", "sp"], ["tp", None]]
-    )
-    panel_plot(kat_ds, panel_array)
+    panel_plot(kat_ds, AIR_PANEL_ARRAY)
     plt.savefig(os.path.join(FIGURE_PATH, "mid_katrina_ecmwf_air_fields.png"))
+    if not in_notebook():
+        plt.clf()
+
+
+@timeit
+def no_air() -> None:
+    """
+    Katrina ECMWF air variables panel plot mid-Katrina.
+    """
+    plot_defaults()
+    air_ds = monthly_air_var_ds().mean("time")
+    panel_plot(air_ds, AIR_PANEL_ARRAY)
+    plt.savefig(os.path.join(FIGURE_PATH, "mean_era5_air_fields.png"))
     if not in_notebook():
         plt.clf()
 
 
 if __name__ == "__main__":
     # python src/plot/panel.py
-    katrina_air()
+    # katrina_air()
+    no_air()
