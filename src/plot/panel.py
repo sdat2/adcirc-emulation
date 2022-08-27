@@ -20,6 +20,7 @@ def panel_plot(input_ds: xr.Dataset, panel_array: np.ndarray) -> None:
     Args:
         input_ds (xr.Dataset): Input dataset (single time slice)
         panel_array (np.ndarray): Input variable names to plot.
+
     """
     fig, axs = plt.subplots(
         panel_array.shape[0], panel_array.shape[1], sharex=True, sharey=True

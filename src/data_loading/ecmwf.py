@@ -5,6 +5,7 @@ from datetime import datetime, date, timedelta
 import numpy as np
 import xarray as xr
 import cdsapi
+from sithom.xr import mon_increase, plot_units
 from src.constants import (
     GOM_BBOX,
     KATRINA_ERA5_NC,
@@ -216,6 +217,33 @@ def monthly_avgs(vars=ECMWF_AIR_VAR + ECMWF_WATER_VAR) -> None:
             },
             os.path.join(DATA_PATH, var + ".nc"),
         )
+
+
+def monthly_var_ds(var_list: List[str]) -> xr.Dataset:
+    """
+    Monthly var ds.
+
+    Args:
+        var_list (List[str]): variable list.
+
+    Returns:
+        xr.Dataset: xarray dataset.
+    """
+    path_list = []
+    for var in var_list:
+        path_list.append(os.path.join(DATA_PATH, var +".nc"))
+
+    return plot_units(mon_increase(xr.open_mfdataset(path_list)))
+
+
+def monthly_land_var_ds() -> xr.Dataset:
+    """Return monthly land ds."""
+    return monthly_var_ds(ECMWF_AIR_VAR)
+
+
+def monthly_water_var_ds() -> xr.Dataset:
+    """Return monthly water ds."""
+    return monthly_var_ds(ECMWF_WATER_VAR)
 
 
 if __name__ == "__main__":
