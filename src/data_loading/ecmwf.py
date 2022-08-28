@@ -249,6 +249,6 @@ def monthly_water_var_ds() -> xr.Dataset:
 if __name__ == "__main__":
     # python src/data_loading/ecmwf.py
     # print(year_month_day_lists("2003-08-11", "2006-01-02"))
-    # katrina_netcdf(vars=ECMWF_AIR_VAR, file_name=KATRINA_ERA5_NC)
+    katrina_netcdf(vars=ECMWF_AIR_VAR, file_name=KATRINA_ERA5_NC)
     katrina_netcdf(vars=ECMWF_WATER_VAR, file_name=KATRINA_WATER_ERA5_NC)
     # monthly_avgs()
