@@ -4,7 +4,7 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 from sithom.misc import in_notebook
-from sithom.plot import label_subplots, set_dim, plot_defaults
+from sithom.plot import label_subplots, set_dim, plot_defaults, axis_formatter
 from sithom.xr import plot_units, mon_increase
 from sithom.time import timeit
 from src.data_loading.ecmwf import monthly_air_var_ds, monthly_water_var_ds
@@ -33,7 +33,14 @@ def panel_plot(input_ds: xr.Dataset, panel_array: np.ndarray) -> None:
         var = panel_array.ravel()[i]
         ax = axs.ravel()[i]
         if var is not None:
-            input_ds[panel_array.ravel()[i]].plot(ax=ax)
+            attrs = input_ds[var].attrs
+            if "units" in attrs:
+                if attrs["units"] == "Pa":
+                    input_ds[var].plot(ax=ax, cbar_kwargs={"format": axis_formatter()})
+                else:
+                    input_ds[var].plot(ax=ax)
+            else:
+                input_ds[var].plot(ax=ax)
             ax.set_title("")
             if i % 2:
                 ax.set_ylabel("")
@@ -46,8 +53,10 @@ def panel_plot(input_ds: xr.Dataset, panel_array: np.ndarray) -> None:
 
 
 AIR_PANEL_ARRAY = np.array(
-    [["u10", "v10"], ["d2m", "t2m"], ["msl", "sp"], ["tp", None]]
+    [["u10", "v10"], ["d2m", "t2m"], ["msl", "sp"], ["tp", "sst"]]
 )
+
+WATER_PANEL_ARRAY = np.array([["mwd", "mwp"], ["swh", None]])
 
 
 @timeit
@@ -70,7 +79,7 @@ def no_air() -> None:
     Katrina ECMWF air variables panel plot mid-Katrina.
     """
     plot_defaults()
-    air_ds = monthly_air_var_ds().mean("time")
+    air_ds = monthly_air_var_ds().mean("time", keep_attrs=True)
     panel_plot(air_ds, AIR_PANEL_ARRAY)
     plt.savefig(os.path.join(FIGURE_PATH, "mean_era5_air_fields.png"))
     if not in_notebook():
@@ -83,8 +92,8 @@ def no_water() -> None:
     Katrina ECMWF water variables panel plot mid-Katrina.
     """
     plot_defaults()
-    air_ds = monthly_water_var_ds().mean("time")
-    panel_plot(air_ds, np.array([["", ""], ["", ""]]))
+    water_ds = monthly_water_var_ds().mean("time", keep_attrs=True)
+    panel_plot(water_ds, WATER_PANEL_ARRAY)
     plt.savefig(os.path.join(FIGURE_PATH, "mean_era5_water_fields.png"))
     if not in_notebook():
         plt.clf()

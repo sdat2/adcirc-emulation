@@ -47,13 +47,14 @@ ECMWF_AIR_VAR: List[str] = [
     "mean_sea_level_pressure",
     "surface_pressure",
     "total_precipitation",
+    "sea_surface_temperature",
 ]
 
 # ERA5 oceanic variables.
 ECMWF_WATER_VAR: List[str] = [
     "mean_wave_direction",
     "mean_wave_period",
-    "sea_surface_temperature",
+    # "sea_surface_temperature",
     "significant_height_of_combined_wind_waves_and_swell",
 ]
 
