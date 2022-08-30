@@ -32,6 +32,10 @@ lint:
 format: 
 	black src
 
+test:
+	coverage run -m pytest
+	coverage report -m
+
 ## Set up python interpreter environment and install basic dependencies
 create_environment:
 ifeq (True,$(HAS_CONDA))
