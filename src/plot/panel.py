@@ -53,7 +53,7 @@ def panel_plot(input_ds: xr.Dataset, panel_array: np.ndarray) -> None:
 
 
 AIR_PANEL_ARRAY = np.array(
-    [["u10", "v10"], ["d2m", "t2m"], ["msl", "sp"], ["tp", "sst"]]
+    [["u10", "v10"], ["d2m", "t2m"], ["tp", "sst"], ["msl", "sp"]]
 )
 
 WATER_PANEL_ARRAY = np.array([["mwd", "mwp"], ["swh", None]])
