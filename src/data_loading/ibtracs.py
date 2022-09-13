@@ -209,21 +209,28 @@ def landings_only(ds: xr.Dataset) -> xr.Dataset:
     return ds.isel(date_time=ds["date_time"][(ds["usa_record"].values == b"L").ravel()])
 
 
-def landing_distribution(ds: xr.Dataset, var: str = "usa_pres") -> list:
+def landing_distribution(
+    ds: xr.Dataset, var: str = "usa_pres", sanitize: bool = True
+) -> list:
     """
     Landing distribution.
 
     Args:
         ds (xr.Dataset): IBTrACS dataset.
         var (str, optional): Variable. Defaults to "usa_pres".
+        sanitize (bool, optional). Whether to remove NaNs. Defaults to True.
 
     Returns:
-        list: List of outputs. Can include Nans.
+        list: List of outputs. Can include NaNs if sanitize==False.
     """
     output = []
     for storm in ds["storm"].values:
         landing_ds = landings_only(ds.isel(storm=storm))
         output += landing_ds[var].values.tolist()
+
+    if sanitize:
+        output = [x for x in output if str(x) != "nan"]
+
     return output
 
 
