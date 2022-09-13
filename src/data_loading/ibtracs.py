@@ -222,6 +222,10 @@ def landing_distribution(
 
     Returns:
         list: List of outputs. Can include NaNs if sanitize==False.
+
+    Example::
+        >>> landing_distribution(katrina())
+        [984.0, 920.0, 928.0]
     """
     output = []
     for storm in ds["storm"].values:
