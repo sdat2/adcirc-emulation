@@ -36,6 +36,7 @@ def panel_plot(input_ds: xr.Dataset, panel_array: np.ndarray) -> None:
             attrs = input_ds[var].attrs
             if "units" in attrs:
                 if attrs["units"] == "Pa":
+                    # Rescale nicely to x10^n etc.
                     input_ds[var].plot(ax=ax, cbar_kwargs={"format": axis_formatter()})
                 else:
                     input_ds[var].plot(ax=ax)
