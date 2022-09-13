@@ -196,6 +196,37 @@ def no_tcs() -> xr.Dataset:
     return filter_by_bbox(na_tcs(), bbox=NO_BBOX.ecmwf())
 
 
+def landings_only(ds: xr.Dataset) -> xr.Dataset:
+    """
+    Extract a reduced dataset based on those points at which a landing occurs.
+
+    Args:
+        ds (xr.Dataset): Individual storm.
+
+    Returns:
+        xr.Dataset: Clipped storm.
+    """
+    return ds.isel(date_time=ds["date_time"][(ds["usa_record"].values == b"L").ravel()])
+
+
+def landing_distribution(ds: xr.Dataset, var: str = "usa_pres") -> list:
+    """
+    Landing distribution.
+
+    Args:
+        ds (xr.Dataset): IBTrACS dataset.
+        var (str, optional): Variable. Defaults to "usa_pres".
+
+    Returns:
+        list: List of outputs. Can include Nans.
+    """
+    output = []
+    for storm in ds["storm"].values:
+        landing_ds = landings_only(ds.isel(storm=storm))
+        output += landing_ds[var].values.tolist()
+    return output
+
+
 def time_steps(input: xr.Dataset) -> xr.Dataset:
     """
     Add time steps to the IBTrACS dataset.

@@ -26,10 +26,15 @@ def mid_katrina(
         >>> sel_da.tp.values.shape
         (10, 23)
     """
-    lons = NO_BBOX.lon
-    lats = NO_BBOX.lat
-    return mon_increase(xr_obj).sel(
-        longitude=slice(lons[0], lons[1]),
-        latitude=slice(lats[0], lats[1]),
-        time=MID_KATRINA_TIME,
-    )
+    if "longitude" in xr_obj:
+        lons = NO_BBOX.lon
+        lats = NO_BBOX.lat
+        return mon_increase(xr_obj).sel(
+            longitude=slice(lons[0], lons[1]),
+            latitude=slice(lats[0], lats[1]),
+            time=MID_KATRINA_TIME,
+        )
+    else:
+        return xr_obj.sel(
+            time=MID_KATRINA_TIME,
+        )

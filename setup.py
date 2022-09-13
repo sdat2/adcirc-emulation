@@ -14,6 +14,7 @@ REQUIRED: List[str] = [
     "uncertainties",
     "climada",
     "eccodes==1.3.3",
+    "adcircpy",
 ]
 
 setup(
