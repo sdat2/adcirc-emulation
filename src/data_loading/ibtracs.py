@@ -238,6 +238,74 @@ def landing_distribution(
     return output
 
 
+# from adcircpy.forcing.winds._parametric.holland2010 import holland_B
+@np.vectorize
+def holland_b(
+    vmax: float,
+    rmax: float,
+    neutral_pressure: float,
+    central_pressure: float,
+    eye_latitude: float,
+) -> float:
+    """
+    Calculate Holland 2010 B parameter.
+
+    Args:
+        vmax (float): _description_
+        rmax (float): _description_
+        neutral_pressure (float): _description_
+        central_pressure (float): _description_
+        eye_latitude (float): _description_
+
+    Returns:
+        float: Holland 2010 B parameter.
+    """
+    air_density = 1.15
+    if neutral_pressure <= central_pressure:
+        neutral_pressure = central_pressure + 1.0
+    f = 2.0 * 7.2921e-5 * np.sin(np.radians(np.abs(eye_latitude)))
+    return (vmax**2 + vmax * rmax * f * air_density * np.exp(1)) / (
+        neutral_pressure - central_pressure
+    )
+
+
+def holland_b_usa(ds: xr.Dataset) -> np.ndarray:
+    """
+    Calculate Holland 2010 B parameter using US variables.
+
+    Args:
+        ds (xr.Dataset): Individual IBTRACS storm.
+
+    Returns:
+        np.ndarray: B parameters.
+    """
+    var_names = ["usa_wind", "usa_rmw", "usa_poci", "usa_pres", "usa_lat"]
+    var_list = [ds[var].values for var in var_names]
+    return holland_b(*var_list)
+
+
+def holland_b_landing_distribution(ds: xr.Dataset, sanitize: bool = True) -> List[float]:
+    """
+    Calculate Holland 2010 B parameter distribution.
+
+    Args:
+        ds (xr.Dataset): _description_
+        sanitize (bool, optional): _description_. Defaults to True.
+
+    Returns:
+        List[float]: Holland B parameters.
+    """
+    output = []
+    for storm in ds["storm"].values:
+        landing_ds = landings_only(ds.isel(storm=storm))
+        output += holland_b_usa(landing_ds).tolist()
+
+    if sanitize:
+        output = [x for x in output if str(x) != "nan"]
+
+    return output
+
+
 def time_steps(input: xr.Dataset) -> xr.Dataset:
     """
     Add time steps to the IBTrACS dataset.

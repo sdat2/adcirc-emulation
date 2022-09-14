@@ -15,6 +15,7 @@ REQUIRED: List[str] = [
     "climada",
     "eccodes==1.3.3",
     "adcircpy",
+    "pyschism",
 ]
 
 setup(

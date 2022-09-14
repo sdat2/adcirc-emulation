@@ -16,7 +16,7 @@ def filter_by_age(stationid_list: List[str], date: str = "2005-06-01") -> List[s
 
     Args:
         stationid_list (List[str]): list of stations.
-        date (optional, str): Date to go after.
+        date (optional, str): Date to go after. Defaults to "2005-06-01".
     """
     station_list = []
     station_id_list = []
