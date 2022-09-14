@@ -211,7 +211,7 @@ def landings_only(ds: xr.Dataset) -> xr.Dataset:
 
 def landing_distribution(
     ds: xr.Dataset, var: str = "usa_pres", sanitize: bool = True
-) -> list:
+) -> np.ndarray:
     """
     Landing distribution.
 
@@ -224,7 +224,7 @@ def landing_distribution(
         list: List of outputs. Can include NaNs if sanitize==False.
 
     Example::
-        >>> landing_distribution(katrina())
+        >>> landing_distribution(katrina()).tolist()
         [984.0, 920.0, 928.0]
     """
     output = []
@@ -235,7 +235,7 @@ def landing_distribution(
     if sanitize:
         output = [x for x in output if str(x) != "nan"]
 
-    return output
+    return np.array(output)
 
 
 # from adcircpy.forcing.winds._parametric.holland2010 import holland_B
@@ -284,7 +284,7 @@ def holland_b_usa(ds: xr.Dataset) -> np.ndarray:
     return holland_b(*var_list)
 
 
-def holland_b_landing_distribution(ds: xr.Dataset, sanitize: bool = True) -> List[float]:
+def holland_b_landing_distribution(ds: xr.Dataset, sanitize: bool = True) -> np.ndarray:
     """
     Calculate Holland 2010 B parameter distribution.
 
@@ -294,6 +294,10 @@ def holland_b_landing_distribution(ds: xr.Dataset, sanitize: bool = True) -> Lis
 
     Returns:
         List[float]: Holland B parameters.
+
+    Example::
+        >>> holland_b_landing_distribution(katrina()).tolist()
+        [175.00549603625592, 140.7033819399621, 143.1886980704015]
     """
     output = []
     for storm in ds["storm"].values:
@@ -303,7 +307,7 @@ def holland_b_landing_distribution(ds: xr.Dataset, sanitize: bool = True) -> Lis
     if sanitize:
         output = [x for x in output if str(x) != "nan"]
 
-    return output
+    return np.array(output)
 
 
 def time_steps(input: xr.Dataset) -> xr.Dataset:
