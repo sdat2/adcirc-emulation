@@ -262,7 +262,7 @@ def holland_b(
     """
     air_density = 1.15
     if neutral_pressure <= central_pressure:
-        neutral_pressure = central_pressure + 1.0
+        neutral_pressure = np.nan  # central_pressure + 1.0
     f = 2.0 * 7.2921e-5 * np.sin(np.radians(np.abs(eye_latitude)))
     return (vmax**2 + vmax * rmax * f * air_density * np.exp(1)) / (
         neutral_pressure - central_pressure
@@ -307,7 +307,9 @@ def holland_b_landing_distribution(ds: xr.Dataset, sanitize: bool = True) -> np.
     if sanitize:
         output = [x for x in output if str(x) != "nan"]
 
-    return np.array(output)
+    output = np.array(output)
+
+    return output[output < 700]
 
 
 def time_steps(input: xr.Dataset) -> xr.Dataset:
