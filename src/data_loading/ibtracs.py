@@ -1,9 +1,12 @@
 """IBTrACS data loading script."""
-from typing import Optional, List, Tuple
+from typing import Callable, Optional, List, Tuple
+import warnings
 import numpy as np
+from scipy import optimize
 import xarray as xr
-from sithom.time import timeit
 from src.constants import IBTRACS_NC, GOM_BBOX, NO_BBOX
+
+# from sithom.time import timeit
 
 
 def _union(lst1: list, lst2: list) -> list:
@@ -264,9 +267,95 @@ def holland_b(
     if neutral_pressure <= central_pressure:
         neutral_pressure = np.nan  # central_pressure + 1.0
     f = 2.0 * 7.2921e-5 * np.sin(np.radians(np.abs(eye_latitude)))
-    return (vmax**2 + vmax * rmax * f * air_density * np.exp(1)) / (
+    return (vmax ** 2 + vmax * rmax * f * air_density * np.exp(1)) / (
         neutral_pressure - central_pressure
     )
+
+
+def holland2010(
+    radius: float, b_coeff: float, x_coeff: float, rmax: float, vmax: float
+) -> float:
+    return (
+        vmax
+        * (((rmax / radius) ** b_coeff) * np.exp(1 - (rmax / radius) ** b_coeff))
+        ** x_coeff
+    )
+
+
+def holland2010_gen(rmax: float, vmax: float) -> Callable:
+    def holland_fit_func(radius: float, b_coeff: float, x_coeff: float) -> float:
+        return holland2010(radius, b_coeff, x_coeff, rmax, vmax)
+
+    return holland_fit_func
+
+
+def holland_fitter(
+    rmax: float, vmax: float, neutral_pressure: float, rlist: list, vlist: list
+) -> None:
+
+    holland2010_loc = holland2010_gen(rmax, vmax)
+
+    def velocity_function_generator(b_coeff: float, x_coeff: float) -> Callable:
+        def velocity_function(radius: float) -> float:
+            return holland2010_loc(radius, b_coeff, x_coeff)
+        return velocity_function
+
+    # b_coeff = holland_B(hurdat)
+    # add bounds
+    bi = np.finfo(float).eps  # avoid divide by zero
+    bf = neutral_pressure
+    bounds = (bi, bf)
+    b_coeff = 1.0
+    x_coeff = 1.0
+    param_guess = [b_coeff, x_coeff]
+    # do curve fitting
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        popt, pcov = optimize.curve_fit(
+            holland2010_loc,
+            rlist,
+            vlist,
+            p0=param_guess,
+            bounds=bounds,
+            method="dogbox",
+        )
+    # print("[b_coeff, x_coeff]", popt)
+    velocity_function_instance = velocity_function_generator(*popt)
+    #radii = np.linspace(bi, bf, num=500)
+    #results = np.array([velocity_function_instance(i) for i in radii])
+    # print(radii, results)
+    return velocity_function_instance, popt
+
+
+def holland_fitter_usa(ds: xr.Dataset) -> Tuple[Callable, np.ndarray]:
+    init_distance_labels = ["usa_r34", "usa_r50", "usa_r64"]
+    init_speeds = [int(x.split("r")[1]) for x in init_distance_labels]
+    init_distances = [np.mean(ds[var].values) for var in init_distance_labels]
+    speeds=[]; distances=[]
+    for i in range(len(init_speeds)):
+        if not np.isnan(init_distances[i]):
+            speeds.append(init_speeds[i])
+            distances.append(init_distances[i])
+
+    var_names = ["usa_wind", "usa_rmw", "usa_poci"]
+    var_list = [ds[var].values for var in var_names]
+    #print([ds[var].attrs["units"] for var in var_names + init_distance_labels])
+    # print([ds[var].attrs["description"] for var in var_names + distance_labels])
+    var_list = [ds[var].values for var in var_names]
+    var_list.append(distances)
+    var_list.append(speeds)
+    #print(var_list)
+    velocity_function_instance, popt = holland_fitter(*var_list)
+    #print("[b_coeff, x_coeff]", popt)
+    return velocity_function_instance, popt
+
+
+def holland_b_fit_usa(ds: xr.Dataset) -> np.ndarray:
+    b_coeff_list = []
+    for i in range(len(ds.date_time.values)):
+        _, popt = holland_fitter_usa(ds.isel(date_time=i))
+        b_coeff_list.append(popt[0])
+    return np.array(b_coeff_list)
 
 
 def holland_b_usa(ds: xr.Dataset) -> np.ndarray:
@@ -284,13 +373,15 @@ def holland_b_usa(ds: xr.Dataset) -> np.ndarray:
     return holland_b(*var_list)
 
 
-def holland_b_landing_distribution(ds: xr.Dataset, sanitize: bool = True) -> np.ndarray:
+def holland_b_landing_distribution(ds: xr.Dataset, sanitize: bool = True, fit=False) -> np.ndarray:
     """
     Calculate Holland 2010 B parameter distribution.
 
     Args:
         ds (xr.Dataset): _description_
         sanitize (bool, optional): _description_. Defaults to True.
+        fit (bool, optional): Whether to fit to windspeeds at different distances.
+            Defaults to False.
 
     Returns:
         List[float]: Holland B parameters.
@@ -298,11 +389,17 @@ def holland_b_landing_distribution(ds: xr.Dataset, sanitize: bool = True) -> np.
     Example::
         >>> holland_b_landing_distribution(katrina()).tolist()
         [175.00549603625592, 140.7033819399621, 143.1886980704015]
+        >>> holland_b_landing_distribution(katrina(), fit=True).tolist()
+        [0.2363810378430956, 2.220446049250313e-16, 0.20139260140129567]
+
     """
     output = []
     for storm in ds["storm"].values:
         landing_ds = landings_only(ds.isel(storm=storm))
-        output += holland_b_usa(landing_ds).tolist()
+        if fit:
+            output += holland_b_fit_usa(landing_ds).tolist()
+        else:
+            output += holland_b_usa(landing_ds).tolist()
 
     if sanitize:
         output = [x for x in output if str(x) != "nan"]
@@ -375,4 +472,7 @@ if __name__ == "__main__":
     # python src/data_loading/ibtracs.py
     # print(na_tcs())
     # print(gom_tcs())
-    print(katrina())
+    # print(katrina())
+    print(holland_b_landing_distribution(katrina(), fit=True).tolist())
+    print(holland_b_landing_distribution(katrina(), fit=False).tolist())
+
