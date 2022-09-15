@@ -1,4 +1,5 @@
 """IBTrACS data loading script."""
+from ast import Call
 from typing import Callable, Optional, List, Tuple
 import warnings
 import numpy as np
@@ -253,6 +254,8 @@ def holland_b(
     """
     Calculate Holland 2010 B parameter.
 
+    Taken from ADCIRCpy.
+
     Args:
         vmax (float): _description_
         rmax (float): _description_
@@ -273,41 +276,77 @@ def holland_b(
 
 
 def holland2010(
-    radius: float, b_coeff: float, x_coeff: float, rmax: float, vmax: float
+    radius: float, bs_coeff: float, x_coeff: float, rmax: float, vmax: float
 ) -> float:
+    """
+    Holland 2010 function.
+
+    Args:
+        radius (float): Radius at a particular point.
+        bs_coeff (float): B coefficient Holland2010.
+        x_coeff (float): X coefficient Holland2010.
+        rmax (float): Radius of maximum wind.
+        vmax (float): Velocity of maximum wind.
+
+    Returns:
+        float:
+    """
     return (
         vmax
-        * (((rmax / radius) ** b_coeff) * np.exp(1 - (rmax / radius) ** b_coeff))
+        * (((rmax / radius) ** bs_coeff) * np.exp(1 - (rmax / radius) ** bs_coeff))
         ** x_coeff
     )
 
 
 def holland2010_gen(rmax: float, vmax: float) -> Callable:
-    def holland_fit_func(radius: float, b_coeff: float, x_coeff: float) -> float:
-        return holland2010(radius, b_coeff, x_coeff, rmax, vmax)
+    """
+    Holland 2010 Generator.
+
+    Args:
+        rmax (float): Radius of maximum of wind.
+        vmax (float): Value of maximum wind.
+
+    Returns:
+        Callable: holland_fit_func(radius: float, bs_coeff: float, x_coeff: float)
+    """
+    def holland_fit_func(radius: float, bs_coeff: float, x_coeff: float) -> float:
+        return holland2010(radius, bs_coeff, x_coeff, rmax, vmax)
 
     return holland_fit_func
 
 
 def holland_fitter(
     rmax: float, vmax: float, neutral_pressure: float, rlist: list, vlist: list
-) -> None:
+) -> Tuple[Callable, np.ndarray]:
+    """
+    Holland 2010 Fitter.
+
+    Args:
+        rmax (float): Radius of maximum wind.
+        vmax (float): Velocity maximum.
+        neutral_pressure (float): Neutral Pressure.
+        rlist (list): Radius list.
+        vlist (list): Velocity list.
+
+    Returns:
+        Tuple[Callable, np.ndarray]:
+    """
 
     holland2010_loc = holland2010_gen(rmax, vmax)
 
-    def velocity_function_generator(b_coeff: float, x_coeff: float) -> Callable:
+    def velocity_function_generator(bs_coeff: float, x_coeff: float) -> Callable:
         def velocity_function(radius: float) -> float:
-            return holland2010_loc(radius, b_coeff, x_coeff)
+            return holland2010_loc(radius, bs_coeff, x_coeff)
         return velocity_function
 
-    # b_coeff = holland_B(hurdat)
+    # bs_coeff = holland_B(hurdat)
     # add bounds
     bi = np.finfo(float).eps  # avoid divide by zero
     bf = neutral_pressure
     bounds = (bi, bf)
-    b_coeff = 1.0
+    bs_coeff = 1.0
     x_coeff = 1.0
-    param_guess = [b_coeff, x_coeff]
+    param_guess = [bs_coeff, x_coeff]
     # do curve fitting
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -319,7 +358,7 @@ def holland_fitter(
             bounds=bounds,
             method="dogbox",
         )
-    # print("[b_coeff, x_coeff]", popt)
+    # print("[bs_coeff, x_coeff]", popt)
     velocity_function_instance = velocity_function_generator(*popt)
     #radii = np.linspace(bi, bf, num=500)
     #results = np.array([velocity_function_instance(i) for i in radii])
@@ -328,6 +367,15 @@ def holland_fitter(
 
 
 def holland_fitter_usa(ds: xr.Dataset) -> Tuple[Callable, np.ndarray]:
+    """
+    Holland Fitter USA.
+
+    Args:
+        ds (xr.Dataset): xarray dataset.
+
+    Returns:
+        Tuple[Callable, np.ndarray]: velocity function, popt
+    """
     init_distance_labels = ["usa_r34", "usa_r50", "usa_r64"]
     init_speeds = [int(x.split("r")[1]) for x in init_distance_labels]
     init_distances = [np.mean(ds[var].values) for var in init_distance_labels]
@@ -346,11 +394,20 @@ def holland_fitter_usa(ds: xr.Dataset) -> Tuple[Callable, np.ndarray]:
     var_list.append(speeds)
     #print(var_list)
     velocity_function_instance, popt = holland_fitter(*var_list)
-    #print("[b_coeff, x_coeff]", popt)
+    #print("[bs_coeff, x_coeff]", popt)
     return velocity_function_instance, popt
 
 
 def holland_b_fit_usa(ds: xr.Dataset) -> np.ndarray:
+    """
+    Holland B function fit on windspeeds USA.
+
+    Args:
+        ds (xr.Dataset): xarray dataset.
+
+    Returns:
+        np.ndarray: numpy array.
+    """
     b_coeff_list = []
     for i in range(len(ds.date_time.values)):
         _, popt = holland_fitter_usa(ds.isel(date_time=i))
@@ -360,7 +417,7 @@ def holland_b_fit_usa(ds: xr.Dataset) -> np.ndarray:
 
 def holland_b_usa(ds: xr.Dataset) -> np.ndarray:
     """
-    Calculate Holland 2010 B parameter using US variables.
+    Calculate Holland 2010 Bs parameter using US variables.
 
     Args:
         ds (xr.Dataset): Individual IBTRACS storm.
