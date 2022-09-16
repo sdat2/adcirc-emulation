@@ -200,7 +200,7 @@ def no_tcs() -> xr.Dataset:
     return filter_by_bbox(na_tcs(), bbox=NO_BBOX.ecmwf())
 
 
-def landings_only(ds: xr.Dataset) -> xr.Dataset:
+def landings_only(ds: xr.Dataset) -> Optional[xr.Dataset]:
     """
     Extract a reduced dataset based on those points at which a landing occurs.
 
@@ -208,9 +208,16 @@ def landings_only(ds: xr.Dataset) -> xr.Dataset:
         ds (xr.Dataset): Individual storm.
 
     Returns:
-        xr.Dataset: Clipped storm.
+        Optional[xr.Dataset]: Clipped storm. If there are no tropical cyclones
+            hitting the coatline the coastline then None is returned.
     """
-    return ds.isel(date_time=ds["date_time"][(ds["usa_record"].values == b"L").ravel()])
+    date_times = np.all(
+        [(ds["usa_record"].values == b"L"), (ds["usa_sshs"].values > 0)], axis=0
+    ).ravel()
+    if np.any(date_times):
+        return ds.isel(date_time=date_times)
+    else:
+        return None
 
 
 def landing_distribution(
@@ -234,7 +241,8 @@ def landing_distribution(
     output = []
     for storm in ds["storm"].values:
         landing_ds = landings_only(ds.isel(storm=storm))
-        output += landing_ds[var].values.tolist()
+        if landing_ds is not None:
+            output += landing_ds[var].values.tolist()
 
     if sanitize:
         output = [x for x in output if str(x) != "nan"]
@@ -270,7 +278,7 @@ def holland_b(
     if neutral_pressure <= central_pressure:
         neutral_pressure = np.nan  # central_pressure + 1.0
     f = 2.0 * 7.2921e-5 * np.sin(np.radians(np.abs(eye_latitude)))
-    return (vmax ** 2 + vmax * rmax * f * air_density * np.exp(1)) / (
+    return (vmax**2 + vmax * rmax * f * air_density * np.exp(1)) / (
         neutral_pressure - central_pressure
     )
 
@@ -309,6 +317,7 @@ def holland2010_gen(rmax: float, vmax: float) -> Callable:
     Returns:
         Callable: holland_fit_func(radius: float, bs_coeff: float, x_coeff: float)
     """
+
     def holland_fit_func(radius: float, bs_coeff: float, x_coeff: float) -> float:
         return holland2010(radius, bs_coeff, x_coeff, rmax, vmax)
 
@@ -337,6 +346,7 @@ def holland_fitter(
     def velocity_function_generator(bs_coeff: float, x_coeff: float) -> Callable:
         def velocity_function(radius: float) -> float:
             return holland2010_loc(radius, bs_coeff, x_coeff)
+
         return velocity_function
 
     # bs_coeff = holland_B(hurdat)
@@ -360,8 +370,8 @@ def holland_fitter(
         )
     # print("[bs_coeff, x_coeff]", popt)
     velocity_function_instance = velocity_function_generator(*popt)
-    #radii = np.linspace(bi, bf, num=500)
-    #results = np.array([velocity_function_instance(i) for i in radii])
+    # radii = np.linspace(bi, bf, num=500)
+    # results = np.array([velocity_function_instance(i) for i in radii])
     # print(radii, results)
     return velocity_function_instance, popt
 
@@ -379,7 +389,8 @@ def holland_fitter_usa(ds: xr.Dataset) -> Tuple[Callable, np.ndarray]:
     init_distance_labels = ["usa_r34", "usa_r50", "usa_r64"]
     init_speeds = [int(x.split("r")[1]) for x in init_distance_labels]
     init_distances = [np.mean(ds[var].values) for var in init_distance_labels]
-    speeds=[]; distances=[]
+    speeds = []
+    distances = []
     for i in range(len(init_speeds)):
         if not np.isnan(init_distances[i]):
             speeds.append(init_speeds[i])
@@ -387,14 +398,14 @@ def holland_fitter_usa(ds: xr.Dataset) -> Tuple[Callable, np.ndarray]:
 
     var_names = ["usa_wind", "usa_rmw", "usa_poci"]
     var_list = [ds[var].values for var in var_names]
-    #print([ds[var].attrs["units"] for var in var_names + init_distance_labels])
+    # print([ds[var].attrs["units"] for var in var_names + init_distance_labels])
     # print([ds[var].attrs["description"] for var in var_names + distance_labels])
     var_list = [ds[var].values for var in var_names]
     var_list.append(distances)
     var_list.append(speeds)
-    #print(var_list)
+    # print(var_list)
     velocity_function_instance, popt = holland_fitter(*var_list)
-    #print("[bs_coeff, x_coeff]", popt)
+    # print("[bs_coeff, x_coeff]", popt)
     return velocity_function_instance, popt
 
 
@@ -430,7 +441,9 @@ def holland_b_usa(ds: xr.Dataset) -> np.ndarray:
     return holland_b(*var_list)
 
 
-def holland_b_landing_distribution(ds: xr.Dataset, sanitize: bool = True, fit=False) -> np.ndarray:
+def holland_b_landing_distribution(
+    ds: xr.Dataset, sanitize: bool = True, fit=False
+) -> np.ndarray:
     """
     Calculate Holland 2010 B parameter distribution.
 
@@ -453,10 +466,11 @@ def holland_b_landing_distribution(ds: xr.Dataset, sanitize: bool = True, fit=Fa
     output = []
     for storm in ds["storm"].values:
         landing_ds = landings_only(ds.isel(storm=storm))
-        if fit:
-            output += holland_b_fit_usa(landing_ds).tolist()
-        else:
-            output += holland_b_usa(landing_ds).tolist()
+        if landing_ds is not None:
+            if fit:
+                output += holland_b_fit_usa(landing_ds).tolist()
+            else:
+                output += holland_b_usa(landing_ds).tolist()
 
     if sanitize:
         output = [x for x in output if str(x) != "nan"]
@@ -532,4 +546,3 @@ if __name__ == "__main__":
     # print(katrina())
     print(holland_b_landing_distribution(katrina(), fit=True).tolist())
     print(holland_b_landing_distribution(katrina(), fit=False).tolist())
-
