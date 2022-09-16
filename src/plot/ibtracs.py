@@ -12,7 +12,7 @@ from sithom.time import timeit
 from sithom.plot import plot_defaults, lim
 from sithom.place import BoundingBox
 from src.constants import FIGURE_PATH, GOM_BBOX, NO_BBOX
-from src.data_loading.ibtracs import na_tcs, gom_tcs
+from src.data_loading.ibtracs import na_tcs, gom_tcs, landing_distribution
 from src.plot.map import map_axes
 from src.preprocessing.labels import sanitize
 
@@ -182,6 +182,108 @@ def plot_gom_tc_angles() -> None:
         plt.clf()
 
 
+from typing import Optional, List
+import matplotlib
+from sithom.plot import label_subplots, set_dim
+from sithom.misc import in_notebook
+
+
+def var_label(ds: xr.Dataset, var: str) -> str:
+    return ds[var].attrs["long_name"] + " [" + ds[var].attrs["units"] + "]"
+
+
+def plain_hist(
+    dist: np.ndarray,
+    ds: xr.Dataset,
+    var: str,
+    ax: Optional[matplotlib.axes.Axes] = None,
+) -> None:
+    if ax is None:
+        ax = plt.subplot(projection="polar")
+    if var == "usa_sshs":
+        kwargs = dict(bins=[0.5 + x for x in range(6)])
+    else:
+        kwargs = dict()
+    ax.hist(dist, **kwargs)
+    ax.set_ylabel("Number of landings")
+    ax.set_xlabel(var_label(ds, var))
+
+
+def angle_hist(
+    dist: np.ndarray,
+    ds: xr.Dataset,
+    var: str,
+    ax: Optional[matplotlib.axes.Axes] = None,
+) -> None:
+    """
+    Plot polar histogram.
+
+    Will only work for single plot,
+    as uses plt.hist to create histogram bins.
+
+    Args:
+        dist (np.ndarray): Input array [Degrees].
+        ds (xr.Dataset): Dataset.
+        var (str): variable.
+        ax (Optional[matplotlib.axes.Axes]): axes.
+    """
+    output = plt.hist(dist)
+    points = output[0]
+    rads = output[1] / 360 * 2 * np.pi
+    plt.clf()
+    if ax is None:
+        ax = plt.subplot(projection="polar")
+    ax.bar(
+        rads[1:],
+        points,
+        width=2 * np.pi / len(points),
+        bottom=0.0,
+        alpha=0.5,
+        edgecolor="black",
+    )
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction(-1)
+
+
+def individual_dist(
+    ds: xr.Dataset, var: str, ax: Optional[matplotlib.axes.Axes] = None
+) -> None:
+    dist = landing_distribution(ds, var=var)
+    if var == "x": #"storm_dir":
+        angle_hist(dist, ds, var, ax=ax)
+    else:
+        plain_hist(dist, ds, var, ax=ax)
+    if var == "usa_sshs":
+        kwargs = dict(bins=[0.5 + x for x in range(6)])
+
+
+def multi_dist(ds: xr.Dataset, var_list: List[List[str]]) -> None:
+    var_array = np.array(var_list)
+    shape = var_array.shape
+    fig, axs = plt.subplots(*shape)
+    set_dim(fig, fraction_of_line_width=1, ratio=(5 ** 0.5 - 1) / 2 * 2)
+
+    for i in range(shape[0]):
+        for j in range(shape[1]):
+            individual_dist(ds, var_array[i, j], ax=axs[i, j])
+    if len(axs.ravel()) > 1:
+        label_subplots(axs.ravel(), override="outside")
+
+
+def make_multi_dist() -> None:
+    gtcs = gom_tcs()
+    multi_dist(
+        gtcs,
+        [["storm_speed", "storm_dir"],
+         ["usa_pres", "usa_rmw"],
+         ["usa_wind", "usa_sshs"]],
+    )
+    if in_notebook():
+        plt.show()
+    else:
+        plt.savefig(os.path.join(FIGURE_PATH, "gom_landing_distributions.png"))
+        plt.clf()
+
 def colorline(
     x: np.ndarray,
     y: np.ndarray,
@@ -261,3 +363,4 @@ if __name__ == "__main__":
     plot_gom_tcs()
     print(GOM_BBOX)
     print(NO_BBOX)
+    make_multi_dist()
