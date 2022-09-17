@@ -1,11 +1,12 @@
 """Generate hurricane."""
 import os
-from typing import Tuple
+from typing import Tuple, List
 import numpy as np
 import matplotlib.pyplot as plt
 import climada.hazard.trop_cyclone as tc
-from src.constants import FIGURE_PATH, NO_BBOX
+from src.constants import FIGURE_PATH, NEW_ORLEANS, NO_BBOX
 from sithom.plot import plot_defaults, label_subplots
+from sithom.place import Point
 from src.data_loading.ibtracs import katrina, prep_for_climada
 
 MODEL_VANG = {"H08": 0, "H1980": 1, "H10": 2}
@@ -56,8 +57,98 @@ def plot_katrina_windfield_example(model: str = "H08") -> None:
     plt.clf()
 
 
+class HollandTropicalCyclone:
+    def __init__(
+        self,
+        point: Point,
+        angle: float,
+        trans_speed: float,
+        vmax: float,
+        rmax: float,
+        bs: float,
+    ) -> None:
+        """
+        Holland tropical cylone to hit coast at point.
+
+        Args:
+            point (Point): _description_
+            angle (float): _description_
+            trans_speed (float): _description_
+            vmax (float): _description_
+            rmax (float): _description_
+            bs (float): _description_
+        """
+        print(angle, trans_speed)
+        self.point = point
+        self.angle = angle
+        self.trans_speed = trans_speed
+        self.vmax = vmax
+        self.rmax = rmax
+        self.bs = bs
+
+    def __repr__(self) -> str:
+        return str(
+            "point: "
+            + str(self.point)
+            + "\n"
+            + "angle: "
+            + str(self.angle)
+            + " degrees\n"
+            + "trans_speed: "
+            + str(self.trans_speed)
+            + " ms-1\n"
+            + "vmax: "
+            + str(self.vmax)
+            + " ms-1\n"
+            + "rmax: "
+            + str(self.rmax)
+            + " km\n"
+            + "bs: "
+            + str(self.bs)
+            + " units\n"
+        )
+
+    def new_point(self, distance: float) -> List[float]:
+        """
+        Line.
+
+        Args:
+            distance (float): Distance in km.
+
+        Returns:
+            List[float, float]: lon, lat
+        """
+        return [
+            self.point.lon + np.sin(np.radians(self.angle)) * distance / 111,
+            self.point.lat + np.cos(np.radians(self.angle)) * distance / 111,
+        ]
+
+    def trajectory(self, run_up=1000, run_down=300) -> np.ndarray:
+        """
+        Trajectory.
+
+        Args:
+            run_up (int, optional): Run up afterwards. Defaults to 1000 km.
+            run_down (int, optional): Run down after point. Defaults to 300 km.
+        """
+        # print(self.point, self.angle, run_up, run_down)
+        point_list = [self.new_point(dist) for dist in range(-run_down, run_up, 10)]
+        return np.array(point_list)
+
+
 if __name__ == "__main__":
-    for key in tc.MODEL_VANG:
-        plot_katrina_windfield_example(model=key)
+    # for key in tc.MODEL_VANG:
+    #    plot_katrina_windfield_example(model=key)
+    htc = HollandTropicalCyclone(NEW_ORLEANS, 20, 30, 70, 3000, 100)
+    print(htc)
+    import matplotlib.pyplot as plt
+    traj = htc.trajectory()
+    print(traj.shape)
+    plt.plot(traj[:,0], traj[:, 1])
+    plt.ylabel("Latitude [N]")
+    plt.xlabel("Longitude [E]")
+    plt.scatter(htc.point.lon, htc.point.lat)
+    plt.show()
+
     # plot_katrina_windfield_example(model="H08")
-    # python src/models/generate-hurricane.py
+    # python src/models/generate-hurricane.py #

@@ -36,7 +36,7 @@ GOM_BBOX = BoundingBox([-100, -80], [15, 35], desc="Gulf of Mexico Bounding Box"
 # New Orleans box (lons, lats)
 NO_BBOX = BoundingBox([-92, -86.5], [28.5, 30.8], desc="New Orleans Area Bounding Box")
 # Significant places (lon, lat)
-NEW_ORLEANS = Point(-90.0715, 29.9511)  # lon , lats
+NEW_ORLEANS = Point(-90.0715, 29.9511, desc="New Orleans Point")  # lon , lats
 
 # ERA5 atmospheric variables.
 ECMWF_AIR_VAR: List[str] = [
