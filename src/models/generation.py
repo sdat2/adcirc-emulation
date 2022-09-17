@@ -78,7 +78,7 @@ class HollandTropicalCyclone:
             rmax (float): _description_
             bs (float): _description_
         """
-        print(angle, trans_speed)
+        # print(angle, trans_speed)
         self.point = point
         self.angle = angle
         self.trans_speed = trans_speed
@@ -123,7 +123,7 @@ class HollandTropicalCyclone:
             self.point.lat + np.cos(np.radians(self.angle)) * distance / 111,
         ]
 
-    def trajectory(self, run_up=1000, run_down=300) -> np.ndarray:
+    def trajectory(self, run_up=1000, run_down=350) -> np.ndarray:
         """
         Trajectory.
 
@@ -132,23 +132,13 @@ class HollandTropicalCyclone:
             run_down (int, optional): Run down after point. Defaults to 300 km.
         """
         # print(self.point, self.angle, run_up, run_down)
-        point_list = [self.new_point(dist) for dist in range(-run_down, run_up, 10)]
+        point_list = [self.new_point(dist) for dist in range(-run_up, run_down, 10)]
         return np.array(point_list)
 
 
 if __name__ == "__main__":
     # for key in tc.MODEL_VANG:
     #    plot_katrina_windfield_example(model=key)
-    htc = HollandTropicalCyclone(NEW_ORLEANS, 20, 30, 70, 3000, 100)
-    print(htc)
-    import matplotlib.pyplot as plt
-    traj = htc.trajectory()
-    print(traj.shape)
-    plt.plot(traj[:,0], traj[:, 1])
-    plt.ylabel("Latitude [N]")
-    plt.xlabel("Longitude [E]")
-    plt.scatter(htc.point.lon, htc.point.lat)
-    plt.show()
-
     # plot_katrina_windfield_example(model="H08")
-    # python src/models/generate-hurricane.py #
+    # python src/models/generate-hurricane.py
+    print("ok")

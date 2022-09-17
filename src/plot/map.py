@@ -1,6 +1,7 @@
 """Function to plot maps using cartopy."""
 import matplotlib
 import matplotlib.pyplot as plt
+from typeguard import typechecked
 
 try:
     import cartopy
@@ -9,7 +10,8 @@ except ImportError:
     print("cartopy not installed")
 
 
-def add_features(ax: matplotlib.axes.Axes):
+@typechecked
+def add_features(ax: matplotlib.axes.Axes) -> matplotlib.axes.Axes:
     """
     Add features to map.
 
@@ -26,7 +28,8 @@ def add_features(ax: matplotlib.axes.Axes):
     return ax
 
 
-def map_axes():
+@typechecked
+def map_axes() -> matplotlib.axes.Axes:
     """
     Map axes with features.
 
