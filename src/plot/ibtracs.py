@@ -1,7 +1,8 @@
 """IBTRACS plotting."""
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 import os
 import numpy as np
+import matplotlib
 import matplotlib.axes
 import matplotlib.pyplot as plt
 import matplotlib.collections as mcoll
@@ -11,6 +12,7 @@ from sithom.misc import in_notebook
 from sithom.time import timeit
 from sithom.plot import plot_defaults, lim
 from sithom.place import BoundingBox
+from sithom.plot import label_subplots, set_dim
 from src.constants import FIGURE_PATH, GOM_BBOX, NO_BBOX
 from src.data_loading.ibtracs import na_tcs, gom_tcs, landing_distribution
 from src.plot.map import map_axes
@@ -38,6 +40,8 @@ def plot_storm(
         scatter_size (float, optional): Defaults to 1.6.
         vmin (Optional[Tuple[float]], optional): Defaults to None.
         vmax (Optional[Tuple[float]], optional): Defaults to None.
+
+    any:
 
     """
     ax.plot(
@@ -182,12 +186,6 @@ def plot_gom_tc_angles() -> None:
         plt.clf()
 
 
-from typing import Optional, List
-import matplotlib
-from sithom.plot import label_subplots, set_dim
-from sithom.misc import in_notebook
-
-
 def var_label(ds: xr.Dataset, var: str) -> str:
     """
     Var label.
@@ -276,7 +274,7 @@ def individual_dist(
         ax (Optional[matplotlib.axes.Axes], optional): _description_. Defaults to None.
     """
     dist = landing_distribution(ds, var=var)
-    if var == "x": #"storm_dir":
+    if var == "x":  # "storm_dir":
         angle_hist(dist, ds, var, ax=ax)
     else:
         plain_hist(dist, ds, var, ax=ax)
@@ -295,7 +293,7 @@ def multi_dist(ds: xr.Dataset, var_list: List[List[str]]) -> None:
     var_array = np.array(var_list)
     shape = var_array.shape
     fig, axs = plt.subplots(*shape)
-    set_dim(fig, fraction_of_line_width=1, ratio=(5 ** 0.5 - 1) / 2 * 2)
+    set_dim(fig, fraction_of_line_width=1.5, ratio=(5**0.5 - 1) / 2 * 2)
 
     for i in range(shape[0]):
         for j in range(shape[1]):
@@ -311,9 +309,11 @@ def make_multi_dist() -> None:
     gtcs = gom_tcs()
     multi_dist(
         gtcs,
-        [["storm_speed", "storm_dir"],
-         ["usa_pres", "usa_rmw"],
-         ["usa_wind", "usa_sshs"]],
+        [
+            ["storm_speed", "storm_dir"],
+            ["usa_pres", "usa_rmw"],
+            ["usa_wind", "usa_sshs"],
+        ],
     )
     if in_notebook():
         plt.show()
@@ -383,7 +383,7 @@ def make_segments(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
     Create list of line segments from x and y coordinates, in the correct format
     for LineCollection: an array of the form numlines x (points per line) x 2 (x
-    and y) array
+    and y) array.
 
     Args:
         x (np.ndarray): x array.
@@ -422,10 +422,10 @@ def test_colorline() -> None:
 if __name__ == "__main__":
     # python src/plot/ibtracs.py
     plot_defaults()
-    #plot_na_tcs()
-    #plot_gom_tc_angles()
-    #plot_gom_tcs()
+    # plot_na_tcs()
+    # plot_gom_tc_angles()
+    # plot_gom_tcs()
     print(GOM_BBOX)
     print(NO_BBOX)
-    # make_multi_dist()
+    make_multi_dist()
     test_colorline()
