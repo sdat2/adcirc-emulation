@@ -189,6 +189,16 @@ from sithom.misc import in_notebook
 
 
 def var_label(ds: xr.Dataset, var: str) -> str:
+    """
+    Var label.
+
+    Args:
+        ds (xr.Dataset): dataset.
+        var (str): variable string.
+
+    Returns:
+        str: Label.
+    """
     return ds[var].attrs["long_name"] + " [" + ds[var].attrs["units"] + "]"
 
 
@@ -198,6 +208,15 @@ def plain_hist(
     var: str,
     ax: Optional[matplotlib.axes.Axes] = None,
 ) -> None:
+    """
+    Plain Histogram.
+
+    Args:
+        dist (np.ndarray): distribution array.
+        ds (xr.Dataset): _description_
+        var (str): _description_
+        ax (Optional[matplotlib.axes.Axes], optional): _description_. Defaults to None.
+    """
     if ax is None:
         ax = plt.subplot(projection="polar")
     if var == "usa_sshs":
@@ -248,6 +267,14 @@ def angle_hist(
 def individual_dist(
     ds: xr.Dataset, var: str, ax: Optional[matplotlib.axes.Axes] = None
 ) -> None:
+    """
+    Individual distribution.
+
+    Args:
+        ds (xr.Dataset): _description_
+        var (str): _description_
+        ax (Optional[matplotlib.axes.Axes], optional): _description_. Defaults to None.
+    """
     dist = landing_distribution(ds, var=var)
     if var == "x": #"storm_dir":
         angle_hist(dist, ds, var, ax=ax)
@@ -258,6 +285,13 @@ def individual_dist(
 
 
 def multi_dist(ds: xr.Dataset, var_list: List[List[str]]) -> None:
+    """
+    Multi distibution.
+
+    Args:
+        ds (xr.Dataset): IBTRaCS dataset.
+        var_list (List[List[str]]): IBTRaCS variables to plot in requireed shape.
+    """
     var_array = np.array(var_list)
     shape = var_array.shape
     fig, axs = plt.subplots(*shape)
@@ -271,6 +305,9 @@ def multi_dist(ds: xr.Dataset, var_list: List[List[str]]) -> None:
 
 
 def make_multi_dist() -> None:
+    """
+    Make multi-panel distribution plot.
+    """
     gtcs = gom_tcs()
     multi_dist(
         gtcs,
@@ -284,6 +321,7 @@ def make_multi_dist() -> None:
         plt.savefig(os.path.join(FIGURE_PATH, "gom_landing_distributions.png"))
         plt.clf()
 
+
 def colorline(
     x: np.ndarray,
     y: np.ndarray,
@@ -294,6 +332,8 @@ def colorline(
     alpha: float = 1.0,
 ) -> mcoll.LineCollection:
     """
+    Make lines with variable colors to plot.
+
     https://stackoverflow.com/a/25941474
 
     http://nbviewer.ipython.org/github/dpsanders/matplotlib-examples/blob/master/colorline.ipynb
@@ -301,6 +341,18 @@ def colorline(
     Plot a colored line with coordinates x and y
     Optionally specify colors in the array z
     Optionally specify a colormap, a norm function and a line width
+
+    Args:
+        x (np.ndarray): The x array.
+        y (np.ndarray): The y array.
+        z (Optional[np.ndarray], optional): The z array. Defaults to None.
+        cmap (_type_, optional): The colormap. Defaults to plt.get_cmap("copper").
+        norm (_type_, optional): The colormap norm. Defaults to plt.Normalize(0.0, 1.0).
+        linewidth (float, optional): The line width. Defaults to 3.
+        alpha (float, optional): The line transparency. Defaults to 1.0.
+
+    Returns:
+        mcoll.LineCollection: Lines to plot.
     """
 
     # Default colors equally spaced on [0,1]:
@@ -319,7 +371,8 @@ def colorline(
     )
 
     ax = plt.gca()
-    ax.add_collection(lc)
+    im = ax.add_collection(lc)
+    plt.colorbar(im, label="example")
 
     return lc
 
@@ -331,6 +384,13 @@ def make_segments(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     Create list of line segments from x and y coordinates, in the correct format
     for LineCollection: an array of the form numlines x (points per line) x 2 (x
     and y) array
+
+    Args:
+        x (np.ndarray): x array.
+        y (np.ndarray): y array.
+
+    Returns:
+        np.ndarray: segments.
     """
 
     points = np.array([x, y]).T.reshape(-1, 1, 2)
@@ -352,15 +412,20 @@ def test_colorline() -> None:
     x, y = verts[:, 0], verts[:, 1]
     z = np.linspace(0, 1, len(x))
     colorline(x, y, z, cmap=plt.get_cmap("jet"), linewidth=2)
-    plt.show()
+    if in_notebook():
+        plt.show()
+    else:
+        plt.savefig(os.path.join(FIGURE_PATH, "example_line_plot.png"))
+        plt.clf()
 
 
 if __name__ == "__main__":
     # python src/plot/ibtracs.py
     plot_defaults()
-    plot_na_tcs()
-    plot_gom_tc_angles()
-    plot_gom_tcs()
+    #plot_na_tcs()
+    #plot_gom_tc_angles()
+    #plot_gom_tcs()
     print(GOM_BBOX)
     print(NO_BBOX)
-    make_multi_dist()
+    # make_multi_dist()
+    test_colorline()
