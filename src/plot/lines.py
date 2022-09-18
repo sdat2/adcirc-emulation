@@ -6,6 +6,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.collections as mcoll
 import matplotlib.path as mpath
+from sithom.plot import plot_defaults
 from sithom.misc import in_notebook
 from src.constants import FIGURE_PATH
 
@@ -15,6 +16,7 @@ def colorline(
     y: np.ndarray,
     z: Optional[np.ndarray] = None,
     ax: Optional[matplotlib.axes.Axes] = None,
+    label: Optional[str] = None,
     cmap=plt.get_cmap("copper"),
     norm=plt.Normalize(0.0, 1.0),
     linewidth: float = 3,
@@ -61,7 +63,11 @@ def colorline(
     if ax is None:
         ax = plt.gca()
     im = ax.add_collection(lc)
-    plt.colorbar(im, label="example", ax=ax)
+    if label is None:
+        kwargs = {}
+    else:
+        kwargs = {"label": label}
+    plt.colorbar(im, **kwargs, ax=ax)
 
     return lc
 
@@ -100,14 +106,30 @@ def test_colorline() -> None:
     verts = path.interpolated(steps=3).vertices
     x, y = verts[:, 0], verts[:, 1]
     z = np.linspace(0, 1, len(x))
-    colorline(x, y, z, cmap=plt.get_cmap("jet"), linewidth=2)
+    colorline(x, y, z, cmap=plt.get_cmap("jet"), linewidth=2, label="example")
+
     if in_notebook():
         plt.show()
     else:
         plt.savefig(os.path.join(FIGURE_PATH, "example_line_plot.png"))
         plt.clf()
 
+    _, axs = plt.subplots(2, 1)
+    colorline(
+        x, y, z, cmap=plt.get_cmap("jet"), ax=axs[0], linewidth=2, label="example1"
+    )
+    colorline(
+        x, y, z, cmap=plt.get_cmap("jet"), ax=axs[1], linewidth=2, label="example2"
+    )
+
+    if in_notebook():
+        plt.show()
+    else:
+        plt.savefig(os.path.join(FIGURE_PATH, "example_line_multi_plot.png"))
+        plt.clf()
+
 
 if __name__ == "__main__":
     # python src/plot/lines.py
+    plot_defaults()
     test_colorline()
