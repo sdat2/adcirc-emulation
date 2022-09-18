@@ -26,8 +26,8 @@ def different_trajectories() -> None:
     xlabel = r"Longitude [$^{\circ}$E]"
 
     ax.set(xlabel=xlabel, ylabel=ylabel)
-    ylocs=[20, 24, 28, 32, 36]
-    xlocs=[-97, -93, -89, -85, -81]
+    ylocs = [20, 24, 28, 32, 36]
+    xlocs = [-97, -93, -89, -85, -81]
     ax.gridlines(draw_labels=True, ylocs=ylocs, xlocs=xlocs)
 
     if in_notebook():
