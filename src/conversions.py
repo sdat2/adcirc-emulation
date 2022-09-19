@@ -1,4 +1,4 @@
-"""Unit conversions for floats."""
+"""Unit conversions."""
 import numpy as np
 from sithom.place import Point
 from src.constants import UREG, RADIUS_EARTH
@@ -22,7 +22,7 @@ def knots_to_ms(knots_input: float) -> float:
     return (knots_input * UREG.knot).to("metre/second").magnitude
 
 
-def nmile_to_m(nmile_input: float) -> float:
+def nmile_to_meter(nmile_input: float) -> float:
     """
     Nautical Miles to meters.
 
@@ -33,8 +33,8 @@ def nmile_to_m(nmile_input: float) -> float:
         float: Meters output.
 
     Example::
-        >>> from src.conversions import nmile_to_m
-        >>> nmile_to_m(1.0)
+        >>> from src.conversions import nmile_to_meter
+        >>> nmile_to_meter(1.0)
         1852.0
     """
     return (nmile_input * UREG.nautical_mile).to("meter").magnitude
@@ -96,8 +96,44 @@ def millibar_to_pascal(millibar_input: float) -> float:
     return (millibar_input * UREG.millibar).to("pascal").magnitude
 
 
+def kelvin_to_celsius(kelvin_input: float) -> float:
+    """
+    Kelvin to celsius.
+
+    Args:
+        kelvin_input (float): input in Kelvin.
+
+    Returns:
+        float: output in degrees Celsius.
+
+    Example::
+        >>> from src.conversions import kelvin_to_celsius
+        >>> kelvin_to_celsius(1.0)
+        -272.15
+    """
+    return (kelvin_input * UREG.kelvin).to("celsius").magnitude
+
+
+def celsius_to_kelvin(celsius_input: float) -> float:
+    """
+    Degrees Celsius to Kelvin.
+
+    Args:
+        celsius_input (float): input in degrees Celsius.
+
+    Returns:
+        float: output in Kelvin.
+
+    Example::
+        >>> from src.conversions import celsius_to_kelvin
+        >>> celsius_to_kelvin(1.0)
+        274.15
+    """
+    return (celsius_input * UREG.celsius).to("kelvin").magnitude
+
+
 if __name__ == "__main__":
     # python src/conversions.py
     # print((1.0 * UREG.Radius_).to("meter").magnitude)
-    print((1.0 * UREG.millibar).to("pascal").magnitude)
+    print((1.0 * UREG.kelvin).to("celsius").magnitude)
     # print("Run")
