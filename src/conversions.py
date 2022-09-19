@@ -79,4 +79,5 @@ def distance_between_points(pt1: Point, pt2: Point) -> float:
 
 if __name__ == "__main__":
     # python src/conversions.py
-    print((1.0 * UREG.Radius_).to("meter").magnitude)
+    # print((1.0 * UREG.Radius_).to("meter").magnitude)
+    print("Run")
