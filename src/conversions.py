@@ -77,7 +77,27 @@ def distance_between_points(pt1: Point, pt2: Point) -> float:
     return (RADIUS_EARTH * radians).to("meter").magnitude
 
 
+def millibar_to_pascal(millibar_input: float) -> float:
+    """
+    Millibar to pascals.
+
+    Args:
+        millibar_input (float): input in millibar.
+
+    Returns:
+        float: output in pascal.
+
+    Example::
+        >>> from src.conversions import millibar_to_pascal
+        >>> millibar_to_pascal(1.0)
+        100.0
+
+    """
+    return (millibar_input * UREG.millibar).to("pascal").magnitude
+
+
 if __name__ == "__main__":
     # python src/conversions.py
     # print((1.0 * UREG.Radius_).to("meter").magnitude)
-    print("Run")
+    print((1.0 * UREG.millibar).to("pascal").magnitude)
+    # print("Run")
