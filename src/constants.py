@@ -7,6 +7,7 @@ from pint import UnitRegistry
 
 # Physical units.
 UREG = UnitRegistry()
+RADIUS_EARTH = 6371.009 * UREG.kilometer
 
 # Note: constants should be UPPER_CASE
 constants_path: str = os.path.realpath(__file__)
