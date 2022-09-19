@@ -17,8 +17,8 @@ def colorline(
     z: Optional[np.ndarray] = None,
     ax: Optional[matplotlib.axes.Axes] = None,
     label: Optional[str] = None,
-    cmap: any =plt.get_cmap("copper"),
-    norm: any =plt.Normalize(0.0, 1.0),
+    cmap: any = plt.get_cmap("copper"),
+    norm: any = plt.Normalize(0.0, 1.0),
     linewidth: float = 3,
     alpha: float = 1.0,
 ) -> mcoll.LineCollection:

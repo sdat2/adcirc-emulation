@@ -3,6 +3,10 @@
 import os
 from typing import List
 from sithom.place import BoundingBox, Point
+from pint import UnitRegistry
+
+# Physical units.
+UREG = UnitRegistry()
 
 # Note: constants should be UPPER_CASE
 constants_path: str = os.path.realpath(__file__)

@@ -135,6 +135,8 @@ class HollandTropicalCyclone:
         point_list = [self.new_point(dist) for dist in range(-run_up, run_down, 10)]
         return np.array(point_list)
 
+    # def time_traj(self, )
+
 
 if __name__ == "__main__":
     # for key in tc.MODEL_VANG:
