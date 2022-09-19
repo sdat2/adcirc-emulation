@@ -164,6 +164,22 @@ def distances_to_points(point: Point, lons: np.ndarray, lats: np.ndarray) -> np.
 
     return distance(lons, lats)
 
+
+def fcor_from_lat(lat: float) -> float:
+    """
+    F corriolis coefficient from latitude (degrees North).
+
+    Args:
+        lat (float): Latitude (degrees North).
+
+    Returns:
+        float: f_cor.
+
+    TODO: Should there be an np.abs in this function?
+    """
+    return 2.0 * 7.2921e-5 * np.sin(np.radians(np.abs(lat)))
+
+
 if __name__ == "__main__":
     # python src/conversions.py
     # print((1.0 * UREG.Radius_).to("meter").magnitude)
