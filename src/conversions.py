@@ -132,6 +132,38 @@ def celsius_to_kelvin(celsius_input: float) -> float:
     return (celsius_input * UREG.celsius).to("kelvin").magnitude
 
 
+def distances_to_points(point: Point, lons: np.ndarray, lats: np.ndarray) -> np.ndarray:
+    """
+    Distance to points.
+
+    Args:
+        point (Point): Central point (lon, lat).
+        lons (np.ndarray): Longitude array (degrees_East).
+        lats (np.ndarray): Latitude array (degrees_North).
+
+    Returns:
+        np.ndarray: Distance array (meters).
+
+
+    Example:
+        >>> import numpy as np
+        >>> from sithom.place import Point
+        >>> point_a = Point(0, 0)
+        >>> lons = np.array([0, 1, 2])
+        >>> lats = np.array([0, 0, 0])
+        >>> distances = distances_to_points(point_a, lons, lats)
+        >>> distances.tolist()
+        [0.0, 111195.08372419143, 222390.16744838285]
+
+    """
+    assert lons.shape == lats.shape
+
+    @np.vectorize
+    def distance(lon: float, lat: float) -> float:
+        return distance_between_points(point, Point(lon, lat))
+
+    return distance(lons, lats)
+
 if __name__ == "__main__":
     # python src/conversions.py
     # print((1.0 * UREG.Radius_).to("meter").magnitude)
