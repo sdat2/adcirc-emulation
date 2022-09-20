@@ -169,24 +169,34 @@ def fcor_from_lat(lat: float) -> float:
     """
     F-corriolis coefficient from latitude (degrees North).
 
+    .. math::
+        :nowrap:
+        \\begin{equation}
+            f=2 \\Omega \\sin \\phi
+        \\end{equation}
+
+    Where phi is the latitude, and omega is the planetary
+    angular frequency.
+
     Args:
         lat (float): Latitude (degrees North).
 
     Returns:
-        float: f_cor.
+        float: Coriolis coefficient.
 
     TODO: Should there be an np.abs in this function? 7.2921e-5
 
     Example::
         >>> from src.conversions import fcor_from_lat
-        >>> fcor_from_lat(53)
-        1.013054328140783
+        >>> fcor_from_lat(90) / 2
+        7.27220521664304e-05
+
     """
     return (
         2.0
+        * 2.0
         * np.pi
-        * RADIUS_EARTH.to("meter").magnitude
-        / (1.0 * UREG.year).to("second").magnitude
+        / ((1.0 * UREG.day).to("second").magnitude)
         * np.sin(np.radians(np.abs(lat)))
     )
 
