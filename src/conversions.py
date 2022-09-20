@@ -114,7 +114,9 @@ def distances_to_points(point: Point, lons: np.ndarray, lats: np.ndarray) -> np.
     return distance(lons, lats)
 
 
-def millibar_to_pascal(millibar_input: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+def millibar_to_pascal(
+    millibar_input: Union[float, np.ndarray]
+) -> Union[float, np.ndarray]:
     """
     Millibar to pascals.
 
@@ -133,7 +135,9 @@ def millibar_to_pascal(millibar_input: Union[float, np.ndarray]) -> Union[float,
     return (millibar_input * UREG.millibar).to("pascal").magnitude
 
 
-def kelvin_to_celsius(kelvin_input: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+def kelvin_to_celsius(
+    kelvin_input: Union[float, np.ndarray]
+) -> Union[float, np.ndarray]:
     """
     Kelvin to celsius.
 
@@ -151,7 +155,9 @@ def kelvin_to_celsius(kelvin_input: Union[float, np.ndarray]) -> Union[float, np
     return (kelvin_input * UREG.kelvin).to("celsius").magnitude
 
 
-def celsius_to_kelvin(celsius_input: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+def celsius_to_kelvin(
+    celsius_input: Union[float, np.ndarray]
+) -> Union[float, np.ndarray]:
     """
     Degrees Celsius to Kelvin.
 
@@ -241,9 +247,11 @@ def si_ify(input: xr.Dataset) -> xr.Dataset:
 
     """
 
-    si_dict = {"knots": ("m s**-1", knots_to_ms),
-            "nmile": ("m",  nmile_to_meter),
-            "mb": ("Pa", millibar_to_pascal)}
+    si_dict = {
+        "knots": ("m s**-1", knots_to_ms),
+        "nmile": ("m", nmile_to_meter),
+        "mb": ("Pa", millibar_to_pascal),
+    }
 
     for var in input:
         if "units" in input[var].attrs:

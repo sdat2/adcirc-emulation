@@ -24,6 +24,46 @@ def _intersection(lst1: list, lst2: list) -> list:
     return list(set(lst1).intersection(set(lst2)))
 
 
+REQ_VAR = [
+    "nature",
+    "basin",
+    "subbasin",
+    "name",
+    "storm_speed",
+    "storm_dir",
+    "usa_pres",
+    "usa_rmw",
+    "usa_wind",
+    "usa_sshs",
+    "usa_poci",
+    "usa_lat",
+    "usa_r34",
+    "usa_r50",
+    "usa_r64",
+    "usa_record",
+]
+
+
+def reduce_to_req(ds: xr.Dataset) -> xr.Dataset:
+    """
+    Reduce IBTRaCS dataset to the small number
+    of variables that are actually used.
+
+    Args:
+        ds (xr.Dataset): dataset.
+
+    Returns:
+        xr.Dataset: dataset.
+
+    Example::
+        >>> from src.data_loading.ibtracs import katrina, reduce_to_req, REQ_VAR
+        >>> ds = reduce_to_req(katrina())
+        >>> np.all([var in REQ_VAR for var in ds])
+        True
+    """
+    return ds[REQ_VAR]
+
+
 # @timeit
 def filter_by_labels(
     ds: xr.Dataset,
@@ -265,11 +305,11 @@ def holland_b(
     Taken from ADCIRCpy.
 
     Args:
-        vmax (float): _description_
-        rmax (float): _description_
-        neutral_pressure (float): _description_
-        central_pressure (float): _description_
-        eye_latitude (float): _description_
+        vmax (float): velocity maximum.
+        rmax (float): radius of maximum winds.
+        neutral_pressure (float): neutral pressure.
+        central_pressure (float): central pressure.
+        eye_latitude (float): Latitude of eye.
 
     Returns:
         float: Holland 2010 B parameter.
@@ -277,7 +317,7 @@ def holland_b(
     air_density = 1.15
     if neutral_pressure <= central_pressure:
         neutral_pressure = np.nan  # central_pressure + 1.0
-    fcor =  fcor_from_lat(eye_latitude)
+    fcor = fcor_from_lat(eye_latitude)
     return (vmax**2 + vmax * rmax * fcor * air_density * np.exp(1)) / (
         neutral_pressure - central_pressure
     )
