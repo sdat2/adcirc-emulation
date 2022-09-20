@@ -1,11 +1,11 @@
 """IBTrACS data loading script."""
-from ast import Call
 from typing import Callable, Optional, List, Tuple
 import warnings
 import numpy as np
 from scipy import optimize
 import xarray as xr
 from src.constants import IBTRACS_NC, GOM_BBOX, NO_BBOX
+from src.conversions import fcor_from_lat
 
 # from sithom.time import timeit
 
@@ -277,8 +277,8 @@ def holland_b(
     air_density = 1.15
     if neutral_pressure <= central_pressure:
         neutral_pressure = np.nan  # central_pressure + 1.0
-    f = 2.0 * 7.2921e-5 * np.sin(np.radians(np.abs(eye_latitude)))
-    return (vmax**2 + vmax * rmax * f * air_density * np.exp(1)) / (
+    fcor =  fcor_from_lat(eye_latitude)
+    return (vmax**2 + vmax * rmax * fcor * air_density * np.exp(1)) / (
         neutral_pressure - central_pressure
     )
 
@@ -458,7 +458,7 @@ def holland_b_landing_distribution(
 
     Example::
         >>> holland_b_landing_distribution(katrina()).tolist()
-        [175.00549603625592, 140.7033819399621, 143.1886980704015]
+        [175.00548104161092, 140.70336636832965, 143.18867930024024]
         >>> holland_b_landing_distribution(katrina(), fit=True).tolist()
         [0.2363810378430956, 2.220446049250313e-16, 0.20139260140129567]
 

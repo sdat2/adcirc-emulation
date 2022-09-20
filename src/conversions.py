@@ -1,18 +1,20 @@
 """Unit conversions."""
+from typing import Union
 import numpy as np
+import xarray as xr
 from sithom.place import Point
 from src.constants import UREG, RADIUS_EARTH
 
 
-def knots_to_ms(knots_input: float) -> float:
+def knots_to_ms(knots_input: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
     """
     Knots to meter/second.
 
     Args:
-        knots_input (float): Knots.
+        knots_input (Union[float, np.ndarray]): Knots.
 
     Returns:
-        float: meter per second output.
+        Union[float, np.ndarray]t: meter per second output.
 
     Example::
         >>> from src.conversions import knots_to_ms
@@ -22,15 +24,15 @@ def knots_to_ms(knots_input: float) -> float:
     return (knots_input * UREG.knot).to("metre/second").magnitude
 
 
-def nmile_to_meter(nmile_input: float) -> float:
+def nmile_to_meter(nmile_input: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
     """
     Nautical Miles to meters.
 
     Args:
-        nmile_input (float): Nautical Mile input.
+        nmile_input (Union[float, np.ndarray]): Nautical Mile input.
 
     Returns:
-        float: Meters output.
+        Union[float, np.ndarray]: Meters output.
 
     Example::
         >>> from src.conversions import nmile_to_meter
@@ -42,7 +44,9 @@ def nmile_to_meter(nmile_input: float) -> float:
 
 def distance_between_points(pt1: Point, pt2: Point) -> float:
     """
-    Distance between points.
+    Distance between lon/lat points.
+
+    NOTE: Approximates Earth as perfect sphere.
 
     Args:
         pt1 (Point): first lon lat point.
@@ -75,61 +79,6 @@ def distance_between_points(pt1: Point, pt2: Point) -> float:
     ) * np.sin(dlong / 2) * np.sin(dlong / 2)
     radians = 2 * np.arctan2(np.sqrt(alpha), np.sqrt(1 - alpha))
     return (RADIUS_EARTH * radians).to("meter").magnitude
-
-
-def millibar_to_pascal(millibar_input: float) -> float:
-    """
-    Millibar to pascals.
-
-    Args:
-        millibar_input (float): input in millibar.
-
-    Returns:
-        float: output in pascal.
-
-    Example::
-        >>> from src.conversions import millibar_to_pascal
-        >>> millibar_to_pascal(1.0)
-        100.0
-
-    """
-    return (millibar_input * UREG.millibar).to("pascal").magnitude
-
-
-def kelvin_to_celsius(kelvin_input: float) -> float:
-    """
-    Kelvin to celsius.
-
-    Args:
-        kelvin_input (float): input in Kelvin.
-
-    Returns:
-        float: output in degrees Celsius.
-
-    Example::
-        >>> from src.conversions import kelvin_to_celsius
-        >>> kelvin_to_celsius(1.0)
-        -272.15
-    """
-    return (kelvin_input * UREG.kelvin).to("celsius").magnitude
-
-
-def celsius_to_kelvin(celsius_input: float) -> float:
-    """
-    Degrees Celsius to Kelvin.
-
-    Args:
-        celsius_input (float): input in degrees Celsius.
-
-    Returns:
-        float: output in Kelvin.
-
-    Example::
-        >>> from src.conversions import celsius_to_kelvin
-        >>> celsius_to_kelvin(1.0)
-        274.15
-    """
-    return (celsius_input * UREG.celsius).to("kelvin").magnitude
 
 
 def distances_to_points(point: Point, lons: np.ndarray, lats: np.ndarray) -> np.ndarray:
@@ -165,7 +114,62 @@ def distances_to_points(point: Point, lons: np.ndarray, lats: np.ndarray) -> np.
     return distance(lons, lats)
 
 
-def fcor_from_lat(lat: float) -> float:
+def millibar_to_pascal(millibar_input: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+    """
+    Millibar to pascals.
+
+    Args:
+        millibar_input (Union[float, np.ndarray]): input in millibar.
+
+    Returns:
+        Union[float, np.ndarray]: output in pascal.
+
+    Example::
+        >>> from src.conversions import millibar_to_pascal
+        >>> millibar_to_pascal(1.0)
+        100.0
+
+    """
+    return (millibar_input * UREG.millibar).to("pascal").magnitude
+
+
+def kelvin_to_celsius(kelvin_input: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+    """
+    Kelvin to celsius.
+
+    Args:
+        kelvin_input (Union[float, np.ndarray]Union[float, np.ndarray]): input in Kelvin.
+
+    Returns:
+        Union[float, np.ndarray]: output in degrees Celsius.
+
+    Example::
+        >>> from src.conversions import kelvin_to_celsius
+        >>> kelvin_to_celsius(1.0)
+        -272.15
+    """
+    return (kelvin_input * UREG.kelvin).to("celsius").magnitude
+
+
+def celsius_to_kelvin(celsius_input: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+    """
+    Degrees Celsius to Kelvin.
+
+    Args:
+        celsius_input (Union[float, np.ndarray]): input in degrees Celsius.
+
+    Returns:
+        Union[float, np.ndarray]: output in Kelvin.
+
+    Example::
+        >>> from src.conversions import celsius_to_kelvin
+        >>> celsius_to_kelvin(1.0)
+        274.15
+    """
+    return (celsius_input * UREG.celsius).to("kelvin").magnitude
+
+
+def fcor_from_lat(lat: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
     """
     F-corriolis coefficient from latitude (degrees North).
 
@@ -179,10 +183,10 @@ def fcor_from_lat(lat: float) -> float:
     angular frequency.
 
     Args:
-        lat (float): Latitude (degrees North).
+        lat (Union[float, np.ndarray]): Latitude (degrees North).
 
     Returns:
-        float: Coriolis coefficient.
+        Union[float, np.ndarray]: Coriolis coefficient.
 
     TODO: Should there be an np.abs in this function? 7.2921e-5
 
@@ -199,6 +203,56 @@ def fcor_from_lat(lat: float) -> float:
         / ((1.0 * UREG.day).to("second").magnitude)
         * np.sin(np.radians(np.abs(lat)))
     )
+
+
+def si_ify(input: xr.Dataset) -> xr.Dataset:
+    """
+    SI-ify
+
+    Args:
+        input (xr.Dataset): dataset to change to SI units.
+
+    Returns:
+        xr.Dataset: Dataset with SI units instead.
+
+
+    Example::
+        >>> import numpy as np
+        >>> import xarray as xr
+        >>> from src.conversions import si_ify
+        >>> wsp_knts = [[1.0, 1.0], [1.0, 1.0]]
+        >>> lon = [[-99.83, -99.32], [-99.79, -99.23]]
+        >>> lat = [[42.25, 42.21], [42.63, 42.59]]
+        >>> ds = xr.Dataset(
+        ...    data_vars=dict(
+        ...        wsp=(["x", "y"], wsp_knts),
+        ...        ),
+        ...    coords=dict(
+        ...        lon=(["x", "y"], lon),
+        ...        lat=(["x", "y"], lat),
+        ...        )
+        ...    )
+        >>> ds["wsp"].attrs["units"] = "knots"
+        >>> ds = si_ify(ds)
+        >>> np.all(ds.wsp.values == 0.5144444444444445)
+        True
+        >>> ds.wsp.attrs["units"]
+        'm s**-1'
+
+    """
+
+    si_dict = {"knots": ("m s**-1", knots_to_ms),
+            "nmile": ("m",  nmile_to_meter),
+            "mb": ("Pa", millibar_to_pascal)}
+
+    for var in input:
+        if "units" in input[var].attrs:
+            init_unit = input[var].attrs["units"]
+            if init_unit in si_dict:
+                input[var][:] = si_dict[init_unit][1](input[var].values)
+                input[var].attrs["units"] = si_dict[init_unit][0]
+
+    return input
 
 
 if __name__ == "__main__":
