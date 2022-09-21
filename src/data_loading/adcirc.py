@@ -1,4 +1,4 @@
-"""ADCIRC."""
+"""ADCIRC Input reading."""
 import os
 import xarray as xr
 from src.constants import KAT_EX_PATH
