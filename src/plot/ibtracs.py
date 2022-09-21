@@ -331,4 +331,3 @@ if __name__ == "__main__":
     print(GOM_BBOX)
     print(NO_BBOX)
     make_multi_dist()
-    test_colorline()

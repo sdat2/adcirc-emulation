@@ -17,6 +17,9 @@ DATA_PATH: str = os.path.join(PROJECT_PATH, "data")
 REPORT_PATH: str = os.path.join(PROJECT_PATH, "report")
 FIGURE_PATH: str = os.path.join(REPORT_PATH, "figures")
 
+# Katrina example:
+KAT_EX_PATH = "/Users/simon/adcirc-swan/adcirc-testsuite/adcirc/adcirc_katrina-2d/"
+
 # Default tidal gauges.
 DEFAULT_GAUGES: List[str] = [
     "8729840",

@@ -394,8 +394,9 @@ def holland_fitter(
     bi = np.finfo(float).eps  # avoid divide by zero
     bf = neutral_pressure
     bounds = (bi, bf)
-    bs_coeff = 1.0
-    x_coeff = 1.0
+    # Initial guesses.
+    bs_coeff = 1
+    x_coeff = 0.5
     param_guess = [bs_coeff, x_coeff]
     # do curve fitting
     with warnings.catch_warnings():
@@ -405,7 +406,7 @@ def holland_fitter(
             rlist,
             vlist,
             p0=param_guess,
-            bounds=bounds,
+            # bounds=bounds,
             method="dogbox",
         )
     # print("[bs_coeff, x_coeff]", popt)

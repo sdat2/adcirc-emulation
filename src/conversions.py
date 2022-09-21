@@ -247,12 +247,12 @@ def si_ify(input: xr.Dataset) -> xr.Dataset:
         'm s**-1'
 
     """
+
     # Map different names for legacy units to those
     # in SI_DICT.
-    rename_dict = {"kts": "knots",
-                   "millibar": "mb"}
+    rename_dict = {"kts": "knots", "millibar": "mb"}
 
-    # OLD_Unit : (NEW_UNIT, conversion_function)
+    # OLD_UNIT : (NEW_UNIT, conversion_function)
 
     si_dict = {
         "knots": ("m s**-1", knots_to_ms),
