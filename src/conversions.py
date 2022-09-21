@@ -248,7 +248,7 @@ def si_ify(input: xr.Dataset) -> xr.Dataset:
     """
 
     si_dict = {
-        "knots": ("m s**-1", knots_to_ms),
+        "kts": ("m s**-1", knots_to_ms),
         "nmile": ("m", nmile_to_meter),
         "mb": ("Pa", millibar_to_pascal),
     }

@@ -5,7 +5,7 @@ import numpy as np
 from scipy import optimize
 import xarray as xr
 from src.constants import IBTRACS_NC, GOM_BBOX, NO_BBOX
-from src.conversions import fcor_from_lat
+from src.conversions import fcor_from_lat, si_ify, knots_to_ms
 
 # from sithom.time import timeit
 
@@ -207,7 +207,7 @@ def na_tcs() -> xr.Dataset:
     Returns:
         xr.Dataset: Filtered IBTrACS dataset.
     """
-    return filter_by_labels(xr.open_dataset(IBTRACS_NC))
+    return si_ify(reduce_to_req(filter_by_labels(xr.open_dataset(IBTRACS_NC))))
 
 
 def gom_tcs() -> xr.Dataset:
@@ -433,7 +433,7 @@ def holland_fitter_usa(ds: xr.Dataset) -> Tuple[Callable, np.ndarray]:
     distances = []
     for i in range(len(init_speeds)):
         if not np.isnan(init_distances[i]):
-            speeds.append(init_speeds[i])
+            knots_to_ms(speeds.append(init_speeds[i]))
             distances.append(init_distances[i])
 
     var_names = ["usa_wind", "usa_rmw", "usa_poci"]
@@ -584,5 +584,10 @@ if __name__ == "__main__":
     # print(na_tcs())
     # print(gom_tcs())
     # print(katrina())
-    print(holland_b_landing_distribution(katrina(), fit=True).tolist())
-    print(holland_b_landing_distribution(katrina(), fit=False).tolist())
+    # print(holland_b_landing_distribution(katrina(), fit=True).tolist())
+    # print(holland_b_landing_distribution(katrina(), fit=False).tolist())
+    ds = na_tcs()
+    for var in ds:
+        if "units" in ds[var].attrs:
+            print(ds[var].attrs["long_name"])
+            print(ds[var].attrs["units"])
