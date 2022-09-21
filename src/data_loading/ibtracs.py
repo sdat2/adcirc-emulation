@@ -395,8 +395,8 @@ def holland_fitter(
     bf = neutral_pressure
     bounds = (bi, bf)
     # Initial guesses.
-    bs_coeff = 1
-    x_coeff = 0.5
+    bs_coeff = 0.5
+    x_coeff = 8
     param_guess = [bs_coeff, x_coeff]
     # do curve fitting
     with warnings.catch_warnings():
@@ -405,9 +405,9 @@ def holland_fitter(
             holland2010_loc,
             rlist,
             vlist,
-            p0=param_guess,
+            # p0=param_guess,
             # bounds=bounds,
-            method="dogbox",
+            # method="dogbox",
         )
     # print("[bs_coeff, x_coeff]", popt)
     velocity_function_instance = velocity_function_generator(*popt)
@@ -444,6 +444,7 @@ def holland_fitter_usa(ds: xr.Dataset) -> Tuple[Callable, np.ndarray]:
     var_list = [ds[var].values for var in var_names]
     var_list.append(distances)
     var_list.append(speeds)
+    print(var_list)
     # print(var_list)
     velocity_function_instance, popt = holland_fitter(*var_list)
     # print("[bs_coeff, x_coeff]", popt)
