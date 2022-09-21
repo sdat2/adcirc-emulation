@@ -276,7 +276,7 @@ def landing_distribution(
 
     Example::
         >>> landing_distribution(katrina()).tolist()
-        [984.0, 920.0, 928.0]
+        [98400.0, 92000.0, 92800.0]
     """
     output = []
     for storm in ds["storm"].values:
@@ -433,7 +433,7 @@ def holland_fitter_usa(ds: xr.Dataset) -> Tuple[Callable, np.ndarray]:
     distances = []
     for i in range(len(init_speeds)):
         if not np.isnan(init_distances[i]):
-            knots_to_ms(speeds.append(init_speeds[i]))
+            speeds.append(knots_to_ms(init_speeds[i]))
             distances.append(init_distances[i])
 
     var_names = ["usa_wind", "usa_rmw", "usa_poci"]
@@ -498,7 +498,7 @@ def holland_b_landing_distribution(
 
     Example::
         >>> holland_b_landing_distribution(katrina()).tolist()
-        [175.00548104161092, 140.70336636832965, 143.18867930024024]
+        [0.5153636160278224, 0.42659086887438924, 0.4443045372729071]
         >>> holland_b_landing_distribution(katrina(), fit=True).tolist()
         [0.2363810378430956, 2.220446049250313e-16, 0.20139260140129567]
 

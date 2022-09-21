@@ -215,12 +215,13 @@ def si_ify(input: xr.Dataset) -> xr.Dataset:
     """
     SI-ify
 
+    TODO: could change to work for xr.DataArray as well.
+
     Args:
         input (xr.Dataset): dataset to change to SI units.
 
     Returns:
         xr.Dataset: Dataset with SI units instead.
-
 
     Example::
         >>> import numpy as np
@@ -246,9 +247,15 @@ def si_ify(input: xr.Dataset) -> xr.Dataset:
         'm s**-1'
 
     """
+    # Map different names for legacy units to those
+    # in SI_DICT.
+    rename_dict = {"kts": "knots",
+                   "millibar": "mb"}
+
+    # OLD_Unit : (NEW_UNIT, conversion_function)
 
     si_dict = {
-        "kts": ("m s**-1", knots_to_ms),
+        "knots": ("m s**-1", knots_to_ms),
         "nmile": ("m", nmile_to_meter),
         "mb": ("Pa", millibar_to_pascal),
     }
@@ -256,6 +263,8 @@ def si_ify(input: xr.Dataset) -> xr.Dataset:
     for var in input:
         if "units" in input[var].attrs:
             init_unit = input[var].attrs["units"]
+            if init_unit in rename_dict:
+                init_unit = rename_dict[init_unit]
             if init_unit in si_dict:
                 input[var][:] = si_dict[init_unit][1](input[var].values)
                 input[var].attrs["units"] = si_dict[init_unit][0]
