@@ -75,10 +75,10 @@ class HollandTropicalCyclone:
         Args:
             point (Point): Point to impact.
             angle (float): Angle to point.
-            trans_speed (float): Translation speed.
-            vmax (float): Wind velocity maximum.
-            rmax (float): Radius of maximum wind.
-            bs (float): Holland b parameter.
+            trans_speed (float): Translation speed m s-1.
+            vmax (float): Wind velocity maximum m s-1.
+            rmax (float): Radius of maximum wind m s-1.
+            bs (float): Holland b parameter m s -1.
         """
         # print(angle, trans_speed)
         self.point = point
@@ -138,7 +138,7 @@ class HollandTropicalCyclone:
         distance_per_timestep = (
             self.trans_speed * self.time_delta / datetime.timedelta(seconds=1)
         )
-        time_steps_before = int(abs(run_up) /distance_per_timestep)
+        time_steps_before = int(abs(run_up) / distance_per_timestep)
         time_steps_after = int(abs(run_down) / distance_per_timestep)
         # print(self.point, self.angle, run_up, run_down)
         point_list = [
@@ -168,7 +168,7 @@ class HollandTropicalCyclone:
             ),
             coords=dict(
                 time=dates,
-                reference_time=self.impact_time,
+                # reference_time=self.impact_time,
             ),
             attrs=dict(description="Tropcial Cylone trajectory."),
         )

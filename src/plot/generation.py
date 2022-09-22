@@ -1,6 +1,7 @@
 """Plot hurricane generation."""
 import os
 import datetime
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from sithom.misc import in_notebook
@@ -18,12 +19,20 @@ def different_trajectories() -> None:
     plot_defaults()
     ax = map_axes()
 
-
-    for angle in [ -60, -45, -30, -15, 0, 15, 30, 45, 60, 70]:
+    for angle in [-60, -45, -30, -15, 0, 15, 30, 45, 60, 70]:
         htc = HollandTropicalCyclone(NEW_ORLEANS, angle, 3, 50, 10e3, 100)
         traj_ds = htc.trajectory_ds()
+        print(traj_ds)
         plt.plot(traj_ds.lon.values, traj_ds.lat.values, alpha=0.5)
-        im = plt.scatter(traj_ds.lon.values, traj_ds.lat.values, c=mdates.date2num(traj_ds.time.values), s=1)
+        print([x for x in traj_ds.time.values.tolist()])
+        print(traj_ds.time.values)
+        # times = np.array([np.datetime64(x) for x in traj_ds.time.values.tolist()])
+        im = plt.scatter(
+            traj_ds.lon.values,
+            traj_ds.lat.values,
+            c=mdates.date2num(traj_ds.time.values),
+            s=1,
+        )
         plt.scatter(
             htc.point.lon,
             htc.point.lat,  # c=dates
@@ -48,14 +57,12 @@ def different_trajectories() -> None:
         plt.show()
     else:
         plt.tight_layout()
-        plt.savefig(os.path.join(FIGURE_PATH, "example_trajectories.png"), bbox_inches="tight")
+        plt.savefig(
+            os.path.join(FIGURE_PATH, "example_trajectories.png"), bbox_inches="tight"
+        )
         plt.clf()
 
 
 if __name__ == "__main__":
     different_trajectories()
     # python src/plot/generation.py
-    base = datetime.datetime.today()
-    numentries = 1000
-    date_list = [base - x * datetime.timedelta(hours=4) for x in range(numentries)]
-    print(date_list)
