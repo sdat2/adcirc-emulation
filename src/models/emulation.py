@@ -17,6 +17,10 @@ from emukit.core.initial_designs.latin_design import LatinDesign
 
 
 def example_plot() -> None:
+    """
+    Example plot.
+    """
+
     plot_defaults()
     x_min = -30.0
     x_max = 30.0
@@ -74,7 +78,14 @@ def example_plot() -> None:
         plt.clf()
 
 
-def example_animation(tmp_dir="tmp/") -> None:
+def example_animation(tmp_dir: str = "tmp/") -> None:
+    """
+    Make an example animation with Latin Hypercube search.
+
+    Args:
+        tmp_dir (str, optional): temporary directory. Defaults to "tmp/".
+
+    """
 
     if not os.path.exists(tmp_dir):
         os.mkdir(tmp_dir)
@@ -91,8 +102,8 @@ def example_animation(tmp_dir="tmp/") -> None:
     var_max = 2.1
     var_min = 0
 
-    p = ContinuousParameter("c", x_min, x_max)
-    space = ParameterSpace([p])
+    x_param = ContinuousParameter("x", x_min, x_max)
+    space = ParameterSpace([x_param])
     design = LatinDesign(space)
     num_init_data_points = 20
     x_data = design.get_samples(num_init_data_points)
@@ -161,14 +172,14 @@ def example_animation(tmp_dir="tmp/") -> None:
         ax1.set_xlabel("x")
         ax1.set_ylim([var_min, var_max])
         label_subplots([ax0, ax1])
-        plt.savefig("tmp/" + str(i) + ".png", bbox_inches="tight")
+        plt.savefig(os.path.join(tmp_dir, str(i) + ".png"), bbox_inches="tight")
         if in_notebook():
             plt.show()
         else:
             plt.clf()
         expdesign_loop.run_loop(func, 1)
 
-    file_names = sorted((tmp_dir + fn for fn in os.listdir(tmp_dir)))
+    file_names = sorted((os.path.join(tmp_dir, fn) for fn in os.listdir(tmp_dir)))
     with io.get_writer(
         os.path.join("gifs", "max-var.gif"), mode="I", duration=0.5
     ) as writer:
@@ -179,6 +190,6 @@ def example_animation(tmp_dir="tmp/") -> None:
 
 
 if __name__ == "__main__":
-    # python src/models/emukit.py
+    # python src/models/emulation.py
     example_animation()
     example_plot()
