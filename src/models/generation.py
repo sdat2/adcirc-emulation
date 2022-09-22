@@ -9,6 +9,7 @@ import climada.hazard.trop_cyclone as tc
 from src.constants import FIGURE_PATH, NEW_ORLEANS, NO_BBOX
 from sithom.plot import plot_defaults, label_subplots
 from sithom.place import Point
+from src.conversions import distances_to_points
 from src.data_loading.ibtracs import katrina, prep_for_climada
 
 MODEL_VANG = {"H08": 0, "H1980": 1, "H10": 2}
@@ -172,6 +173,11 @@ class HollandTropicalCyclone:
             ),
             attrs=dict(description="Tropcial Cylone trajectory."),
         )
+
+    def windspeed_at_points(
+        self: np.ndarray, lats: np.ndarray, lons, point: Point
+    ) -> np.ndarray:
+        distances = distances_to_points(point, lons, lats)
 
 
 if __name__ == "__main__":

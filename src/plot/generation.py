@@ -2,6 +2,7 @@
 import os
 import datetime
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from sithom.misc import in_notebook
@@ -19,7 +20,7 @@ def different_trajectories() -> None:
     plot_defaults()
     ax = map_axes()
 
-    for angle in [-60, -45, -30, -15, 0, 15, 30, 45, 60, 70]:
+    for angle in [-60, 50, -40, -30, -15, 0, 15, 30, 40, 50, 60, 70]:
         htc = HollandTropicalCyclone(NEW_ORLEANS, angle, 3, 50, 10e3, 100)
         traj_ds = htc.trajectory_ds()
         print(traj_ds)

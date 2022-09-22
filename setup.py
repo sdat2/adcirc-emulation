@@ -16,6 +16,8 @@ REQUIRED: List[str] = [
     "eccodes==1.3.3",
     "adcircpy",
     "pyschism",
+    "pyDOE",
+    "emukit"
 ]
 
 setup(
