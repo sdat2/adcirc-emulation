@@ -17,7 +17,7 @@ REQUIRED: List[str] = [
     "adcircpy",
     "pyschism",
     "pyDOE",
-    "emukit"
+    "emukit",
 ]
 
 setup(

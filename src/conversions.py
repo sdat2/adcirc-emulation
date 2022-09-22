@@ -114,6 +114,34 @@ def distances_to_points(point: Point, lons: np.ndarray, lats: np.ndarray) -> np.
     return distance(lons, lats)
 
 
+def angle_between_points(point1: Point, point2: Point) -> float:
+    """
+    Angle from point2 to point1.
+
+    Args:
+        point1 (Point): target
+        point2 (Point): gun
+
+    Returns:
+        float: angle in degrees.
+
+    Example::
+        >>> angle_between_points(Point(0,0), Point(0, 10))
+        180.0
+        >>> angle_between_points(Point(0,0), Point(0, -10))
+        0.0
+        >>> angle_between_points(Point(0,0), Point(10, 0))
+        -90.0
+        >>> angle_between_points(Point(0,0), Point(-10, 0))
+        90.0
+    """
+    myradians = np.arctan2(
+        np.radians(point1.lon - point2.lon), np.radians(point1.lat - point2.lat)
+    )
+    #  If you want to convert radians to degrees
+    return np.degrees(myradians)
+
+
 def millibar_to_pascal(
     millibar_input: Union[float, np.ndarray]
 ) -> Union[float, np.ndarray]:
