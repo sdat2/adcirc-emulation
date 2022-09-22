@@ -175,20 +175,55 @@ class HollandTropicalCyclone:
         )
 
     def windspeed_at_points(
-        self, lats: np.ndarray, lons, point: Point
+        self, lats: np.ndarray, lons: np.ndarray, point: Point
     ) -> np.ndarray:
+        """
+        Windspeeds at points.
+
+        Args:
+            lats (np.ndarray): Latitudes [degrees_North]
+            lons (np.ndarray): Longitudes [degrees_South]
+            point (Point): Point (lon, lat).
+
+        Returns:
+            np.ndarray: Windspeed [m s**-1]
+        """
         distances = distances_to_points(point, lons, lats)
         return holland2010(distances, self.bs, 0.5, self.rmax, self.vmax)
 
     def angle_at_points(
         self, lats: np.ndarray, lons: np.ndarray, point: Point
     ) -> np.ndarray:
+        """
+        Angles from each point.
+
+        Args:
+            lats (np.ndarray): Latitudes.
+            lons (np.ndarray): Longitudes.
+            point (Point): Point around which to go.
+
+        Returns:
+            np.ndarray: Angles in degrees from North.
+        """
         return angles_to_points(point, lons, lats)
 
-    def velocity_at_points(self, lats: np.ndarray, lons, point: Point) -> Tuple[np.ndarray, np.ndarray]:
+    def velocity_at_points(
+        self, lats: np.ndarray, lons: np.ndarray, point: Point
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Velocity at points.
+
+        Args:
+            lats (np.ndarray): Latitudes [degrees_North].
+            lons (np.ndarray): Longitudes [degrees_East].
+            point (Point): point (lon, lat).
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray]: u_vel [m s**-1], v_vel [m s**-1]
+        """
         windspeed = self.windspeed_at_points(lats, lons, point)
-        angle = np.radians(self.angle_at_points(lats, lons, point) + 90.0)
-        return np.cos(angle) * windspeed, np.sin(angle) * windspeed
+        angle = np.radians(self.angle_at_points(lats, lons, point) - 90.0)
+        return np.sin(angle) * windspeed, np.cos(angle) * windspeed
 
 
 if __name__ == "__main__":
