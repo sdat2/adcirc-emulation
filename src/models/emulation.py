@@ -78,6 +78,23 @@ def example_plot() -> None:
         plt.clf()
 
 
+def space() -> None:
+    """
+    Make parameter space.
+    """
+    dir = ContinuousParameter("dir [degrees]", -70, 70)
+    trans_speed = ContinuousParameter("Speed [m s**-1]", 1, 5)
+    vmax = ContinuousParameter("Maximum velocity [m s**-1]", 20, 60)
+    rmax = ContinuousParameter("Radius of maximum velocity [m]", 10e3, 100e3)
+    bs = ContinuousParameter("bs [?dim?]", 6, 8)
+    space = ParameterSpace([dir, trans_speed, vmax, rmax, bs])
+    design = LatinDesign(space)
+    num_init_data_points = 20
+    x_data = design.get_samples(num_init_data_points)
+    print(x_data)
+    print(space)
+
+
 def example_animation(tmp_dir: str = "tmp/") -> None:
     """
     Make an example animation with Latin Hypercube search.
@@ -191,5 +208,6 @@ def example_animation(tmp_dir: str = "tmp/") -> None:
 
 if __name__ == "__main__":
     # python src/models/emulation.py
-    example_animation()
-    example_plot()
+    #example_animation()
+    # example_plot()
+    space()
