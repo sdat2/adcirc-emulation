@@ -9,7 +9,7 @@ import climada.hazard.trop_cyclone as tc
 from src.constants import FIGURE_PATH, NEW_ORLEANS, NO_BBOX
 from sithom.plot import plot_defaults, label_subplots
 from sithom.place import Point
-from src.conversions import distances_to_points
+from src.conversions import distances_to_points, angles_to_points
 from src.data_loading.ibtracs import holland2010, katrina, prep_for_climada
 
 MODEL_VANG = {"H08": 0, "H1980": 1, "H10": 2}
@@ -175,18 +175,20 @@ class HollandTropicalCyclone:
         )
 
     def windspeed_at_points(
-        self: np.ndarray, lats: np.ndarray, lons, point: Point
+        self, lats: np.ndarray, lons, point: Point
     ) -> np.ndarray:
         distances = distances_to_points(point, lons, lats)
         return holland2010(distances, self.bs, 0.5, self.rmax, self.vmax)
 
     def angle_at_points(
-        self: np.ndarray, lats: np.ndarray, lons: np.ndarray, point: Point
+        self, lats: np.ndarray, lons: np.ndarray, point: Point
     ) -> np.ndarray:
-        print("ok")
+        return angles_to_points(point, lons, lats)
 
-    def velocity_at_points() -> Tuple[np.ndarray, np.ndarray]:
-        print("ok")
+    def velocity_at_points(self, lats: np.ndarray, lons, point: Point) -> Tuple[np.ndarray, np.ndarray]:
+        windspeed = self.windspeed_at_points(lats, lons, point)
+        angle = np.radians(self.angle_at_points(lats, lons, point) + 90.0)
+        return np.cos(angle) * windspeed, np.sin(angle) * windspeed
 
 
 if __name__ == "__main__":
