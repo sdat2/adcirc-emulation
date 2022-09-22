@@ -1,8 +1,10 @@
 """EMUKIT"""
 import os
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import imageio as io
+from frozendict import frozendict
 import GPy
 from GPy.models import GPRegression
 from emukit.experimental_design.experimental_design_loop import ExperimentalDesignLoop
@@ -12,6 +14,7 @@ from emukit.model_wrappers import GPyModelWrapper
 from emukit.experimental_design.acquisitions import ModelVariance
 from sithom.plot import plot_defaults, label_subplots
 from sithom.misc import in_notebook
+from xarray.core.utils import FrozenDict
 from src.constants import FIGURE_PATH
 from emukit.core.initial_designs.latin_design import LatinDesign
 
@@ -82,17 +85,27 @@ def space() -> None:
     """
     Make parameter space.
     """
-    dir = ContinuousParameter("dir [degrees]", -70, 70)
-    trans_speed = ContinuousParameter("Speed [m s**-1]", 1, 5)
-    vmax = ContinuousParameter("Maximum velocity [m s**-1]", 20, 60)
-    rmax = ContinuousParameter("Radius of maximum velocity [m]", 10e3, 100e3)
-    bs = ContinuousParameter("bs [?dim?]", 6, 8)
-    space = ParameterSpace([dir, trans_speed, vmax, rmax, bs])
+    param_dict = frozendict(
+        {
+            "dir [degrees]": (-70, 70),
+            "Speed [m s**-1]": (1, 5),
+            "Maximum velocity [m s**-1]": (20, 60),
+            "Radius of maximum velocity [m]": (10e3, 100e3),
+            "bs [?dim?]": (6, 8),
+        }
+    )
+
+    param_list = [
+        ContinuousParameter(param, param_dict[param][0], param_dict[param][1]) for param in param_dict
+    ]
+    space = ParameterSpace(param_list)
     design = LatinDesign(space)
     num_init_data_points = 20
     x_data = design.get_samples(num_init_data_points)
     print(x_data)
     print(space)
+    print(dir(space))
+    print(param_list)
 
 
 def example_animation(tmp_dir: str = "tmp/") -> None:
@@ -208,6 +221,6 @@ def example_animation(tmp_dir: str = "tmp/") -> None:
 
 if __name__ == "__main__":
     # python src/models/emulation.py
-    #example_animation()
+    # example_animation()
     # example_plot()
     space()
