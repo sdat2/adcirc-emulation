@@ -2,6 +2,7 @@
 import os
 import datetime
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from sithom.misc import in_notebook
 from sithom.plot import plot_defaults
 from src.models.generation import HollandTropicalCyclone
@@ -17,10 +18,12 @@ def different_trajectories() -> None:
     plot_defaults()
     ax = map_axes()
 
-    for angle in [-80, -60, -45, -30, -15, 0, 15, 30, 45, 60, 80]:
-        htc = HollandTropicalCyclone(NEW_ORLEANS, angle, 5, 70, 3000, 100)
+
+    for angle in [ -60, -45, -30, -15, 0, 15, 30, 45, 60, 70]:
+        htc = HollandTropicalCyclone(NEW_ORLEANS, angle, 3, 50, 10e3, 100)
         traj_ds = htc.trajectory_ds()
-        im = plt.plot(traj_ds.lon.values, traj_ds.lat.values,) # c=traj_ds.time.values)
+        plt.plot(traj_ds.lon.values, traj_ds.lat.values, alpha=0.5)
+        im = plt.scatter(traj_ds.lon.values, traj_ds.lat.values, c=mdates.date2num(traj_ds.time.values), s=1)
         plt.scatter(
             htc.point.lon,
             htc.point.lat,  # c=dates
@@ -31,6 +34,11 @@ def different_trajectories() -> None:
     ylabel = r"Latitude [$^{\circ}$N]"
     xlabel = r"Longitude [$^{\circ}$E]"
 
+    cb = plt.colorbar()
+    loc = mdates.AutoDateLocator()
+    cb.ax.yaxis.set_major_locator(loc)
+    cb.ax.yaxis.set_major_formatter(mdates.ConciseDateFormatter(loc))
+
     ax.set(xlabel=xlabel, ylabel=ylabel)
     ylocs = [20, 24, 28, 32, 36]
     xlocs = [-97, -93, -89, -85, -81]
@@ -39,7 +47,8 @@ def different_trajectories() -> None:
     if in_notebook():
         plt.show()
     else:
-        plt.savefig(os.path.join(FIGURE_PATH, "example_trajectories.png"))
+        plt.tight_layout()
+        plt.savefig(os.path.join(FIGURE_PATH, "example_trajectories.png"), bbox_inches="tight")
         plt.clf()
 
 

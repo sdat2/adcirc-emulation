@@ -149,7 +149,7 @@ class HollandTropicalCyclone:
             self.impact_time + x * self.time_delta
             for x in range(
                 -time_steps_before,
-                time_steps_after + 2,
+                time_steps_after + 1,
                 1,
             )
         ]
