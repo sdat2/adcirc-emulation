@@ -2,6 +2,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import imageio as io
 import GPy
 from GPy.models import GPRegression
 from emukit.experimental_design.experimental_design_loop import ExperimentalDesignLoop
@@ -73,7 +74,13 @@ def example_plot() -> None:
         plt.clf()
 
 
-def example_animation() -> None:
+def example_animation(tmp_dir="tmp/") -> None:
+
+    if not os.path.exists(tmp_dir):
+        os.mkdir(tmp_dir)
+
+    plot_defaults()
+
     def func(x_inputs):
         return np.sin(x_inputs) + np.random.randn(len(x_inputs), 1) * 0.05
 
@@ -106,6 +113,7 @@ def example_animation() -> None:
 
         predicted_y = []
         predicted_std = []
+
         for x in real_x:
             y, var = model_emukit.predict(np.array([[x]]))
             std = np.sqrt(var)
@@ -138,6 +146,13 @@ def example_animation() -> None:
             borderaxespad=0,
             ncol=2,
         )
+        ax0.fill_between(
+            real_x,
+            predicted_y - predicted_std,
+            predicted_y + predicted_std,
+            color="blue",
+            alpha=0.3,
+        )
         var = model_variance.evaluate(real_x.reshape(len(real_x), 1))
         ax1.plot(real_x, var)
         ax1.set_ylabel("Variance")
@@ -153,8 +168,17 @@ def example_animation() -> None:
             plt.clf()
         expdesign_loop.run_loop(func, 1)
 
+    file_names = sorted((tmp_dir + fn for fn in os.listdir(tmp_dir)))
+    with io.get_writer(
+        os.path.join("gifs", "max-var.gif"), mode="I", duration=0.5
+    ) as writer:
+        for filename in file_names:
+            image = io.imread(filename)
+            writer.append_data(image)
+    writer.close()
 
 
 if __name__ == "__main__":
     # python src/models/emukit.py
+    example_animation()
     example_plot()
