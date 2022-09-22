@@ -87,9 +87,9 @@ def space() -> None:
     """
     param_dict = frozendict(
         {
-            "dir [degrees]": (-70, 70),
-            "Speed [m s**-1]": (1, 5),
-            "Maximum velocity [m s**-1]": (20, 60),
+            "Direction [degrees]": (-70, 70),
+            "Speed [m s$^{-1}$]": (1, 5),
+            "Maximum velocity [m $^{-1}$]": (20, 60),
             "Radius of maximum velocity [m]": (10e3, 100e3),
             "bs [?dim?]": (6, 8),
         }
@@ -100,12 +100,27 @@ def space() -> None:
     ]
     space = ParameterSpace(param_list)
     design = LatinDesign(space)
-    num_init_data_points = 20
+    num_init_data_points = 100
     x_data = design.get_samples(num_init_data_points)
-    print(x_data)
-    print(space)
-    print(dir(space))
-    print(param_list)
+
+    latin_cube = frozendict({param: x_data[:, i] for i, param in enumerate(param_dict)})
+
+    params = list(latin_cube.keys())
+
+    plt.scatter(latin_cube[params[0]], latin_cube[params[1]], c=latin_cube[params[2]])
+    plt.xlabel(params[0])
+    plt.ylabel(params[1])
+    plt.colorbar(label=params[2])
+    plt.savefig(os.path.join(FIGURE_PATH, "param.png"))
+    if in_notebook():
+        plt.show()
+    else:
+        plt.clf()
+    #print(x_data)
+    #print(x_data.shape)
+    #print(space)
+    #print(dir(space))
+    #print(param_list)
 
 
 def example_animation(tmp_dir: str = "tmp/") -> None:
