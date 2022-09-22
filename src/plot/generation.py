@@ -26,7 +26,7 @@ def different_trajectories() -> None:
             htc.point.lat,  # c=dates
         )
 
-    plt.colorbar(im, label="Time")
+    # plt.colorbar(im, label="Time")
 
     ylabel = r"Latitude [$^{\circ}$N]"
     xlabel = r"Longitude [$^{\circ}$E]"

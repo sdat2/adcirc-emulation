@@ -117,14 +117,14 @@ class HollandTropicalCyclone:
         Line.
 
         Args:
-            distance (float): Distance in km.
+            distance (float): Distance in meters.
 
         Returns:
             List[float, float]: lon, lat
         """
         return [
-            self.point.lon + np.sin(np.radians(self.angle)) * distance / 111,
-            self.point.lat + np.cos(np.radians(self.angle)) * distance / 111,
+            self.point.lon + np.sin(np.radians(self.angle)) * distance / 111e3,
+            self.point.lat + np.cos(np.radians(self.angle)) * distance / 111e3,
         ]
 
     def trajectory(self, run_up=1e6, run_down=3.5e5) -> Tuple[np.ndarray, np.ndarray]:
