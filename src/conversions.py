@@ -142,6 +142,37 @@ def angle_between_points(point1: Point, point2: Point) -> float:
     return np.degrees(myradians)
 
 
+def angles_to_points(point: Point, lons: np.ndarray, lats: np.ndarray) -> np.ndarray:
+    """
+    angles to points.
+
+    Args:
+        point (Point): point.
+        lons (np.ndarray): longitude.
+        lats (np.ndarray): latitude.
+
+    Returns:
+        np.ndarray: numpy array of degree angles
+
+    Example::
+        >>> point_a = Point(0, 0)
+        >>> lons = np.array([0, 10, 0, -10])
+        >>> lats = np.array([10, 0, -10, 0])
+        >>> angles = angles_to_points(point_a, lons, lats)
+        >>> angles.tolist()
+        [180.0, -90.0, 0.0, 90.0]
+
+    """
+
+    assert lons.shape == lats.shape
+
+    @np.vectorize
+    def angle(lon: float, lat: float) -> float:
+        return angle_between_points(point, Point(lon, lat))
+
+    return angle(lons, lats)
+
+
 def millibar_to_pascal(
     millibar_input: Union[float, np.ndarray]
 ) -> Union[float, np.ndarray]:
