@@ -27,7 +27,8 @@ def plot_example() -> None:
     plt.plot(radii, velocities)
     plt.xlabel("Radius (m)")
     plt.ylabel("Velocity (m s$^{-1}$)")
-    plt.gca().xaxis.set_major_formatter(mtick.FormatStrFormatter("%.0e"))
+    # plt.gca().xaxis.set_major_formatter(mtick.FormatStrFormatter("%.0e"))
+    plt.gca().xaxis.set_major_formatter(axis_formatter())
 
     radii_kat = np.array(
         [np.mean(ds[var].values) for var in ["usa_r34", "usa_r50", "usa_r64"]]

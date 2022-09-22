@@ -370,6 +370,8 @@ def holland_fitter(
     """
     Holland 2010 Fitter.
 
+    Adapted from ADCIRCpy
+
     Args:
         rmax (float): Radius of maximum wind.
         vmax (float): Velocity maximum.

@@ -1,5 +1,6 @@
 """Plot hurricane generation."""
 import os
+import datetime
 import matplotlib.pyplot as plt
 from sithom.misc import in_notebook
 from sithom.plot import plot_defaults
@@ -17,10 +18,15 @@ def different_trajectories() -> None:
     ax = map_axes()
 
     for angle in [-80, -60, -45, -30, -15, 0, 15, 30, 45, 60, 80]:
-        htc = HollandTropicalCyclone(NEW_ORLEANS, angle, 30, 70, 3000, 100)
-        traj = htc.trajectory()
-        plt.plot(traj[:, 0], traj[:, 1])
-        plt.scatter(htc.point.lon, htc.point.lat)
+        htc = HollandTropicalCyclone(NEW_ORLEANS, angle, 5, 70, 3000, 100)
+        traj_ds = htc.trajectory_ds()
+        im = plt.plot(traj_ds.lon.values, traj_ds.lat.values,) # c=traj_ds.time.values)
+        plt.scatter(
+            htc.point.lon,
+            htc.point.lat,  # c=dates
+        )
+
+    plt.colorbar(im, label="Time")
 
     ylabel = r"Latitude [$^{\circ}$N]"
     xlabel = r"Longitude [$^{\circ}$E]"
@@ -40,3 +46,7 @@ def different_trajectories() -> None:
 if __name__ == "__main__":
     different_trajectories()
     # python src/plot/generation.py
+    base = datetime.datetime.today()
+    numentries = 1000
+    date_list = [base - x * datetime.timedelta(hours=4) for x in range(numentries)]
+    print(date_list)

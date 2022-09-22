@@ -1,7 +1,9 @@
 """Generate hurricane."""
 import os
 from typing import Tuple, List
+import datetime
 import numpy as np
+import xarray as xr
 import matplotlib.pyplot as plt
 import climada.hazard.trop_cyclone as tc
 from src.constants import FIGURE_PATH, NEW_ORLEANS, NO_BBOX
@@ -71,12 +73,12 @@ class HollandTropicalCyclone:
         Holland tropical cylone to hit coast at point.
 
         Args:
-            point (Point): _description_
-            angle (float): _description_
-            trans_speed (float): _description_
-            vmax (float): _description_
-            rmax (float): _description_
-            bs (float): _description_
+            point (Point): Point to impact.
+            angle (float): Angle to point.
+            trans_speed (float): Translation speed.
+            vmax (float): Wind velocity maximum.
+            rmax (float): Radius of maximum wind.
+            bs (float): Holland b parameter.
         """
         # print(angle, trans_speed)
         self.point = point
@@ -85,6 +87,8 @@ class HollandTropicalCyclone:
         self.vmax = vmax
         self.rmax = rmax
         self.bs = bs
+        self.time_delta = datetime.timedelta(hours=4)
+        self.impact_time = datetime.datetime(year=2005, month=8, day=28)
 
     def __repr__(self) -> str:
         return str(
@@ -123,19 +127,51 @@ class HollandTropicalCyclone:
             self.point.lat + np.cos(np.radians(self.angle)) * distance / 111,
         ]
 
-    def trajectory(self, run_up=1000, run_down=350) -> np.ndarray:
+    def trajectory(self, run_up=1e6, run_down=3.5e5) -> Tuple[np.ndarray, np.ndarray]:
         """
         Trajectory.
 
         Args:
-            run_up (int, optional): Run up afterwards. Defaults to 1000 km.
-            run_down (int, optional): Run down after point. Defaults to 300 km.
+            run_up (int, optional): Run up afterwards. Defaults to 1000 km in meteres.
+            run_down (int, optional): Run down after point. Defaults to 350 km im meters.
         """
+        distance_per_timestep = (
+            self.trans_speed * self.time_delta / datetime.timedelta(seconds=1)
+        )
+        time_steps_before = int(abs(run_up) /distance_per_timestep)
+        time_steps_after = int(abs(run_down) / distance_per_timestep)
         # print(self.point, self.angle, run_up, run_down)
-        point_list = [self.new_point(dist) for dist in range(-run_up, run_down, 10)]
-        return np.array(point_list)
+        point_list = [
+            self.new_point(dist)
+            for dist in range(-int(run_up), int(run_down), int(distance_per_timestep))
+        ]
+        time_list = [
+            self.impact_time + x * self.time_delta
+            for x in range(
+                -time_steps_before,
+                time_steps_after + 2,
+                1,
+            )
+        ]
+        print(time_steps_before + time_steps_after + 1)
+        return np.array(point_list), np.array(time_list)
 
     # def time_traj(self, )
+    def trajectory_ds(self, run_up=1e6, run_down=3.5e5) -> xr.Dataset:
+        traj, dates = self.trajectory(run_up=run_up, run_down=run_down)
+        print(traj.shape)
+        print(dates.shape)
+        return xr.Dataset(
+            data_vars=dict(
+                lon=(["time"], traj[:, 0]),
+                lat=(["time"], traj[:, 1]),
+            ),
+            coords=dict(
+                time=dates,
+                reference_time=self.impact_time,
+            ),
+            attrs=dict(description="Tropcial Cylone trajectory."),
+        )
 
 
 if __name__ == "__main__":
