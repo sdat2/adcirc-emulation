@@ -31,6 +31,9 @@ DEFAULT_GAUGES: List[str] = [
     "8764044",
 ]
 
+# Default CRS
+WGS84 = "EPSG:4326"  # WGS84 standard crs (latitude, longitude)
+
 # Data files.
 KATRINA_TIDE_NC: str = os.path.join(DATA_PATH, "katrina_tides.nc")
 KATRINA_ERA5_NC: str = os.path.join(DATA_PATH, "katrina_era5.nc")
