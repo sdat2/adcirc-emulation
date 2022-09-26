@@ -96,7 +96,8 @@ def space() -> None:
     )
 
     param_list = [
-        ContinuousParameter(param, param_dict[param][0], param_dict[param][1]) for param in param_dict
+        ContinuousParameter(param, param_dict[param][0], param_dict[param][1])
+        for param in param_dict
     ]
     space = ParameterSpace(param_list)
     design = LatinDesign(space)
@@ -116,11 +117,11 @@ def space() -> None:
         plt.show()
     else:
         plt.clf()
-    #print(x_data)
-    #print(x_data.shape)
-    #print(space)
-    #print(dir(space))
-    #print(param_list)
+    # print(x_data)
+    # print(x_data.shape)
+    # print(space)
+    # print(dir(space))
+    # print(param_list)
 
 
 def example_animation(tmp_dir: str = "tmp/") -> None:
