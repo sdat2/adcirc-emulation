@@ -3,7 +3,7 @@ from typing import List
 import os
 import numpy as np
 import xarray as xr
-from src.constants import KAT_EX_PATH
+from src.constants import DATA_PATH, KAT_EX_PATH
 import netCDF4 as nc
 
 
@@ -106,7 +106,7 @@ def read_windspeeds(windspeed_path: str) -> xr.Dataset:
                 lat=(["lat"], lats),
                 time=date_list,
             ),
-            attrs=dict(description="Weather related data."),
+            attrs=dict(description="Velocities could be the wrong way round"),
         )
 
 
@@ -167,12 +167,25 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
             ),
             attrs=dict(
                 description="Pressure",
+                long_name="Pressure",
                 units="mb",
             ),
         )
 
 
-if __name__ == "__main__":
+def read_default_inputs() -> None:
+    for file_tuple in [
+        ("fort.217", "fort.218"),
+        ("fort.221", "fort.222"),
+        ("fort.223", "fort.224"),
+    ]:
+        pr_ds = read_pressures(os.path.join(KAT_EX_PATH, file_tuple[0]))
+        pr_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[0]) + ".nc")
+        ws_ds = read_windspeeds(os.path.join(KAT_EX_PATH, file_tuple[1]))
+        ws_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[1]) + ".nc")
+
+
+def main():
     # python src/data_loading/adcirc.py
     nc_files = [x for x in os.listdir(KAT_EX_PATH) if x.endswith(".nc")]
     print(KAT_EX_PATH)
@@ -200,3 +213,8 @@ if __name__ == "__main__":
 
         except Exception as e:
             print(e)
+
+
+if __name__ == "__main__":
+    # python src/data_loading/adcirc.py
+    read_default_inputs()
