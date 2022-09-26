@@ -74,12 +74,12 @@ class HollandTropicalCyclone:
         Holland tropical cylone to hit coast at point.
 
         Args:
-            point (Point): Point to impact.
-            angle (float): Angle to point.
-            trans_speed (float): Translation speed m s-1.
-            vmax (float): Wind velocity maximum m s-1.
-            rmax (float): Radius of maximum wind m s-1.
-            bs (float): Holland b parameter m s -1.
+            point (Point): Point to impact (lon, lat).
+            angle (float): Angle to point [degrees].
+            trans_speed (float): Translation speed [m s**-1].
+            vmax (float): Wind velocity maximum [m s**-1].
+            rmax (float): Radius of maximum wind [m s**-1].
+            bs (float): Holland b parameter [m s**-1].
         """
         # print(angle, trans_speed)
         self.point = point
@@ -115,13 +115,13 @@ class HollandTropicalCyclone:
 
     def new_point(self, distance: float) -> List[float]:
         """
-        Line.
+        Line. Assumes 111km per degree.
 
         Args:
             distance (float): Distance in meters.
 
         Returns:
-            List[float, float]: lon, lat
+            List[float, float]: lon, lat.
         """
         return [
             self.point.lon + np.sin(np.radians(self.angle)) * distance / 111e3,
@@ -148,25 +148,28 @@ class HollandTropicalCyclone:
         ]
         time_list = [
             self.impact_time + x * self.time_delta
-            for x in range(
-                -time_steps_before,
-                time_steps_after + 1,
-                1,
-            )
+            for x in range(-time_steps_before, time_steps_after + 1, 1,)
         ]
         print(time_steps_before + time_steps_after + 1)
         return np.array(point_list), np.array(time_list)
 
     # def time_traj(self, )
     def trajectory_ds(self, run_up=1e6, run_down=3.5e5) -> xr.Dataset:
+        """
+        Create a trajectory dataset for the center eye of the tropical cylone.
+
+        Args:
+            run_up (float, optional): How many meters to run up. Defaults to 1e6.
+            run_down (float, optional): How many meters to run down. Defaults to 3.5e5.
+
+        Returns:
+            xr.Dataset: trajectory dataset with variables lon, lat and time.
+        """
         traj, dates = self.trajectory(run_up=run_up, run_down=run_down)
         print(traj.shape)
         print(dates.shape)
         return xr.Dataset(
-            data_vars=dict(
-                lon=(["time"], traj[:, 0]),
-                lat=(["time"], traj[:, 1]),
-            ),
+            data_vars=dict(lon=(["time"], traj[:, 0]), lat=(["time"], traj[:, 1]),),
             coords=dict(
                 time=dates,
                 # reference_time=self.impact_time,

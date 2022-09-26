@@ -18,7 +18,10 @@ REPORT_PATH: str = os.path.join(PROJECT_PATH, "report")
 FIGURE_PATH: str = os.path.join(REPORT_PATH, "figures")
 
 # Katrina example:
-KAT_EX_PATH = "/Users/simon/adcirc-swan/adcirc-testsuite/adcirc/adcirc_katrina-2d/"
+KAT_EX_PATH = os.path.join(
+    "/Users", "simon", "adcirc-swan", "adcirc-testsuite", "adcirc", "adcirc_katrina-2d"
+)
+# PATH=/Users/simon/adcirc-swan/adcircpy/exe:$PATH
 
 # Default tidal gauges.
 DEFAULT_GAUGES: List[str] = [
@@ -32,7 +35,7 @@ DEFAULT_GAUGES: List[str] = [
 ]
 
 # Default CRS
-WGS84 = "EPSG:4326"  # WGS84 standard crs (latitude, longitude)
+WGS84: str = "EPSG:4326"  # WGS84 standard crs (latitude, longitude)
 
 # Data files.
 KATRINA_TIDE_NC: str = os.path.join(DATA_PATH, "katrina_tides.nc")
