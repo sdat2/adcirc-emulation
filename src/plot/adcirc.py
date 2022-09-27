@@ -44,6 +44,26 @@ def maxele() -> None:
         plt.clf()
 
 
+def maxvel() -> None:
+    """
+    Max velocity.
+    """
+    plot_defaults()
+    maxvel = Maxvel(os.path.join(KAT_EX_PATH, "maxvel.63.nc"), crs="EPSG:4326")
+    maxvel.tricontourf(
+        cbar=True, levels=20, label="Maxmimum Velocity [m s$^{-1}$]", vmin=0, vmax=3
+    )
+    plt.xlabel("Longitude [$^{\circ}$E]")
+    plt.ylabel("Latitude [$^{\circ}$N]")
+
+    plt.savefig(os.path.join(FIGURE_PATH, "example-whole-domain-maxvel.png"))
+
+    if in_notebook():
+        plt.show()
+    else:
+        plt.clf()
+
+
 def multiplot(files=("fort.217", "fort.218")) -> None:
     """
     Multiplot.
@@ -179,6 +199,7 @@ def multiplot_animate(
 if __name__ == "__main__":
     # python src/plot/adcirc.py
     maxele()
+    maxvel()
     multiplot()
     multiplot(files=("fort.221", "fort.222"))
     multiplot(files=("fort.223", "fort.224"))
