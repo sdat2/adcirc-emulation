@@ -29,8 +29,10 @@ def maxele() -> None:
     Max elevation.
     """
     plot_defaults()
-    maxvel = Maxele(os.path.join(KAT_EX_PATH, "maxele.63.nc"), crs="EPSG:4326")
-    maxvel.tricontourf(cbar=True, levels=20, label="Maxmimum Elevation [m]", vmin=0, vmax=3)
+    maxele = Maxele(os.path.join(KAT_EX_PATH, "maxele.63.nc"), crs="EPSG:4326")
+    maxele.tricontourf(
+        cbar=True, levels=20, label="Maxmimum Elevation [m]", vmin=0, vmax=3
+    )
     plt.xlabel("Longitude [$^{\circ}$E]")
     plt.ylabel("Latitude [$^{\circ}$N]")
 
