@@ -24,7 +24,10 @@ from sithom.misc import in_notebook
 from src.constants import DATA_PATH, FIGURE_PATH, KAT_EX_PATH
 
 
-def maxele():
+def maxele() -> None:
+    """
+    Max elevation.
+    """
     plot_defaults()
     maxvel = Maxele(os.path.join(KAT_EX_PATH, "maxele.63.nc"), crs="EPSG:4326")
     maxvel.tricontourf(cbar=True, levels=20, label="Maxmimum Elevation [m]", vmin=0, vmax=3)
