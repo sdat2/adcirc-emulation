@@ -10,6 +10,15 @@ import netCDF4 as nc
 
 @np.vectorize
 def int_to_datetime(int_input: int) -> datetime.datetime:
+    """
+    Int format to datetime.
+
+    Args:
+        int_input (int): Int input.
+
+    Returns:
+        datetime.datetime: Datetime.
+    """
     date_str = str(int_input)
     return datetime.datetime(
         year=int(date_str[:4]),
@@ -38,6 +47,15 @@ def two_char_int(int_input: int) -> str:
 
 @np.vectorize
 def datetime_to_int(date: datetime.datetime) -> int:
+    """
+    Datetime.
+
+    Args:
+        date (datetime.datetime):
+
+    Returns:
+        int: int to output.
+    """
     return int(
         str(date.year)
         + two_char_int(date.month)
