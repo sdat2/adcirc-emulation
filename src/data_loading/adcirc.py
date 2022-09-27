@@ -1,4 +1,9 @@
-"""ADCIRC Input reading."""
+"""ADCIRC Input reading.
+
+
+https://coast.nd.edu/reports_papers/SELA_2007_IDS_2_FinalDraft/App%20D%20PBL-C%20WIN_PRE%20File%20Format.pdf
+
+"""
 from typing import List, Union
 import os
 import datetime
