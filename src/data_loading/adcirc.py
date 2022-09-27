@@ -176,6 +176,8 @@ def read_windspeeds(windspeed_path: str) -> xr.Dataset:
         )
         ds.V10.attrs = {"units": "m s**-1", "long_name": "Meridional 10m windspeed"}
         ds.U10.attrs = {"units": "m s**-1", "long_name": "Zonal 10m windspeed"}
+        ds.lat.attrs = {"units": "degree_North", "long_name": "Latitude"}
+        ds.lon.attrs = {"units": "degree_East", "long_name": "Longitude"}
         return ds
 
 
@@ -230,7 +232,7 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
         )
 
         # 56 diff list - one for each timestep.
-        return xr.DataArray(
+        da = xr.DataArray(
             data=np.array(pressure_lol).reshape(len(dates), len(lats), len(lons)),
             dims=["time", "lat", "lon"],
             coords=dict(
@@ -244,6 +246,9 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
                 units="mb",
             ),
         )
+        da.lat.attrs = {"units": "degree_North", "long_name": "Latitude"}
+        da.lon.attrs = {"units": "degree_East", "long_name": "Longitude"}
+        return da
 
 
 def read_default_inputs() -> None:
