@@ -1,5 +1,5 @@
 """ADCIRC Input reading."""
-from typing import List
+from typing import List, Union
 import os
 import datetime
 import numpy as np
@@ -46,16 +46,20 @@ def two_char_int(int_input: int) -> str:
 
 
 @np.vectorize
-def datetime_to_int(date: datetime.datetime) -> int:
+def datetime_to_int(date: Union[datetime.datetime, np.datetime64]) -> int:
     """
     Datetime.
 
     Args:
-        date (datetime.datetime):
+        date (Union[datetime.datetime, np.datetime64]):
 
     Returns:
         int: int to output.
     """
+    if isinstance(date, np.datetime64):
+        date = datetime.datetime.utcfromtimestamp(
+            (date - np.datetime64("1970-01-01T00:00:00Z")) / np.timedelta64(1, "s")
+        )
     return int(
         str(date.year)
         + two_char_int(date.month)
@@ -70,7 +74,7 @@ def read_data_line(line: str) -> List[float]:
     Read data line.
 
     Args:
-        line (str): _description_
+        line (str): Read a line of data.
 
     Returns:
         List[float]: _description_
@@ -142,9 +146,11 @@ def read_windspeeds(windspeed_path: str) -> xr.Dataset:
 
         names = ["iLat", "iLong", "DX", "DY", "SWLat", "SWLon", "DT"]
         coords = read_coord_line(wsp_list[1], names)
-        dates  = int_to_datetime(np.array([
-            read_coord_line(x, names)["DT"] for x in wsp_list if x.startswith("i")
-        ]).astype(int))
+        dates = int_to_datetime(
+            np.array(
+                [read_coord_line(x, names)["DT"] for x in wsp_list if x.startswith("i")]
+            ).astype(int)
+        )
         lats = np.array(
             [coords["SWLat"] + coords["DY"] * i for i in range(int(coords["iLat"]))]
         )
@@ -152,18 +158,25 @@ def read_windspeeds(windspeed_path: str) -> xr.Dataset:
             [coords["SWLon"] + coords["DX"] * i for i in range(int(coords["iLong"]))]
         )
         data = np.array(wsp_lol).reshape(len(dates), 2, len(lats), len(lons))
-        return xr.Dataset(
+        ds = xr.Dataset(
             data_vars=dict(
-                uvel=(["time", "lat", "lon"], data[:, 0, :, :]),
-                vvel=(["time", "lat", "lon"], data[:, 1, :, :]),
+                # TODO, are these the right way round?
+                U10=(["time", "lat", "lon"], data[:, 0, :, :]),
+                V10=(["time", "lat", "lon"], data[:, 1, :, :]),
             ),
             coords=dict(
                 lon=(["lon"], lons),
                 lat=(["lat"], lats),
                 time=dates,
             ),
-            attrs=dict(description="Velocities could be the wrong way round"),
+            attrs=dict(
+                description="Velocities could be the wrong way round",
+                grid_var=str(coords),
+            ),
         )
+        ds.V10.attrs = {"units": "m s**-1", "long_name": "Meridional 10m windspeed"}
+        ds.U10.attrs = {"units": "m s**-1", "long_name": "Zonal 10m windspeed"}
+        return ds
 
 
 def read_pressures(pressure_path: str) -> xr.DataArray:
@@ -200,9 +213,15 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
                 print(pressure_list[i])
                 pressure_lol.append([])
 
-        dates  = int_to_datetime(np.array([
-            read_coord_line(x, names)["DT"] for x in pressure_list if x.startswith("i")
-        ]).astype(int))
+        dates = int_to_datetime(
+            np.array(
+                [
+                    read_coord_line(x, names)["DT"]
+                    for x in pressure_list
+                    if x.startswith("i")
+                ]
+            ).astype(int)
+        )
         lats = np.array(
             [coords["SWLat"] + coords["DY"] * i for i in range(int(coords["iLat"]))]
         )
@@ -220,7 +239,6 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
                 time=dates,
             ),
             attrs=dict(
-                description="Pressure",
                 long_name="Pressure",
                 description="Surface pressure",
                 units="mb",
@@ -238,6 +256,57 @@ def read_default_inputs() -> None:
         pr_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[0]) + ".nc")
         ws_ds = read_windspeeds(os.path.join(KAT_EX_PATH, file_tuple[1]))
         ws_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[1]) + ".nc")
+
+
+# windspeed 8 entries, 3 s.f. 3 space
+
+
+def entry(inp: float) -> str:
+    if inp < 0:
+        out = "   " + "{:.4f}".format(inp)
+    else:
+        out = "    " + "{:.4f}".format(inp)
+    return out
+
+def entry_p(inp: float) -> str:
+    return " " + "{:.4f}".format(inp)
+
+def make_line_p(inp: List[float]) -> str:
+    return "".join(list(map(entry_p, inp)))
+
+def make_line(inp: List[float]) -> str:
+    return "".join(list(map(entry, inp)))
+
+def print_inputs():
+    da = xr.open_dataarray(os.path.join(DATA_PATH, "fort.217" + ".nc"))
+    ds = datetime_to_int(da.time.values[0])
+    de = datetime_to_int(da.time.values[-1])
+    lats = da.lat.values
+    lons = da.lon.values
+    swlat = "{:.4f}".format(np.min(lats))
+    swlon = "{:.4f}".format(np.min(lons))
+    dy = "{:.4f}".format(lats[1] - lats[0])
+    dx = "{:.4f}".format(lons[1] - lons[0])
+    ilon = str(len(lons))
+    ilat = str(len(lats))
+    first_line = f"Oceanweather WIN/PRE Format                            {ds}     {de}"
+
+    with open(os.path.join(DATA_PATH, "fort.217"), "w") as file:
+        print(first_line)
+        file.write(first_line + "\n")
+
+        for time in da.time.values:
+            dt = str(datetime_to_int(time))
+            data = list(
+                da.sel(time=time).values.reshape(int(len(lons) * len(lats) / 8), 8)
+            )
+            data_list_str = [make_line_p(float_line) for float_line in data]
+            date_line = f"iLat=  {ilat}iLong=  {ilon}DX={dx}DY={dy}SWLat={swlat}SWLon={swlon}DT={dt}"
+            file.write(date_line + "\n")
+            for line in data_list_str:
+                file.write(line + "\n")
+
+        # iLat=  46iLong=  60DX=0.0500DY=0.0500SWLat=28.60000SWLon=-90.2800DT=200508250000
 
 
 def main():
@@ -272,4 +341,10 @@ def main():
 
 if __name__ == "__main__":
     # python src/data_loading/adcirc.py
-    read_default_inputs()
+    # read_default_inputs()
+    print_inputs()
+    print(
+        make_line(
+            [-4.4665, -4.3980, -4.3604, -4.2985, -4.2514, -4.2389, -4.2370, -4.2362]
+        )
+    )

@@ -148,7 +148,11 @@ class HollandTropicalCyclone:
         ]
         time_list = [
             self.impact_time + x * self.time_delta
-            for x in range(-time_steps_before, time_steps_after + 1, 1,)
+            for x in range(
+                -time_steps_before,
+                time_steps_after + 1,
+                1,
+            )
         ]
         print(time_steps_before + time_steps_after + 1)
         return np.array(point_list), np.array(time_list)
@@ -169,7 +173,10 @@ class HollandTropicalCyclone:
         print(traj.shape)
         print(dates.shape)
         return xr.Dataset(
-            data_vars=dict(lon=(["time"], traj[:, 0]), lat=(["time"], traj[:, 1]),),
+            data_vars=dict(
+                lon=(["time"], traj[:, 0]),
+                lat=(["time"], traj[:, 1]),
+            ),
             coords=dict(
                 time=dates,
                 # reference_time=self.impact_time,
