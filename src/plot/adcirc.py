@@ -21,7 +21,22 @@ import cmocean.cm as cmo
 from sithom.plot import label_subplots, plot_defaults, get_dim, lim, cmap
 from sithom.xr import plot_units
 from sithom.misc import in_notebook
-from src.constants import DATA_PATH, FIGURE_PATH
+from src.constants import DATA_PATH, FIGURE_PATH, KAT_EX_PATH
+
+
+def maxele():
+    plot_defaults()
+    maxvel = Maxele(os.path.join(KAT_EX_PATH, "maxele.63.nc"), crs="EPSG:4326")
+    maxvel.tricontourf(cbar=True, levels=20, label="Maxmimum Elevation [m]", vmin=0, vmax=3)
+    plt.xlabel("Longitude [$^{\circ}$E]")
+    plt.ylabel("Latitude [$^{\circ}$N]")
+
+    plt.savefig(os.path.join(FIGURE_PATH, "example-whole-domain-maxele.png"))
+
+    if in_notebook():
+        plt.show()
+    else:
+        plt.clf()
 
 
 def multiplot(files=("fort.217", "fort.218")) -> None:
@@ -38,8 +53,16 @@ def multiplot(files=("fort.217", "fort.218")) -> None:
     """
 
     plot_defaults()
-    p_da = plot_units(xr.open_dataarray(os.path.join(DATA_PATH, files[0] + ".nc")))
-    wsp_ds = plot_units(xr.open_dataset(os.path.join(DATA_PATH, files[1] + ".nc")))
+    p_da = plot_units(
+        xr.open_dataarray(os.path.join(DATA_PATH, files[0] + ".nc")),
+        x_dim="lon",
+        y_dim="lat",
+    )
+    wsp_ds = plot_units(
+        xr.open_dataset(os.path.join(DATA_PATH, files[1] + ".nc")),
+        x_dim="lon",
+        y_dim="lat",
+    )
 
     fig, axs = plt.subplots(3, 1, sharey=True, sharex=True, figsize=get_dim(ratio=2))
     time = 40
@@ -150,7 +173,8 @@ def multiplot_animate(
 
 if __name__ == "__main__":
     # python src/plot/adcirc.py
+    maxele()
     multiplot()
     multiplot(files=("fort.221", "fort.222"))
     multiplot(files=("fort.223", "fort.224"))
-    multiplot_animate()
+    # multiplot_animate()
