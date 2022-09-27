@@ -1,10 +1,50 @@
 """ADCIRC Input reading."""
 from typing import List
 import os
+import datetime
 import numpy as np
 import xarray as xr
 from src.constants import DATA_PATH, KAT_EX_PATH
 import netCDF4 as nc
+
+
+@np.vectorize
+def int_to_datetime(int_input: int) -> datetime.datetime:
+    date_str = str(int_input)
+    return datetime.datetime(
+        year=int(date_str[:4]),
+        month=int(date_str[4:6]),
+        day=int(date_str[6:8]),
+        hour=int(date_str[8:10]),
+        minute=int(date_str[10:12]),
+    )
+
+
+def two_char_int(int_input: int) -> str:
+    """
+    Two char int.
+
+    Args:
+        int_input (int): input integer.
+
+    Returns:
+        str: Two char int.
+    """
+    ret_str = str(int_input)
+    if len(ret_str) == 1:
+        ret_str = "0" + ret_str
+    return ret_str
+
+
+@np.vectorize
+def datetime_to_int(date: datetime.datetime) -> int:
+    return int(
+        str(date.year)
+        + two_char_int(date.month)
+        + two_char_int(date.day)
+        + two_char_int(date.hour)
+        + two_char_int(date.minute)
+    )
 
 
 def read_data_line(line: str) -> List[float]:
@@ -84,18 +124,16 @@ def read_windspeeds(windspeed_path: str) -> xr.Dataset:
 
         names = ["iLat", "iLong", "DX", "DY", "SWLat", "SWLon", "DT"]
         coords = read_coord_line(wsp_list[1], names)
-        date_list = [
+        dates  = int_to_datetime(np.array([
             read_coord_line(x, names)["DT"] for x in wsp_list if x.startswith("i")
-        ]
-        print(date_list)
-        print(len(date_list))
+        ]).astype(int))
         lats = np.array(
             [coords["SWLat"] + coords["DY"] * i for i in range(int(coords["iLat"]))]
         )
         lons = np.array(
             [coords["SWLon"] + coords["DX"] * i for i in range(int(coords["iLong"]))]
         )
-        data = np.array(wsp_lol).reshape(len(date_list), 2, len(lats), len(lons))
+        data = np.array(wsp_lol).reshape(len(dates), 2, len(lats), len(lons))
         return xr.Dataset(
             data_vars=dict(
                 uvel=(["time", "lat", "lon"], data[:, 0, :, :]),
@@ -104,7 +142,7 @@ def read_windspeeds(windspeed_path: str) -> xr.Dataset:
             coords=dict(
                 lon=(["lon"], lons),
                 lat=(["lat"], lats),
-                time=date_list,
+                time=dates,
             ),
             attrs=dict(description="Velocities could be the wrong way round"),
         )
@@ -144,30 +182,29 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
                 print(pressure_list[i])
                 pressure_lol.append([])
 
-        date_list = [
+        dates  = int_to_datetime(np.array([
             read_coord_line(x, names)["DT"] for x in pressure_list if x.startswith("i")
-        ]
+        ]).astype(int))
         lats = np.array(
             [coords["SWLat"] + coords["DY"] * i for i in range(int(coords["iLat"]))]
         )
         lons = np.array(
             [coords["SWLon"] + coords["DX"] * i for i in range(int(coords["iLong"]))]
         )
-        print(date_list)
-        print(len(date_list))
 
         # 56 diff list - one for each timestep.
         return xr.DataArray(
-            data=np.array(pressure_lol).reshape(len(date_list), len(lats), len(lons)),
+            data=np.array(pressure_lol).reshape(len(dates), len(lats), len(lons)),
             dims=["time", "lat", "lon"],
             coords=dict(
                 lon=(["lon"], lons),
                 lat=(["lat"], lats),
-                time=date_list,
+                time=dates,
             ),
             attrs=dict(
                 description="Pressure",
                 long_name="Pressure",
+                description="Surface pressure",
                 units="mb",
             ),
         )
