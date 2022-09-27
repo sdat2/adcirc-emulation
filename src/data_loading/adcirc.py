@@ -254,8 +254,16 @@ def read_default_inputs() -> None:
     ]:
         pr_ds = read_pressures(os.path.join(KAT_EX_PATH, file_tuple[0]))
         pr_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[0]) + ".nc")
+        print_pressure(
+            os.path.join(DATA_PATH, file_tuple[0] + ".nc"),
+            os.path.join(DATA_PATH, file_tuple[0]),
+        )
         ws_ds = read_windspeeds(os.path.join(KAT_EX_PATH, file_tuple[1]))
         ws_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[1]) + ".nc")
+        print_wsp(
+            os.path.join(DATA_PATH, file_tuple[1] + ".nc"),
+            os.path.join(DATA_PATH, file_tuple[1]),
+        )
 
 
 # windspeed 8 entries, 3 s.f. 3 space
@@ -268,17 +276,21 @@ def entry(inp: float) -> str:
         out = "    " + "{:.4f}".format(inp)
     return out
 
+
 def entry_p(inp: float) -> str:
     return " " + "{:.4f}".format(inp)
+
 
 def make_line_p(inp: List[float]) -> str:
     return "".join(list(map(entry_p, inp)))
 
+
 def make_line(inp: List[float]) -> str:
     return "".join(list(map(entry, inp)))
 
-def print_inputs():
-    da = xr.open_dataarray(os.path.join(DATA_PATH, "fort.217" + ".nc"))
+
+def print_pressure(input_path: str, output_path: str) -> None:
+    da = xr.open_dataarray(input_path)
     ds = datetime_to_int(da.time.values[0])
     de = datetime_to_int(da.time.values[-1])
     lats = da.lat.values
@@ -291,7 +303,7 @@ def print_inputs():
     ilat = str(len(lats))
     first_line = f"Oceanweather WIN/PRE Format                            {ds}     {de}"
 
-    with open(os.path.join(DATA_PATH, "fort.217"), "w") as file:
+    with open(output_path, "w") as file:
         print(first_line)
         file.write(first_line + "\n")
 
@@ -307,6 +319,49 @@ def print_inputs():
                 file.write(line + "\n")
 
         # iLat=  46iLong=  60DX=0.0500DY=0.0500SWLat=28.60000SWLon=-90.2800DT=200508250000
+
+
+def print_wsp(input_path: str, output_path: str) -> None:
+    wds = xr.open_dataset(input_path)
+    ds = datetime_to_int(wds.time.values[0])
+    de = datetime_to_int(wds.time.values[-1])
+    lats = wds.lat.values
+    lons = wds.lon.values
+    swlat = "{:.4f}".format(np.min(lats))
+    swlon = "{:.4f}".format(np.min(lons))
+    dy = "{:.4f}".format(lats[1] - lats[0])
+    dx = "{:.4f}".format(lons[1] - lons[0])
+    ilon = str(len(lons))
+    ilat = str(len(lats))
+    first_line = f"Oceanweather WIN/PRE Format                            {ds}     {de}"
+
+    with open(output_path, "w") as file:
+        print(first_line)
+        file.write(first_line + "\n")
+
+        for time in wds.time.values:
+            dt = str(datetime_to_int(time))
+            data_u10 = list(
+                wds.U10.sel(time=time).values.reshape(int(len(lons) * len(lats) / 8), 8)
+            )
+            data_v10 = list(
+                wds.V10.sel(time=time).values.reshape(int(len(lons) * len(lats) / 8), 8)
+            )
+            data = data_u10 + data_v10
+            data_list_str = [make_line(float_line) for float_line in data]
+            date_line = f"iLat=  {ilat}iLong=  {ilon}DX={dx}DY={dy}SWLat={swlat}SWLon={swlon}DT={dt}"
+            file.write(date_line + "\n")
+            for line in data_list_str:
+                file.write(line + "\n")
+
+
+def test():
+    print_wsp(
+        os.path.join(DATA_PATH, "fort.218" + ".nc"), os.path.join(DATA_PATH, "fort.218")
+    )
+    print_pressure(
+        os.path.join(DATA_PATH, "fort.217" + ".nc"), os.path.join(DATA_PATH, "fort.217")
+    )
 
 
 def main():
@@ -341,8 +396,8 @@ def main():
 
 if __name__ == "__main__":
     # python src/data_loading/adcirc.py
-    # read_default_inputs()
-    print_inputs()
+    read_default_inputs()
+    # test()
     print(
         make_line(
             [-4.4665, -4.3980, -4.3604, -4.2985, -4.2514, -4.2389, -4.2370, -4.2362]
