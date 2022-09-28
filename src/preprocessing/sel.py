@@ -35,6 +35,4 @@ def mid_katrina(
             time=MID_KATRINA_TIME,
         )
     else:
-        return xr_obj.sel(
-            time=MID_KATRINA_TIME,
-        )
+        return xr_obj.sel(time=MID_KATRINA_TIME,)

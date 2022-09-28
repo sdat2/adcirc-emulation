@@ -318,7 +318,7 @@ def holland_b(
     if neutral_pressure <= central_pressure:
         neutral_pressure = np.nan  # central_pressure + 1.0
     fcor = fcor_from_lat(eye_latitude)
-    return (vmax**2 + vmax * rmax * fcor * air_density * np.exp(1)) / (
+    return (vmax ** 2 + vmax * rmax * fcor * air_density * np.exp(1)) / (
         neutral_pressure - central_pressure
     )
 
