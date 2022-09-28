@@ -294,7 +294,9 @@ def mult_generation(mult: int = 1) -> None:
             os.mkdir(output_direc)
 
         for file in invariant_inputs:
-            shutil.copy(os.path.join(source_direc, file), os.path.join(output_direc, file))
+            shutil.copy(
+                os.path.join(source_direc, file), os.path.join(output_direc, file)
+            )
 
         for file in pressure_inputs:
             orginal_file = os.path.join(source_direc, file)
@@ -313,7 +315,6 @@ def mult_generation(mult: int = 1) -> None:
     def run_adcirc() -> int:
         command = f"cd {output_direc} \n {adcirc_exe} > adcirc_log.txt"
         return os.system(command)
-
 
     create_inputs()
     assert run_adcirc() == 0
@@ -354,8 +355,8 @@ if __name__ == "__main__":
     # plot_katrina_windfield_example(model="H08")
     # python src/models/generation.py
     print(NEW_ORLEANS)
-    mult_generation(1)
-    [mult_generation(1) for x in range(16) if x not in list(range(0, 16, 4))]
+    # mult_generation(1)
+    [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
     # comp()
     # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
