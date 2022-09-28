@@ -4,7 +4,7 @@
 https://coast.nd.edu/reports_papers/SELA_2007_IDS_2_FinalDraft/App%20D%20PBL-C%20WIN_PRE%20File%20Format.pdf
 
 """
-from typing import List, Union
+from typing import List, Union, Optional
 import os
 import datetime
 import numpy as np
@@ -265,13 +265,13 @@ def read_default_inputs() -> None:
         pr_ds = read_pressures(os.path.join(KAT_EX_PATH, file_tuple[0]))
         pr_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[0]) + ".nc")
         print_pressure(
-            os.path.join(DATA_PATH, file_tuple[0] + ".nc"),
+            pr_ds,
             os.path.join(DATA_PATH, file_tuple[0]),
         )
         ws_ds = read_windspeeds(os.path.join(KAT_EX_PATH, file_tuple[1]))
         ws_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[1]) + ".nc")
         print_wsp(
-            os.path.join(DATA_PATH, file_tuple[1] + ".nc"),
+            ws_ds,
             os.path.join(DATA_PATH, file_tuple[1]),
         )
 
@@ -302,7 +302,7 @@ def make_line(inp: List[float]) -> str:
 def print_pressure(input_path: str, output_path: str) -> None:
     da = xr.open_dataarray(input_path)
     ds = datetime_to_int(da.time.values[0])
-    de = datetime_to_int(da.time.values[-1])
+    de = datetime_to_int(da.time.values[-1])[:2]
     lats = da.lat.values
     lons = da.lon.values
     swlat = "{:.4f}".format(np.min(lats))
@@ -331,10 +331,11 @@ def print_pressure(input_path: str, output_path: str) -> None:
         # iLat=  46iLong=  60DX=0.0500DY=0.0500SWLat=28.60000SWLon=-90.2800DT=200508250000
 
 
-def print_wsp(input_path: str, output_path: str) -> None:
-    wds = xr.open_dataset(input_path)
-    ds = datetime_to_int(wds.time.values[0])
-    de = datetime_to_int(wds.time.values[-1])
+def print_wsp(wds: xr.Dataset, output_path: str) -> None:
+    # wds = xr.open_dataset(input_path)
+    # header does not include minutes.
+    ds = str(datetime_to_int(wds.time.values[0]))[:-2]
+    de = str(datetime_to_int(wds.time.values[-1]))[:-2]
     lats = wds.lat.values
     lons = wds.lon.values
     swlat = "{:.4f}".format(np.min(lats))
@@ -363,15 +364,6 @@ def print_wsp(input_path: str, output_path: str) -> None:
             file.write(date_line + "\n")
             for line in data_list_str:
                 file.write(line + "\n")
-
-
-def test():
-    print_wsp(
-        os.path.join(DATA_PATH, "fort.218" + ".nc"), os.path.join(DATA_PATH, "fort.218")
-    )
-    print_pressure(
-        os.path.join(DATA_PATH, "fort.217" + ".nc"), os.path.join(DATA_PATH, "fort.217")
-    )
 
 
 def main():

@@ -1,15 +1,19 @@
 """Generate hurricane."""
+import subprocess
 import os
+import shutil
 from typing import Tuple, List
 import datetime
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import climada.hazard.trop_cyclone as tc
-from src.constants import FIGURE_PATH, NEW_ORLEANS, NO_BBOX
+from src.constants import DATA_PATH, FIGURE_PATH, KAT_EX_PATH, NEW_ORLEANS, NO_BBOX
 from sithom.plot import plot_defaults, label_subplots
 from sithom.place import Point
+from sithom.time import timeit
 from src.conversions import distances_to_points, angles_to_points
+from src.data_loading.adcirc import print_wsp, read_windspeeds
 from src.data_loading.ibtracs import holland2010, katrina, prep_for_climada
 
 MODEL_VANG = {"H08": 0, "H1980": 1, "H10": 2}
@@ -236,9 +240,68 @@ class HollandTropicalCyclone:
         return np.sin(angle) * windspeed, np.cos(angle) * windspeed
 
 
+def mult_generation():
+    """
+    Multiply Katrina by 2 for new example.
+    """
+    source_direc = KAT_EX_PATH
+    invariant_inputs = [
+        "fort.14",
+        "fort.15",
+        "fort.16",
+        "fort.22",
+        "fort.33",
+        "fort.64.nc",
+        "fort.73.nc",
+        "fort.74.nc",
+        "fort.74.nc",
+    ]
+    pressure_inputs = [
+        "fort.217",
+        "fort.221",
+        "fort.223",
+    ]
+    wsp_inputs = [
+        "fort.218",
+        "fort.222",
+        "fort.224",
+    ]
+    output_direc = os.path.join(DATA_PATH, "mult2")
+    adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
+
+
+    if not os.path.exists(output_direc):
+        os.mkdir(output_direc)
+
+    for file in invariant_inputs + pressure_inputs:
+        shutil.copy(os.path.join(source_direc, file), os.path.join(output_direc, file))
+
+    for file in wsp_inputs:
+        orginal_file = os.path.join(source_direc, file)
+        ds = read_windspeeds(orginal_file)
+        final_file = os.path.join(output_direc, file)
+        ds = ds * 2
+        print_wsp(ds, final_file)
+
+    @timeit
+    def run_adcirc():
+        command = f"cd {output_direc} \n {adcirc_exe} > adcirc_log.txt"
+        print(os.system(command))
+
+    run_adcirc()
+    # output, error = process.communicate()
+    # print(output, error)
+
+
 if __name__ == "__main__":
     # for key in tc.MODEL_VANG:
     #    plot_katrina_windfield_example(model=key)
     # plot_katrina_windfield_example(model="H08")
-    # python src/models/generate-hurricane.py
-    print("ok")
+    # python src/models/generation.py
+    mult_generation()
+    # print("ok")
+
+    # output_direc = os.path.join(DATA_PATH, "mult2")
+    # adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
+    # command = f"cd {output_direc} \n {adcirc_exe} > adcirc_log.txt"
+    # os.system(command)
