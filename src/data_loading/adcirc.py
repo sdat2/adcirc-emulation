@@ -278,13 +278,12 @@ def read_default_inputs() -> None:
 
 
 # windspeed 8 entries, 3 s.f. 3 space
-
-
 def entry(inp: float) -> str:
     tot_len = 6 + 4
     num = "{:.4f}".format(inp)
     spaces = tot_len - len(num)
     return " " * spaces + num
+
 
 def make_line(inp: List[float]) -> str:
     return "".join(list(map(entry, inp)))

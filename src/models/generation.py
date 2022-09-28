@@ -246,10 +246,23 @@ class HollandTropicalCyclone:
         return np.sin(angle) * windspeed, np.cos(angle) * windspeed
 
 
-def mult_generation() -> None:
+def mult_folder_name(mult: int) -> str:
+    """
+    Args:
+        mult (int): Multiply.
+
+    Returns:
+        str: folder path.
+    """
+
+    return os.path.join(DATA_PATH, "mult" + str(mult))
+
+
+def mult_generation(mult: int = 1) -> None:
     """
     Multiply Katrina by 2 for new example.
     """
+
     source_direc = KAT_EX_PATH
     invariant_inputs = [
         "fort.14",
@@ -272,7 +285,8 @@ def mult_generation() -> None:
         "fort.222",
         "fort.224",
     ]
-    output_direc = os.path.join(DATA_PATH, "mult1")
+
+    output_direc = mult_folder_name(mult)
     adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
 
     if not os.path.exists(output_direc):
