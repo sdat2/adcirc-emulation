@@ -286,31 +286,31 @@ def entry(inp: float) -> str:
     spaces = tot_len - len(num)
     return " " * spaces + num
 
-
-def entry_p(inp: float) -> str:
-    return " " + "{:.4f}".format(inp)
-
-
-def make_line_p(inp: List[float]) -> str:
-    return "".join(list(map(entry_p, inp)))
-
-
 def make_line(inp: List[float]) -> str:
     return "".join(list(map(entry, inp)))
 
 
-def print_pressure(input_path: str, output_path: str) -> None:
-    da = xr.open_dataarray(input_path)
-    ds = datetime_to_int(da.time.values[0])
-    de = datetime_to_int(da.time.values[-1])[:2]
+def print_pressure(da: xr.DataArray, output_path: str) -> None:
+    """
+    Print pressure text files.
+
+    Args:
+        input_path (str): _description_
+        output_path (str): _description_
+    """
+    ds = str(datetime_to_int(da.time.values[0]))[:-2]
+    de = str(datetime_to_int(da.time.values[-1]))[:-2]
     lats = da.lat.values
     lons = da.lon.values
-    swlat = "{:.4f}".format(np.min(lats))
+    swlat = "{:.5f}".format(np.min(lats))
     swlon = "{:.4f}".format(np.min(lons))
     dy = "{:.4f}".format(lats[1] - lats[0])
     dx = "{:.4f}".format(lons[1] - lons[0])
+    default_len = 4
     ilon = str(len(lons))
+    ilon = " " * (default_len - len(ilon)) + ilon
     ilat = str(len(lats))
+    ilat = " " * (default_len - len(ilat)) + ilat
     first_line = f"Oceanweather WIN/PRE Format                            {ds}     {de}"
 
     with open(output_path, "w") as file:
@@ -322,8 +322,8 @@ def print_pressure(input_path: str, output_path: str) -> None:
             data = list(
                 da.sel(time=time).values.reshape(int(len(lons) * len(lats) / 8), 8)
             )
-            data_list_str = [make_line_p(float_line) for float_line in data]
-            date_line = f"iLat=  {ilat}iLong=  {ilon}DX={dx}DY={dy}SWLat={swlat}SWLon={swlon}DT={dt}"
+            data_list_str = [make_line(float_line) for float_line in data]
+            date_line = f"iLat={ilat}iLong={ilon}DX={dx}DY={dy}SWLat={swlat}SWLon={swlon}DT={dt}"
             file.write(date_line + "\n")
             for line in data_list_str:
                 file.write(line + "\n")
@@ -351,9 +351,9 @@ def print_wsp(wds: xr.Dataset, output_path: str) -> None:
     dx = "{:.4f}".format(lons[1] - lons[0])
     default_len = 4
     ilon = str(len(lons))
-    ilon = " "*(default_len- len(ilon)) + ilon
+    ilon = " " * (default_len - len(ilon)) + ilon
     ilat = str(len(lats))
-    ilat = " "*(default_len- len(ilat)) + ilat
+    ilat = " " * (default_len - len(ilat)) + ilat
     first_line = f"Oceanweather WIN/PRE Format                            {ds}     {de}"
 
     with open(output_path, "w") as file:

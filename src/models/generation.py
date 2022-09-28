@@ -14,7 +14,12 @@ from sithom.plot import plot_defaults, label_subplots
 from sithom.place import Point
 from sithom.time import timeit
 from src.conversions import distances_to_points, angles_to_points
-from src.data_loading.adcirc import print_wsp, read_windspeeds
+from src.data_loading.adcirc import (
+    print_pressure,
+    print_wsp,
+    read_pressures,
+    read_windspeeds,
+)
 from src.data_loading.ibtracs import holland2010, katrina, prep_for_climada
 
 MODEL_VANG = {"H08": 0, "H1980": 1, "H10": 2}
@@ -267,20 +272,26 @@ def mult_generation() -> None:
         "fort.222",
         "fort.224",
     ]
-    output_direc = os.path.join(DATA_PATH, "mult2")
+    output_direc = os.path.join(DATA_PATH, "mult1")
     adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
 
     if not os.path.exists(output_direc):
         os.mkdir(output_direc)
 
-    for file in invariant_inputs + pressure_inputs:
+    for file in invariant_inputs:
         shutil.copy(os.path.join(source_direc, file), os.path.join(output_direc, file))
+
+    for file in pressure_inputs:
+        orginal_file = os.path.join(source_direc, file)
+        ds = read_pressures(orginal_file)
+        final_file = os.path.join(output_direc, file)
+        print_pressure(ds, final_file)
 
     for file in wsp_inputs:
         orginal_file = os.path.join(source_direc, file)
         ds = read_windspeeds(orginal_file)
         final_file = os.path.join(output_direc, file)
-        ds = ds * 2
+        ds = ds * 1
         print_wsp(ds, final_file)
 
     @timeit
@@ -298,10 +309,16 @@ def comp() -> None:
     Compare the wind files.
     """
 
-    files =  ["fort.218", "fort.222", "fort.224"]
+    p_files = [
+        "fort.217",
+        "fort.221",
+        "fort.223",
+    ]
 
-        #file = "fort.217"
-    for file in files:
+    w_files = ["fort.218", "fort.222", "fort.224"]
+
+    # file = "fort.217"
+    for file in p_files + w_files:
 
         file1 = os.path.join(KAT_EX_PATH, file)
         file2 = os.path.join(DATA_PATH, "mult1", file)
@@ -327,7 +344,6 @@ if __name__ == "__main__":
     mult_generation()
     comp()
     # print("ok")
-
     # output_direc = os.path.join(DATA_PATH, "mult2")
     # adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
     # command = f"cd {output_direc} \n {adcirc_exe} > adcirc_log.txt"
