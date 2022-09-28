@@ -309,7 +309,7 @@ def mult_generation(mult: int = 1) -> None:
 
     @timeit
     def run_adcirc() -> int:
-        command = f"cd {output_direc} \n {adcirc_exe}"  #  > adcirc_log.txt"
+        command = f"cd {output_direc} \n {adcirc_exe} > adcirc_log.txt"
         return os.system(command)
 
     assert run_adcirc() == 0
@@ -354,7 +354,7 @@ if __name__ == "__main__":
     #    plot_katrina_windfield_example(model=key)
     # plot_katrina_windfield_example(model="H08")
     # python src/models/generation.py
-    mult_generation(2)
+    mult_generation(3)
     # comp()
     # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
