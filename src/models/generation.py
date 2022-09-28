@@ -1,5 +1,4 @@
 """Generate hurricane."""
-import subprocess
 import os
 import shutil
 from typing import Tuple, List
@@ -305,7 +304,7 @@ def mult_generation(mult: int = 1) -> None:
         orginal_file = os.path.join(source_direc, file)
         ds = read_windspeeds(orginal_file)
         final_file = os.path.join(output_direc, file)
-        ds = ds * 1
+        ds = ds * mult
         print_wsp(ds, final_file)
 
     @timeit
@@ -355,8 +354,8 @@ if __name__ == "__main__":
     #    plot_katrina_windfield_example(model=key)
     # plot_katrina_windfield_example(model="H08")
     # python src/models/generation.py
-    mult_generation()
-    comp()
+    mult_generation(2)
+    # comp()
     # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
     # adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
