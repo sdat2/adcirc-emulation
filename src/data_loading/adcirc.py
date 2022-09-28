@@ -332,6 +332,13 @@ def print_pressure(input_path: str, output_path: str) -> None:
 
 
 def print_wsp(wds: xr.Dataset, output_path: str) -> None:
+    """
+    Print windspeed.
+
+    Args:
+        wds (xr.Dataset): windspeed dataset.
+        output_path (str): output path.
+    """
     # wds = xr.open_dataset(input_path)
     # header does not include minutes.
     ds = str(datetime_to_int(wds.time.values[0]))[:-2]
@@ -350,7 +357,9 @@ def print_wsp(wds: xr.Dataset, output_path: str) -> None:
     first_line = f"Oceanweather WIN/PRE Format                            {ds}     {de}"
 
     with open(output_path, "w") as file:
+        file.write(first_line + "\n")
         for time in wds.time.values:
+
             dt = str(datetime_to_int(time))
             data_u10 = list(
                 wds.U10.sel(time=time).values.reshape(int(len(lons) * len(lats) / 8), 8)
