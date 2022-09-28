@@ -138,16 +138,16 @@ def read_windspeeds(windspeed_path: str) -> xr.Dataset:
         # print("len pressure", len_wsp)
 
         # print(wsp_list[0])
-        print(wsp_list[1])
-        print(wsp_list[2])
-        print(read_data_line(wsp_list[2]))
+        # print (wsp_list[1])
+        # print (wsp_list[2])
+        # print (read_data_line(wsp_list[2]))
 
         wsp_lol.append([])
         for i in range(2, len_wsp):
             if wsp_list[i].startswith(" "):
                 wsp_lol[-1].append(read_data_line(wsp_list[i]))
             else:
-                print(wsp_list[i])
+                # print (wsp_list[i])
                 wsp_lol.append([])
 
         names = ["iLat", "iLong", "DX", "DY", "SWLat", "SWLon", "DT"]
@@ -203,12 +203,12 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
         pressure_lol = []
 
         len_pressure = len(pressure_list)
-        print("len pressure", len_pressure)
+        # print ("len pressure", len_pressure)
 
-        print(pressure_list[0])
-        print(pressure_list[1])
-        print(pressure_list[2])
-        print(read_data_line(pressure_list[2]))
+        # print (pressure_list[0])
+        # print (pressure_list[1])
+        # print (pressure_list[2])
+        # print (read_data_line(pressure_list[2]))
 
         names = ["iLat", "iLong", "DX", "DY", "SWLat", "SWLon", "DT"]
         coords = read_coord_line(pressure_list[1], names)
@@ -218,7 +218,7 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
             if pressure_list[i].startswith(" "):
                 pressure_lol[-1].append(read_data_line(pressure_list[i]))
             else:
-                print(pressure_list[i])
+                # print (pressure_list[i])
                 pressure_lol.append([])
 
         dates = int_to_datetime(
@@ -294,8 +294,8 @@ def print_pressure(da: xr.DataArray, output_path: str) -> None:
     Print pressure text files.
 
     Args:
-        input_path (str): _description_
-        output_path (str): _description_
+        da (xr.DataArray): da.
+        output_path (str): output path.
     """
     ds = str(datetime_to_int(da.time.values[0]))[:-2]
     de = str(datetime_to_int(da.time.values[-1]))[:-2]
@@ -313,7 +313,7 @@ def print_pressure(da: xr.DataArray, output_path: str) -> None:
     first_line = f"Oceanweather WIN/PRE Format                            {ds}     {de}"
 
     with open(output_path, "w") as file:
-        print(first_line)
+        # print (first_line)
         file.write(first_line + "\n")
 
         for time in da.time.values:
@@ -377,9 +377,9 @@ def print_wsp(wds: xr.Dataset, output_path: str) -> None:
 def main():
     # python src/data_loading/adcirc.py
     nc_files = [x for x in os.listdir(KAT_EX_PATH) if x.endswith(".nc")]
-    print(KAT_EX_PATH)
+    # print (KAT_EX_PATH)
     for file in nc_files:
-        print(file)
+        # print (file)
 
         try:
             print(
