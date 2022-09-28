@@ -268,11 +268,10 @@ def read_default_inputs() -> None:
 
 
 def entry(inp: float) -> str:
-    if inp < 0:
-        out = "   " + "{:.4f}".format(inp)
-    else:
-        out = "    " + "{:.4f}".format(inp)
-    return out
+    tot_len = 6 + 4
+    num = "{:.4f}".format(inp)
+    spaces = tot_len - len(num)
+    return " "*spaces + num
 
 
 def entry_p(inp: float) -> str:
@@ -326,7 +325,7 @@ def print_wsp(wds: xr.Dataset, output_path: str) -> None:
     de = str(datetime_to_int(wds.time.values[-1]))[:-2]
     lats = wds.lat.values
     lons = wds.lon.values
-    swlat = "{:.4f}".format(np.min(lats))
+    swlat = "{:.5f}".format(np.min(lats))
     swlon = "{:.4f}".format(np.min(lons))
     dy = "{:.4f}".format(lats[1] - lats[0])
     dx = "{:.4f}".format(lons[1] - lons[0])
@@ -348,7 +347,7 @@ def print_wsp(wds: xr.Dataset, output_path: str) -> None:
             )
             data = data_u10 + data_v10
             data_list_str = [make_line(float_line) for float_line in data]
-            date_line = f"iLat=  {ilat}iLong=  {ilon}DX={dx}DY={dy}SWLat={swlat}SWLon={swlon}DT={dt}"
+            date_line = f"iLat= {ilat}iLong= {ilon}DX={dx}DY={dy}SWLat={swlat}SWLon={swlon}DT={dt}"
             file.write(date_line + "\n")
             for line in data_list_str:
                 file.write(line + "\n")

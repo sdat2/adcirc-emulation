@@ -259,7 +259,7 @@ def mult_generation():
         "fort.222",
         "fort.224",
     ]
-    output_direc = os.path.join(DATA_PATH, "mult2")
+    output_direc = os.path.join(DATA_PATH, "mult1")
     adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
 
     if not os.path.exists(output_direc):
@@ -272,12 +272,12 @@ def mult_generation():
         orginal_file = os.path.join(source_direc, file)
         ds = read_windspeeds(orginal_file)
         final_file = os.path.join(output_direc, file)
-        ds = ds * 2
+        ds = ds # * 2
         print_wsp(ds, final_file)
 
     @timeit
     def run_adcirc():
-        command = f"cd {output_direc} \n {adcirc_exe} > adcirc_log.txt"
+        command = f"cd {output_direc} \n {adcirc_exe}" #  > adcirc_log.txt"
         print(os.system(command))
 
     run_adcirc()
@@ -285,15 +285,41 @@ def mult_generation():
     # print(output, error)
 
 
+def comp():
+    import difflib
+
+    file = "fort.222"
+
+    file1 = os.path.join(KAT_EX_PATH, file)
+    file2 = os.path.join(DATA_PATH, "mult1", file)
+
+    with open(file1) as file_1:
+        file_1_text = file_1.readlines()
+
+    with open(file2) as file_2:
+        file_2_text = file_2.readlines()
+
+    # Find and print the diff:
+    for line in difflib.unified_diff(
+            file_1_text, file_2_text, fromfile=file1,
+            tofile=file2, lineterm=''):
+        print(line)
+
 if __name__ == "__main__":
     # for key in tc.MODEL_VANG:
     #    plot_katrina_windfield_example(model=key)
     # plot_katrina_windfield_example(model="H08")
     # python src/models/generation.py
     mult_generation()
+    comp()
     # print("ok")
 
     # output_direc = os.path.join(DATA_PATH, "mult2")
     # adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
     # command = f"cd {output_direc} \n {adcirc_exe} > adcirc_log.txt"
     # os.system(command)
+    # original
+    # iLat= 100iLong= 100DX=0.2500DY=0.2500SWLat=17.00000SWLon=-99.0000DT=200508250000
+    # new
+    # iLat=  100iLong=  100DX=0.2500DY=0.2500SWLat=17.0000SWLon=-99.0000DT=200508250000
+
