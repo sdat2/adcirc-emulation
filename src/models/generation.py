@@ -1,7 +1,6 @@
 """Generate hurricane."""
 import os
 import shutil
-from this import d
 from typing import Tuple, List
 import datetime
 import difflib
@@ -356,6 +355,7 @@ if __name__ == "__main__":
     # python src/models/generation.py
     print(NEW_ORLEANS)
     mult_generation(1)
+    [mult_generation(1) for x in range(16) if x not in list(range(0, 16, 4))]
     # comp()
     # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
