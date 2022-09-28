@@ -135,9 +135,9 @@ def read_windspeeds(windspeed_path: str) -> xr.Dataset:
         wsp_lol = []
 
         len_wsp = len(wsp_list)
-        print("len pressure", len_wsp)
+        # print("len pressure", len_wsp)
 
-        print(wsp_list[0])
+        # print(wsp_list[0])
         print(wsp_list[1])
         print(wsp_list[2])
         print(read_data_line(wsp_list[2]))

@@ -1,6 +1,7 @@
 """Generate hurricane."""
 import os
 import shutil
+from this import d
 from typing import Tuple, List
 import datetime
 import difflib
@@ -288,30 +289,34 @@ def mult_generation(mult: int = 1) -> None:
     output_direc = mult_folder_name(mult)
     adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
 
-    if not os.path.exists(output_direc):
-        os.mkdir(output_direc)
+    @timeit
+    def create_inputs() -> None:
+        if not os.path.exists(output_direc):
+            os.mkdir(output_direc)
 
-    for file in invariant_inputs:
-        shutil.copy(os.path.join(source_direc, file), os.path.join(output_direc, file))
+        for file in invariant_inputs:
+            shutil.copy(os.path.join(source_direc, file), os.path.join(output_direc, file))
 
-    for file in pressure_inputs:
-        orginal_file = os.path.join(source_direc, file)
-        ds = read_pressures(orginal_file)
-        final_file = os.path.join(output_direc, file)
-        print_pressure(ds, final_file)
+        for file in pressure_inputs:
+            orginal_file = os.path.join(source_direc, file)
+            ds = read_pressures(orginal_file)
+            final_file = os.path.join(output_direc, file)
+            print_pressure(ds, final_file)
 
-    for file in wsp_inputs:
-        orginal_file = os.path.join(source_direc, file)
-        ds = read_windspeeds(orginal_file)
-        final_file = os.path.join(output_direc, file)
-        ds = ds * mult
-        print_wsp(ds, final_file)
+        for file in wsp_inputs:
+            orginal_file = os.path.join(source_direc, file)
+            ds = read_windspeeds(orginal_file)
+            final_file = os.path.join(output_direc, file)
+            ds = ds * mult
+            print_wsp(ds, final_file)
 
     @timeit
     def run_adcirc() -> int:
         command = f"cd {output_direc} \n {adcirc_exe} > adcirc_log.txt"
         return os.system(command)
 
+
+    create_inputs()
     assert run_adcirc() == 0
     # output, error = process.communicate()
     # print(output, error)
@@ -319,7 +324,7 @@ def mult_generation(mult: int = 1) -> None:
 
 def comp() -> None:
     """
-    Compare the wind files.
+    Compare the wind and pressure files.
     """
 
     pres_files = ["fort.217", "fort.221", "fort.223"]
