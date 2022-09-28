@@ -323,7 +323,6 @@ def comp() -> None:
     """
 
     pres_files = ["fort.217", "fort.221", "fort.223"]
-
     wind_files = ["fort.218", "fort.222", "fort.224"]
 
     # file = "fort.217"
@@ -350,6 +349,7 @@ if __name__ == "__main__":
     #    plot_katrina_windfield_example(model=key)
     # plot_katrina_windfield_example(model="H08")
     # python src/models/generation.py
+    print(NEW_ORLEANS)
     mult_generation(1)
     # comp()
     # print("ok")
