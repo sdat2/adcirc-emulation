@@ -322,16 +322,12 @@ def comp() -> None:
     Compare the wind files.
     """
 
-    p_files = [
-        "fort.217",
-        "fort.221",
-        "fort.223",
-    ]
+    pres_files = ["fort.217", "fort.221", "fort.223"]
 
-    w_files = ["fort.218", "fort.222", "fort.224"]
+    wind_files = ["fort.218", "fort.222", "fort.224"]
 
     # file = "fort.217"
-    for file in p_files + w_files:
+    for file in pres_files + wind_files:
 
         file1 = os.path.join(KAT_EX_PATH, file)
         file2 = os.path.join(DATA_PATH, "mult1", file)
@@ -364,4 +360,4 @@ if __name__ == "__main__":
     # original
     # iLat= 100iLong= 100DX=0.2500DY=0.2500SWLat=17.00000SWLon=-99.0000DT=200508250000
     # new
-    # iLat=  100iLong=  100DX=0.2500DY=0.2500SWLat=17.0000SWLon=-99.0000DT=200508250000
+    # iLat= 100iLong= 100DX=0.2500DY=0.2500SWLat=17.00000SWLon=-99.0000DT=200508250000
