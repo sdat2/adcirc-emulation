@@ -4,6 +4,7 @@
 https://coast.nd.edu/reports_papers/SELA_2007_IDS_2_FinalDraft/App%20D%20PBL-C%20WIN_PRE%20File%20Format.pdf
 
 """
+from email.policy import default
 from typing import List, Union, Optional
 import os
 import datetime
@@ -169,7 +170,11 @@ def read_windspeeds(windspeed_path: str) -> xr.Dataset:
                 U10=(["time", "lat", "lon"], data[:, 0, :, :]),
                 V10=(["time", "lat", "lon"], data[:, 1, :, :]),
             ),
-            coords=dict(lon=(["lon"], lons), lat=(["lat"], lats), time=dates,),
+            coords=dict(
+                lon=(["lon"], lons),
+                lat=(["lat"], lats),
+                time=dates,
+            ),
             attrs=dict(
                 description="Velocities could be the wrong way round",
                 grid_var=str(coords),
@@ -236,9 +241,15 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
         da = xr.DataArray(
             data=np.array(pressure_lol).reshape(len(dates), len(lats), len(lons)),
             dims=["time", "lat", "lon"],
-            coords=dict(lon=(["lon"], lons), lat=(["lat"], lats), time=dates,),
+            coords=dict(
+                lon=(["lon"], lons),
+                lat=(["lat"], lats),
+                time=dates,
+            ),
             attrs=dict(
-                long_name="Pressure", description="Surface pressure", units="mb",
+                long_name="Pressure",
+                description="Surface pressure",
+                units="mb",
             ),
         )
         da.lat.attrs = {"units": "degree_North", "long_name": "Latitude"}
@@ -255,12 +266,14 @@ def read_default_inputs() -> None:
         pr_ds = read_pressures(os.path.join(KAT_EX_PATH, file_tuple[0]))
         pr_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[0]) + ".nc")
         print_pressure(
-            pr_ds, os.path.join(DATA_PATH, file_tuple[0]),
+            pr_ds,
+            os.path.join(DATA_PATH, file_tuple[0]),
         )
         ws_ds = read_windspeeds(os.path.join(KAT_EX_PATH, file_tuple[1]))
         ws_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[1]) + ".nc")
         print_wsp(
-            ws_ds, os.path.join(DATA_PATH, file_tuple[1]),
+            ws_ds,
+            os.path.join(DATA_PATH, file_tuple[1]),
         )
 
 
@@ -271,7 +284,7 @@ def entry(inp: float) -> str:
     tot_len = 6 + 4
     num = "{:.4f}".format(inp)
     spaces = tot_len - len(num)
-    return " "*spaces + num
+    return " " * spaces + num
 
 
 def entry_p(inp: float) -> str:
@@ -329,14 +342,14 @@ def print_wsp(wds: xr.Dataset, output_path: str) -> None:
     swlon = "{:.4f}".format(np.min(lons))
     dy = "{:.4f}".format(lats[1] - lats[0])
     dx = "{:.4f}".format(lons[1] - lons[0])
+    default_len = 4
     ilon = str(len(lons))
+    ilon = " "*(default_len- len(ilon)) + ilon
     ilat = str(len(lats))
+    ilat = " "*(default_len- len(ilat)) + ilat
     first_line = f"Oceanweather WIN/PRE Format                            {ds}     {de}"
 
     with open(output_path, "w") as file:
-        print(first_line)
-        file.write(first_line + "\n")
-
         for time in wds.time.values:
             dt = str(datetime_to_int(time))
             data_u10 = list(
@@ -347,7 +360,7 @@ def print_wsp(wds: xr.Dataset, output_path: str) -> None:
             )
             data = data_u10 + data_v10
             data_list_str = [make_line(float_line) for float_line in data]
-            date_line = f"iLat= {ilat}iLong= {ilon}DX={dx}DY={dy}SWLat={swlat}SWLon={swlon}DT={dt}"
+            date_line = f"iLat={ilat}iLong={ilon}DX={dx}DY={dy}SWLat={swlat}SWLon={swlon}DT={dt}"
             file.write(date_line + "\n")
             for line in data_list_str:
                 file.write(line + "\n")

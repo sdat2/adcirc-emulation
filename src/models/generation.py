@@ -4,6 +4,7 @@ import os
 import shutil
 from typing import Tuple, List
 import datetime
+import difflib
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
@@ -152,7 +153,11 @@ class HollandTropicalCyclone:
         ]
         time_list = [
             self.impact_time + x * self.time_delta
-            for x in range(-time_steps_before, time_steps_after + 1, 1,)
+            for x in range(
+                -time_steps_before,
+                time_steps_after + 1,
+                1,
+            )
         ]
         print(time_steps_before + time_steps_after + 1)
         return np.array(point_list), np.array(time_list)
@@ -173,7 +178,10 @@ class HollandTropicalCyclone:
         print(traj.shape)
         print(dates.shape)
         return xr.Dataset(
-            data_vars=dict(lon=(["time"], traj[:, 0]), lat=(["time"], traj[:, 1]),),
+            data_vars=dict(
+                lon=(["time"], traj[:, 0]),
+                lat=(["time"], traj[:, 1]),
+            ),
             coords=dict(
                 time=dates,
                 # reference_time=self.impact_time,
@@ -233,7 +241,7 @@ class HollandTropicalCyclone:
         return np.sin(angle) * windspeed, np.cos(angle) * windspeed
 
 
-def mult_generation():
+def mult_generation() -> None:
     """
     Multiply Katrina by 2 for new example.
     """
@@ -259,7 +267,7 @@ def mult_generation():
         "fort.222",
         "fort.224",
     ]
-    output_direc = os.path.join(DATA_PATH, "mult1")
+    output_direc = os.path.join(DATA_PATH, "mult2")
     adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
 
     if not os.path.exists(output_direc):
@@ -272,38 +280,44 @@ def mult_generation():
         orginal_file = os.path.join(source_direc, file)
         ds = read_windspeeds(orginal_file)
         final_file = os.path.join(output_direc, file)
-        ds = ds # * 2
+        ds = ds * 2
         print_wsp(ds, final_file)
 
     @timeit
-    def run_adcirc():
-        command = f"cd {output_direc} \n {adcirc_exe}" #  > adcirc_log.txt"
-        print(os.system(command))
+    def run_adcirc() -> int:
+        command = f"cd {output_direc} \n {adcirc_exe}"  #  > adcirc_log.txt"
+        return os.system(command)
 
-    run_adcirc()
+    assert run_adcirc() == 0
     # output, error = process.communicate()
     # print(output, error)
 
 
-def comp():
-    import difflib
+def comp() -> None:
+    """
+    Compare the wind files.
+    """
 
-    file = "fort.222"
+    files =  ["fort.218", "fort.222", "fort.224"]
 
-    file1 = os.path.join(KAT_EX_PATH, file)
-    file2 = os.path.join(DATA_PATH, "mult1", file)
+        #file = "fort.217"
+    for file in files:
 
-    with open(file1) as file_1:
-        file_1_text = file_1.readlines()
+        file1 = os.path.join(KAT_EX_PATH, file)
+        file2 = os.path.join(DATA_PATH, "mult1", file)
 
-    with open(file2) as file_2:
-        file_2_text = file_2.readlines()
+        with open(file1) as file_1:
+            file_1_text = file_1.readlines()
 
-    # Find and print the diff:
-    for line in difflib.unified_diff(
-            file_1_text, file_2_text, fromfile=file1,
-            tofile=file2, lineterm=''):
-        print(line)
+        with open(file2) as file_2:
+            file_2_text = file_2.readlines()
+
+        # Find and print the diff:
+        for line in difflib.unified_diff(
+            file_1_text, file_2_text, fromfile=file1, tofile=file2, lineterm=""
+        ):
+            print(line)
+
 
 if __name__ == "__main__":
     # for key in tc.MODEL_VANG:
@@ -311,7 +325,7 @@ if __name__ == "__main__":
     # plot_katrina_windfield_example(model="H08")
     # python src/models/generation.py
     mult_generation()
-    comp()
+    # comp()
     # print("ok")
 
     # output_direc = os.path.join(DATA_PATH, "mult2")
@@ -322,4 +336,3 @@ if __name__ == "__main__":
     # iLat= 100iLong= 100DX=0.2500DY=0.2500SWLat=17.00000SWLon=-99.0000DT=200508250000
     # new
     # iLat=  100iLong=  100DX=0.2500DY=0.2500SWLat=17.0000SWLon=-99.0000DT=200508250000
-
