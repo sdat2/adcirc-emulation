@@ -184,9 +184,6 @@ class TropicalCyclone:
             attrs=dict(description="Tropcial Cylone trajectory."),
         )
 
-    def distances_at_points(self, xr.Dataset):
-        return distances_to_points(point, lons, lats)
-
     def angle_at_points(
         self, lats: np.ndarray, lons: np.ndarray, point: Point
     ) -> np.ndarray:
