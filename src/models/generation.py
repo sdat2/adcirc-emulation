@@ -332,7 +332,7 @@ class Holland80:
     def __init__(self, pc, rmax, vmax) -> None:
         """ """
         self.pc = pc  # Pa
-        self.rho = 1.15  # kg m-3
+        self.rho = 1.0  # 15  # kg m-3
         self.pn = millibar_to_pascal(1010)  # Pa
         self.rmax = rmax  # meters
         self.vmax = vmax  # meters per second
@@ -361,15 +361,16 @@ class GenH80:
         pn=100500,  # pa
         angle=0.0,  # degrees
         trans_speed=7.71,  # m s**-1
-        output_direc=os.path.join(DATA_PATH, "exp_h80"),
+        output_direc=os.path.join(DATA_PATH, "exp_h80"), # string.
     ) -> None:
-        self.vmax = vmax # m s**-1
+        self.vmax = vmax  # m s**-1
         self.rmax = rmax  #  m
-        self.pc = pc # Pa
+        self.pc = pc  # Pa
         self.pn = pn  # pa
         self.angle = angle  # degrees
         self.trans_speed = trans_speed  # m s**-1
-        self.output_direc = output_direc
+        self.output_direc = output_direc # string to output direc
+        # impact time for katrina.
         self.impact_time = datetime.datetime(year=2005, month=8, day=29, hour=12)
 
     def center_from_time(self, time: np.datetime64) -> Point:
@@ -418,7 +419,8 @@ class GenH80:
 
             for file in invariant_inputs:
                 shutil.copy(
-                    os.path.join(source_direc, file), os.path.join(self.output_direc, file)
+                    os.path.join(source_direc, file),
+                    os.path.join(self.output_direc, file),
                 )
 
             for forts in [
