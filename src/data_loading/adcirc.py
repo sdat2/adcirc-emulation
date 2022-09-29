@@ -278,6 +278,15 @@ def read_default_inputs() -> None:
 
 # windspeed 8 entries, 3 s.f. 3 space
 def entry(inp: float) -> str:
+    """
+    Input.
+
+    Args:
+        inp (float): input float.
+
+    Returns:
+        str: 10 character string for fortran input (4 decimal places).
+    """
     tot_len = 6 + 4
     num = "{:.4f}".format(inp)
     spaces = tot_len - len(num)
@@ -285,6 +294,15 @@ def entry(inp: float) -> str:
 
 
 def make_line(inp: List[float]) -> str:
+    """
+    Make line.
+
+    Args:
+        inp (List[float]): input.
+
+    Returns:
+        str: line of floats.
+    """
     return "".join(list(map(entry, inp)))
 
 
@@ -321,12 +339,15 @@ def print_pressure(da: xr.DataArray, output_path: str) -> None:
                 da.sel(time=time).values.reshape(int(len(lons) * len(lats) / 8), 8)
             )
             data_list_str = [make_line(float_line) for float_line in data]
-            date_line = f"iLat={ilat}iLong={ilon}DX={dx}DY={dy}SWLat={swlat}SWLon={swlon}DT={dt}"
+            date_line = str(
+                f"iLat={ilat}iLong={ilon}DX={dx}DY={dy}"
+                + f"SWLat={swlat}SWLon={swlon}DT={dt}"
+            )
             file.write(date_line + "\n")
             for line in data_list_str:
                 file.write(line + "\n")
 
-        # iLat=  46iLong=  60DX=0.0500DY=0.0500SWLat=28.60000SWLon=-90.2800DT=200508250000
+    # iLat=  46iLong=  60DX=0.0500DY=0.0500SWLat=28.60000SWLon=-90.2800DT=200508250000
 
 
 def print_wsp(wds: xr.Dataset, output_path: str) -> None:
