@@ -377,6 +377,54 @@ def center_from_time(time: np.datetime64) -> Point:
     )
 
 
+def run_h80() -> None:
+    """
+    H80
+    """
+    source_direc = KAT_EX_PATH
+    invariant_inputs = [
+        "fort.14",
+        "fort.15",
+        "fort.16",
+        "fort.22",
+        "fort.33",
+        "fort.64.nc",
+        "fort.73.nc",
+        "fort.74.nc",
+        "fort.74.nc",
+    ]
+
+    output_direc = os.path.join(DATA_PATH, "exp_h80")
+    adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
+
+    @timeit
+    def create_inputs() -> None:
+        if not os.path.exists(output_direc):
+            os.mkdir(output_direc)
+
+        for file in invariant_inputs:
+            shutil.copy(
+                os.path.join(source_direc, file), os.path.join(output_direc, file)
+            )
+
+        for forts in [
+            ("fort.217", "fort.218"),
+            ("fort.221", "fort.222"),
+            ("fort.223", "fort.224"),
+        ]:
+            prepare_run(forts, output_direc)
+
+    @timeit
+    def run_adcirc() -> int:
+        command = f"cd {output_direc} \n {adcirc_exe} > adcirc_log.txt"
+        return os.system(command)
+
+    create_inputs()
+    assert run_adcirc() == 0
+    # output, error = process.communicate()
+    # print(output, error)
+
+
 @timeit
 def prepare_run(forts: Tuple[str], output_path: str) -> None:
     """
@@ -465,8 +513,7 @@ if __name__ == "__main__":
     #    plot_katrina_windfield_example(model=key)
     # plot_katrina_windfield_example(model="H08")
     # python src/models/generation.py
-
-    print("")
+    run_h80()
     # print(NEW_ORLEANS)
     # mult_generation(1)
     # [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
