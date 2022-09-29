@@ -1,4 +1,4 @@
-"""ADCIRC Input reading.
+"""ADCIRC Input reading (and writing).
 
 
 https://coast.nd.edu/reports_papers/SELA_2007_IDS_2_FinalDraft/App%20D%20PBL-C%20WIN_PRE%20File%20Format.pdf
@@ -192,7 +192,7 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
     Read pressures.
 
     Args:
-        pressure_path (str): _description_
+        pressure_path (str): Path to pressure fort file.
 
     Returns:
         xr.DataArray: _description_
@@ -204,7 +204,6 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
 
         len_pressure = len(pressure_list)
         # print ("len pressure", len_pressure)
-
         # print (pressure_list[0])
         # print (pressure_list[1])
         # print (pressure_list[2])
@@ -408,8 +407,3 @@ if __name__ == "__main__":
     # python src/data_loading/adcirc.py
     read_default_inputs()
     # test()
-    print(
-        make_line(
-            [-4.4665, -4.3980, -4.3604, -4.2985, -4.2514, -4.2389, -4.2370, -4.2362]
-        )
-    )

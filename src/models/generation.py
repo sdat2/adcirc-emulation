@@ -355,8 +355,8 @@ if __name__ == "__main__":
     # plot_katrina_windfield_example(model="H08")
     # python src/models/generation.py
     print(NEW_ORLEANS)
-    # mult_generation(1)
-    [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
+    mult_generation(1)
+    # [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
     # comp()
     # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
