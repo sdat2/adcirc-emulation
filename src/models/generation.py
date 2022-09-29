@@ -12,7 +12,12 @@ from src.constants import DATA_PATH, FIGURE_PATH, KAT_EX_PATH, NEW_ORLEANS, NO_B
 from sithom.plot import plot_defaults, label_subplots
 from sithom.place import Point
 from sithom.time import timeit
-from src.conversions import distances_to_points, angles_to_points
+from src.conversions import (
+    distances_to_points,
+    angles_to_points,
+    millibar_to_pascal,
+    pascal_to_millibar,
+)
 from src.data_loading.adcirc import (
     print_pressure,
     print_wsp,
@@ -323,13 +328,147 @@ def comp() -> None:
             print(line)
 
 
+class Holland80:
+    def __init__(self, pc, rmax, vmax) -> None:
+        """ """
+        self.pc = pc  # Pa
+        self.rho = 1.15  # kg m-3
+        self.pn = millibar_to_pascal(1010)  # Pa
+        self.rmax = rmax  # meters
+        self.vmax = vmax  # meters per second
+        self.b_coeff = self.vmax**2 / (self.pn - self.pc) * np.e  # dimensionless
+
+    def pressure(self, radii: np.ndarray) -> np.ndarray:
+        return self.pn - (self.pn - self.pc) * np.exp(
+            -((radii / self.rmax) ** self.b_coeff)
+        )
+
+    def velocity(self, radii: np.ndarray) -> float:
+        return np.sqrt(
+            (self.pn - self.pc)
+            * np.exp(-((radii / self.rmax) ** self.b_coeff))
+            * (radii / self.rmax) ** self.b_coeff
+            * self.b_coeff
+        )
+
+
+def center_from_time(time: np.datetime64) -> Point:
+    """
+    Assumes 111km per degree.
+
+    Args:
+        time (numpy.datetime64): time.
+
+    Returns:
+        List[float, float]: lon, lat.
+    """
+    time = datetime.datetime.utcfromtimestamp(
+        (time - np.datetime64("1970-01-01T00:00:00")) / np.timedelta64(1, "s")
+    )
+    angle = 30
+    trans_speed = 5  # m s -1
+    # time_delta = datetime.timedelta(hours=3)
+    impact_time = datetime.datetime(year=2005, month=8, day=29, hour=12)
+    time_delta = time - impact_time
+    distance = time_delta / datetime.timedelta(seconds=1) * trans_speed
+    return Point(
+        NEW_ORLEANS.lon + np.sin(np.radians(angle)) * distance / 111e3,
+        NEW_ORLEANS.lat + np.cos(np.radians(angle)) * distance / 111e3,
+    )
+
+
+@timeit
+def prepare_run(forts: Tuple[str], output_path: str) -> None:
+    """
+    Prepare run.
+
+    Args:
+        forts (Tuple[str]): e.g. ("fort.221", "fort.222")
+        output_path (str): e.g. os.path.join(DATA_PATH, "exp_h80")
+    """
+
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+
+    kath80 = Holland80(millibar_to_pascal(915), 20e3, 50)
+    da = read_pressures(os.path.join(KAT_EX_PATH, "fort.221"))
+    vds_list = []
+    pds_list = []
+    for time in da.time.values:
+        vds, pds = tc_time_slice(da, time, kath80)
+        vds_list.append(vds)
+        pds_list.append(pds)
+
+    vds = xr.merge(vds_list)
+    pda = xr.merge(pds_list)["pressure"]
+    print_pressure(pda, os.path.join(output_path, forts[0]))
+    print_wsp(vds, os.path.join(output_path, forts[1]))
+
+
+@timeit
+def tc_time_slice(
+    da: xr.DataArray, time: np.datetime64, kath80: Holland80
+) -> Tuple[xr.Dataset, xr.Dataset]:
+    center = center_from_time(time)
+    lons, lats = np.meshgrid(da.lon, da.lat)
+    distances = distances_to_points(center, lons, lats)
+    angles = angles_to_points(center, lons, lats)
+    ds = xr.Dataset(
+        data_vars=dict(
+            distance=(["time", "lat", "lon"], np.expand_dims(distances, axis=0)),
+            angle=(["time", "lat", "lon"], np.expand_dims(angles, axis=0)),
+        ),
+        coords=dict(
+            lat=(["lat"], da.lat.values),
+            lon=(["lon"], da.lon.values),
+            time=(["time"], [time]),
+        ),
+    )
+    ds.distance.attrs = {"units": "meters", "long_name": "Distance from center"}
+    ds.angle.attrs = {"units": "degrees", "long_name": "Angle from center"}
+
+    windspeed = kath80.velocity(
+        ds.distance.values
+    )  # self.windspeed_at_points(lats, lons, point)
+    angle = np.radians(ds.angle.values - 90.0)
+    u10, v10 = np.sin(angle) * windspeed, np.cos(angle) * windspeed
+    pressure = pascal_to_millibar(kath80.pressure(ds.distance.values))
+    pds = xr.Dataset(
+        data_vars=dict(
+            pressure=(["time", "lat", "lon"], pressure),
+        ),
+        coords=dict(
+            lat=(["lat"], da.lat.values),
+            lon=(["lon"], da.lon.values),
+            time=(["time"], [time]),
+        ),
+    )
+    pds.pressure.attrs = {"units": "mb", "long_name": "Surface pressure"}
+    vds = xr.Dataset(
+        data_vars=dict(
+            U10=(["time", "lat", "lon"], u10),
+            V10=(["time", "lat", "lon"], v10),
+        ),
+        coords=dict(
+            lat=(["lat"], da.lat.values),
+            lon=(["lon"], da.lon.values),
+            time=(["time"], [time]),
+        ),
+    )
+    vds.U10.attrs = {"units": "m s**-1", "long_name": "Zonal velocity"}
+    vds.V10.attrs = {"units": "m s**-1", "long_name": "Meridional velocity"}
+    return vds, pds
+
+
 if __name__ == "__main__":
     # for key in tc.MODEL_VANG:
     #    plot_katrina_windfield_example(model=key)
     # plot_katrina_windfield_example(model="H08")
     # python src/models/generation.py
-    print(NEW_ORLEANS)
-    mult_generation(1)
+
+    print("")
+    # print(NEW_ORLEANS)
+    # mult_generation(1)
     # [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
     # comp()
     # print("ok")
