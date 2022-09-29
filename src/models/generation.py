@@ -69,36 +69,27 @@ def plot_katrina_windfield_example(model: str = "H08") -> None:
     plt.clf()
 
 
-class HollandTropicalCyclone:
+class TropicalCyclone:
     def __init__(
         self,
         point: Point,
         angle: float,
         trans_speed: float,
-        vmax: float,
-        rmax: float,
-        bs: float,
     ) -> None:
         """
-        Holland tropical cylone to hit coast at point.
+        Tropical cylone to hit coast at point.
 
         Args:
             point (Point): Point to impact (lon, lat).
             angle (float): Angle to point [degrees].
             trans_speed (float): Translation speed [m s**-1].
-            vmax (float): Wind velocity maximum [m s**-1].
-            rmax (float): Radius of maximum wind [m s**-1].
-            bs (float): Holland b parameter [m s**-1].
         """
         # print(angle, trans_speed)
         self.point = point
         self.angle = angle
         self.trans_speed = trans_speed
-        self.vmax = vmax
-        self.rmax = rmax
-        self.bs = bs
-        self.time_delta = datetime.timedelta(hours=4)
-        self.impact_time = datetime.datetime(year=2005, month=8, day=28)
+        self.time_delta = datetime.timedelta(hours=3)
+        self.impact_time = datetime.datetime(year=2005, month=8, day=29, hour=12)
 
     def __repr__(self) -> str:
         return str(
@@ -193,22 +184,8 @@ class HollandTropicalCyclone:
             attrs=dict(description="Tropcial Cylone trajectory."),
         )
 
-    def windspeed_at_points(
-        self, lats: np.ndarray, lons: np.ndarray, point: Point
-    ) -> np.ndarray:
-        """
-        Windspeeds at points.
-
-        Args:
-            lats (np.ndarray): Latitudes [degrees_North]
-            lons (np.ndarray): Longitudes [degrees_South]
-            point (Point): Point (lon, lat).
-
-        Returns:
-            np.ndarray: Windspeed [m s**-1]
-        """
-        distances = distances_to_points(point, lons, lats)
-        return holland2010(distances, self.bs, 0.5, self.rmax, self.vmax)
+    def distances_at_points(self, xr.Dataset):
+        return distances_to_points(point, lons, lats)
 
     def angle_at_points(
         self, lats: np.ndarray, lons: np.ndarray, point: Point
