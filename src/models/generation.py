@@ -363,12 +363,12 @@ class GenH80:
         trans_speed=7.71,  # m s**-1
         output_direc=os.path.join(DATA_PATH, "exp_h80"),
     ) -> None:
-        self.vmax = 54.01667  # m s**-1
-        self.rmax = 40744  #  m
-        self.pc = 92800  # Pa
-        self.pn = 100500  # pa
-        self.angle = 0.0  # degrees
-        self.trans_speed = 7.71  # m s**-1
+        self.vmax = vmax # m s**-1
+        self.rmax = rmax  #  m
+        self.pc = pc # Pa
+        self.pn = pn  # pa
+        self.angle = angle  # degrees
+        self.trans_speed = trans_speed  # m s**-1
         self.output_direc = output_direc
         self.impact_time = datetime.datetime(year=2005, month=8, day=29, hour=12)
 
