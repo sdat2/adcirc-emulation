@@ -194,6 +194,26 @@ def millibar_to_pascal(
     return (millibar_input * UREG.millibar).to("pascal").magnitude
 
 
+def pascal_to_millibar(
+    pascal_input: Union[float, np.ndarray]
+) -> Union[float, np.ndarray]:
+    """
+    Pascal to millibar.
+
+    Args:
+        pascal_input (Union[float, np.ndarray]): input in pascal.
+
+    Returns:
+        Union[float, np.ndarray]: output in millibar.
+
+    Example::
+        >>> from src.conversions import pascal_to_millibar
+        >>> pascal_to_millibar(100.0)
+        1.0
+    """
+    return (pascal_input * UREG.pascal).to("millibar").magnitude
+
+
 def kelvin_to_celsius(
     kelvin_input: Union[float, np.ndarray]
 ) -> Union[float, np.ndarray]:
