@@ -590,8 +590,19 @@ if __name__ == "__main__":
     # print(katrina())
     # print(holland_b_landing_distribution(katrina(), fit=True).tolist())
     # print(holland_b_landing_distribution(katrina(), fit=False).tolist())
-    ds = na_tcs()
-    for var in ds:
-        if "units" in ds[var].attrs:
-            print(ds[var].attrs["long_name"])
-            print(ds[var].attrs["units"])
+    # ds = na_tcs()
+    # for var in ds:
+    ##    if "units" in ds[var].attrs:
+    #        print(ds[var].attrs["long_name"])
+    #        print(ds[var].attrs["units"])
+
+    kat_stats = si_ify(landings_only(katrina()).isel(date_time=2)[REQ_VAR])
+    for var in kat_stats:
+        print(kat_stats[var])
+
+    vmax = 54.01667  # m s**-1
+    rmax = 40744  #  m
+    pc = 92800  # Pa
+    pn = 100500  # pa
+    angle = 0.0  # degrees
+    trans_speed = 7.71  # m s**-1

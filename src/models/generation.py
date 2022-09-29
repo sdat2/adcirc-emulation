@@ -352,160 +352,170 @@ class Holland80:
         )
 
 
-def center_from_time(time: np.datetime64) -> Point:
-    """
-    Assumes 111km per degree.
+class GenH80:
+    def __init__(
+        self,
+        vmax=54.01667,  # m s**-1
+        rmax=40744,  #  m
+        pc=92800,  # Pa
+        pn=100500,  # pa
+        angle=0.0,  # degrees
+        trans_speed=7.71,  # m s**-1
+        output_direc=os.path.join(DATA_PATH, "exp_h80"),
+    ) -> None:
+        self.vmax = 54.01667  # m s**-1
+        self.rmax = 40744  #  m
+        self.pc = 92800  # Pa
+        self.pn = 100500  # pa
+        self.angle = 0.0  # degrees
+        self.trans_speed = 7.71  # m s**-1
+        self.output_direc = output_direc
+        self.impact_time = datetime.datetime(year=2005, month=8, day=29, hour=12)
 
-    Args:
-        time (numpy.datetime64): time.
+    def center_from_time(self, time: np.datetime64) -> Point:
+        """
+        Assumes 111km per degree.
 
-    Returns:
-        List[float, float]: lon, lat.
-    """
-    time = datetime.datetime.utcfromtimestamp(
-        (time - np.datetime64("1970-01-01T00:00:00")) / np.timedelta64(1, "s")
-    )
-    angle = 30
-    trans_speed = 5  # m s -1
-    # time_delta = datetime.timedelta(hours=3)
-    impact_time = datetime.datetime(year=2005, month=8, day=29, hour=12)
-    time_delta = time - impact_time
-    distance = time_delta / datetime.timedelta(seconds=1) * trans_speed
-    return Point(
-        NEW_ORLEANS.lon + np.sin(np.radians(angle)) * distance / 111e3,
-        NEW_ORLEANS.lat + np.cos(np.radians(angle)) * distance / 111e3,
-    )
+        Args:
+            time (numpy.datetime64): time.
 
+        Returns:
+            List[float, float]: lon, lat.
+        """
+        time = datetime.datetime.utcfromtimestamp(
+            (time - np.datetime64("1970-01-01T00:00:00")) / np.timedelta64(1, "s")
+        )
+        time_delta = time - self.impact_time
+        distance = time_delta / datetime.timedelta(seconds=1) * self.trans_speed
+        return Point(
+            NEW_ORLEANS.lon + np.sin(np.radians(self.angle)) * distance / 111e3,
+            NEW_ORLEANS.lat + np.cos(np.radians(self.angle)) * distance / 111e3,
+        )
 
-def run_h80() -> None:
-    """
-    H80
-    """
-    source_direc = KAT_EX_PATH
-    invariant_inputs = [
-        "fort.14",
-        "fort.15",
-        "fort.16",
-        "fort.22",
-        "fort.33",
-        "fort.64.nc",
-        "fort.73.nc",
-        "fort.74.nc",
-        "fort.74.nc",
-    ]
+    def run_h80(self) -> None:
+        """
+        H80
+        """
+        source_direc = KAT_EX_PATH
+        invariant_inputs = [
+            "fort.14",
+            "fort.15",
+            "fort.16",
+            "fort.22",
+            "fort.33",
+            "fort.64.nc",
+            "fort.73.nc",
+            "fort.74.nc",
+            "fort.74.nc",
+        ]
 
-    output_direc = os.path.join(DATA_PATH, "exp_h80")
-    adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
+        adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
+
+        @timeit
+        def create_inputs() -> None:
+            if not os.path.exists(self.output_direc):
+                os.mkdir(self.output_direc)
+
+            for file in invariant_inputs:
+                shutil.copy(
+                    os.path.join(source_direc, file), os.path.join(self.output_direc, file)
+                )
+
+            for forts in [
+                ("fort.217", "fort.218"),
+                ("fort.221", "fort.222"),
+                ("fort.223", "fort.224"),
+            ]:
+                self.prepare_run(forts)
+
+        @timeit
+        def run_adcirc() -> int:
+            command = f"cd {self.output_direc} \n {adcirc_exe} > adcirc_log.txt"
+            return os.system(command)
+
+        create_inputs()
+        assert run_adcirc() == 0
+        # output, error = process.communicate()
+        # print(output, error)
 
     @timeit
-    def create_inputs() -> None:
-        if not os.path.exists(output_direc):
-            os.mkdir(output_direc)
+    def prepare_run(self, forts: Tuple[str]) -> None:
+        """
+        Prepare run.
 
-        for file in invariant_inputs:
-            shutil.copy(
-                os.path.join(source_direc, file), os.path.join(output_direc, file)
-            )
+        Args:
+            forts (Tuple[str]): e.g. ("fort.221", "fort.222")
+        """
 
-        for forts in [
-            ("fort.217", "fort.218"),
-            ("fort.221", "fort.222"),
-            ("fort.223", "fort.224"),
-        ]:
-            prepare_run(forts, output_direc)
+        if not os.path.exists(self.output_direc):
+            os.mkdir(self.output_direc)
 
-    @timeit
-    def run_adcirc() -> int:
-        command = f"cd {output_direc} \n {adcirc_exe} > adcirc_log.txt"
-        return os.system(command)
+        kath80 = Holland80(self.pc, self.rmax, self.vmax)
+        da = read_pressures(os.path.join(KAT_EX_PATH, "fort.221"))
+        vds_list = []
+        pds_list = []
+        for time in da.time.values:
+            vds, pds = self.tc_time_slice(da, time, kath80)
+            vds_list.append(vds)
+            pds_list.append(pds)
 
-    create_inputs()
-    assert run_adcirc() == 0
-    # output, error = process.communicate()
-    # print(output, error)
+        vds = xr.merge(vds_list)
+        pda = xr.merge(pds_list)["pressure"]
+        print_pressure(pda, os.path.join(self.output_direc, forts[0]))
+        print_wsp(vds, os.path.join(self.output_direc, forts[1]))
 
+    def tc_time_slice(
+        self, da: xr.DataArray, time: np.datetime64, kath80: Holland80
+    ) -> Tuple[xr.Dataset, xr.Dataset]:
+        center = self.center_from_time(time)
+        lons, lats = np.meshgrid(da.lon, da.lat)
+        distances = distances_to_points(center, lons, lats)
+        angles = angles_to_points(center, lons, lats)
+        ds = xr.Dataset(
+            data_vars=dict(
+                distance=(["time", "lat", "lon"], np.expand_dims(distances, axis=0)),
+                angle=(["time", "lat", "lon"], np.expand_dims(angles, axis=0)),
+            ),
+            coords=dict(
+                lat=(["lat"], da.lat.values),
+                lon=(["lon"], da.lon.values),
+                time=(["time"], [time]),
+            ),
+        )
+        ds.distance.attrs = {"units": "meters", "long_name": "Distance from center"}
+        ds.angle.attrs = {"units": "degrees", "long_name": "Angle from center"}
 
-@timeit
-def prepare_run(forts: Tuple[str], output_path: str) -> None:
-    """
-    Prepare run.
-
-    Args:
-        forts (Tuple[str]): e.g. ("fort.221", "fort.222")
-        output_path (str): e.g. os.path.join(DATA_PATH, "exp_h80")
-    """
-
-    if not os.path.exists(output_path):
-        os.mkdir(output_path)
-
-    kath80 = Holland80(millibar_to_pascal(915), 20e3, 50)
-    da = read_pressures(os.path.join(KAT_EX_PATH, "fort.221"))
-    vds_list = []
-    pds_list = []
-    for time in da.time.values:
-        vds, pds = tc_time_slice(da, time, kath80)
-        vds_list.append(vds)
-        pds_list.append(pds)
-
-    vds = xr.merge(vds_list)
-    pda = xr.merge(pds_list)["pressure"]
-    print_pressure(pda, os.path.join(output_path, forts[0]))
-    print_wsp(vds, os.path.join(output_path, forts[1]))
-
-
-@timeit
-def tc_time_slice(
-    da: xr.DataArray, time: np.datetime64, kath80: Holland80
-) -> Tuple[xr.Dataset, xr.Dataset]:
-    center = center_from_time(time)
-    lons, lats = np.meshgrid(da.lon, da.lat)
-    distances = distances_to_points(center, lons, lats)
-    angles = angles_to_points(center, lons, lats)
-    ds = xr.Dataset(
-        data_vars=dict(
-            distance=(["time", "lat", "lon"], np.expand_dims(distances, axis=0)),
-            angle=(["time", "lat", "lon"], np.expand_dims(angles, axis=0)),
-        ),
-        coords=dict(
-            lat=(["lat"], da.lat.values),
-            lon=(["lon"], da.lon.values),
-            time=(["time"], [time]),
-        ),
-    )
-    ds.distance.attrs = {"units": "meters", "long_name": "Distance from center"}
-    ds.angle.attrs = {"units": "degrees", "long_name": "Angle from center"}
-
-    windspeed = kath80.velocity(
-        ds.distance.values
-    )  # self.windspeed_at_points(lats, lons, point)
-    angle = np.radians(ds.angle.values - 90.0)
-    u10, v10 = np.sin(angle) * windspeed, np.cos(angle) * windspeed
-    pressure = pascal_to_millibar(kath80.pressure(ds.distance.values))
-    pds = xr.Dataset(
-        data_vars=dict(
-            pressure=(["time", "lat", "lon"], pressure),
-        ),
-        coords=dict(
-            lat=(["lat"], da.lat.values),
-            lon=(["lon"], da.lon.values),
-            time=(["time"], [time]),
-        ),
-    )
-    pds.pressure.attrs = {"units": "mb", "long_name": "Surface pressure"}
-    vds = xr.Dataset(
-        data_vars=dict(
-            U10=(["time", "lat", "lon"], u10),
-            V10=(["time", "lat", "lon"], v10),
-        ),
-        coords=dict(
-            lat=(["lat"], da.lat.values),
-            lon=(["lon"], da.lon.values),
-            time=(["time"], [time]),
-        ),
-    )
-    vds.U10.attrs = {"units": "m s**-1", "long_name": "Zonal velocity"}
-    vds.V10.attrs = {"units": "m s**-1", "long_name": "Meridional velocity"}
-    return vds, pds
+        windspeed = kath80.velocity(
+            ds.distance.values
+        )  # self.windspeed_at_points(lats, lons, point)
+        angles = np.radians(ds.angle.values - 90.0)
+        u10, v10 = -np.sin(angles) * windspeed, -np.cos(angles) * windspeed
+        pressure = pascal_to_millibar(kath80.pressure(ds.distance.values))
+        pds = xr.Dataset(
+            data_vars=dict(
+                pressure=(["time", "lat", "lon"], pressure),
+            ),
+            coords=dict(
+                lat=(["lat"], da.lat.values),
+                lon=(["lon"], da.lon.values),
+                time=(["time"], [time]),
+            ),
+        )
+        pds.pressure.attrs = {"units": "mb", "long_name": "Surface pressure"}
+        vds = xr.Dataset(
+            data_vars=dict(
+                U10=(["time", "lat", "lon"], u10),
+                V10=(["time", "lat", "lon"], v10),
+            ),
+            coords=dict(
+                lat=(["lat"], da.lat.values),
+                lon=(["lon"], da.lon.values),
+                time=(["time"], [time]),
+            ),
+        )
+        vds.U10.attrs = {"units": "m s**-1", "long_name": "Zonal velocity"}
+        vds.V10.attrs = {"units": "m s**-1", "long_name": "Meridional velocity"}
+        return vds, pds
 
 
 if __name__ == "__main__":
@@ -513,7 +523,7 @@ if __name__ == "__main__":
     #    plot_katrina_windfield_example(model=key)
     # plot_katrina_windfield_example(model="H08")
     # python src/models/generation.py
-    run_h80()
+    GenH80().run_h80()
     # print(NEW_ORLEANS)
     # mult_generation(1)
     # [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
