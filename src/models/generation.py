@@ -361,7 +361,7 @@ class GenH80:
         pn=100500,  # pa
         angle=0.0,  # degrees
         trans_speed=7.71,  # m s**-1
-        output_direc=os.path.join(DATA_PATH, "exp_h80"), # string.
+        output_direc=os.path.join(DATA_PATH, "exp_h80"),  # string.
     ) -> None:
         self.vmax = vmax  # m s**-1
         self.rmax = rmax  #  m
@@ -369,7 +369,7 @@ class GenH80:
         self.pn = pn  # pa
         self.angle = angle  # degrees
         self.trans_speed = trans_speed  # m s**-1
-        self.output_direc = output_direc # string to output direc
+        self.output_direc = output_direc  # string to output direc
         # impact time for katrina.
         self.impact_time = datetime.datetime(year=2005, month=8, day=29, hour=12)
 

@@ -15,7 +15,8 @@ from emukit.experimental_design.acquisitions import ModelVariance
 from sithom.plot import plot_defaults, label_subplots
 from sithom.misc import in_notebook
 from xarray.core.utils import FrozenDict
-from src.constants import FIGURE_PATH
+from src.constants import DATA_PATH, FIGURE_PATH
+from src.models.generation import GenH80
 from emukit.core.initial_designs.latin_design import LatinDesign
 
 
@@ -88,10 +89,9 @@ def space() -> None:
     param_dict = frozendict(
         {
             "Direction [degrees]": (-70, 70),
-            "Speed [m s$^{-1}$]": (1, 5),
-            "Maximum velocity [m $^{-1}$]": (20, 60),
-            "Radius of maximum velocity [m]": (10e3, 100e3),
-            "bs [?dim?]": (6, 8),
+            "Speed [m s$^{-1}$]": (2, 5),
+            "Maximum velocity [m $^{-1}$]": (30, 60),
+            # "Radius of maximum velocity [m]": (10e3, 50e3),
         }
     )
 
@@ -108,11 +108,25 @@ def space() -> None:
 
     params = list(latin_cube.keys())
 
+    big_direc = os.path.join(DATA_PATH, "lhc")
+
+    if not os.path.exists(big_direc):
+        os.mkdir(big_direc)
+
+    for i in range(num_init_data_points):
+        GenH80(
+            vmax=latin_cube[params[2]][i],
+            trans_speed=latin_cube[params[1]][i],
+            angle=latin_cube[params[0]][i],
+            output_direc=os.path.join(big_direc, str(i)),
+        ).run_h80()
+
     plt.scatter(latin_cube[params[0]], latin_cube[params[1]], c=latin_cube[params[2]])
     plt.xlabel(params[0])
     plt.ylabel(params[1])
     plt.colorbar(label=params[2])
     plt.savefig(os.path.join(FIGURE_PATH, "param.png"))
+
     if in_notebook():
         plt.show()
     else:
