@@ -82,6 +82,46 @@ def example_plot() -> None:
         plt.clf()
 
 
+def plot_space() -> None:
+    """
+    Make parameter space.
+    """
+    param_dict = frozendict(
+        {
+            "Direction [degrees]": (-70, 70),
+            "Speed [m s$^{-1}$]": (3, 10),
+        }
+    )
+
+    param_list = [
+        ContinuousParameter(param, param_dict[param][0], param_dict[param][1])
+        for param in param_dict
+    ]
+    space = ParameterSpace(param_list)
+    design = LatinDesign(space)
+    num_init_data_points = 100
+    x_data = design.get_samples(num_init_data_points)
+    latin_cube = frozendict({param: x_data[:, i] for i, param in enumerate(param_dict)})
+    params = list(latin_cube.keys())
+    big_direc = os.path.join(DATA_PATH, "2dlhc")
+
+    for i in range(num_init_data_points):
+        os.path.join(big_direc, str(i), "maxele.63.nc")
+
+    plt.scatter(
+        latin_cube[params[0]], latin_cube[params[1]]
+    )  # , c=latin_cube[params[2]])
+    plt.xlabel(params[0])
+    plt.ylabel(params[1])
+    # plt.colorbar(label=params[2])
+    plt.savefig(os.path.join(FIGURE_PATH, "2dlhc_param.png"))
+
+    if in_notebook():
+        plt.show()
+    else:
+        plt.clf()
+
+
 def space() -> None:
     """
     Make parameter space.
@@ -89,8 +129,8 @@ def space() -> None:
     param_dict = frozendict(
         {
             "Direction [degrees]": (-70, 70),
-            "Speed [m s$^{-1}$]": (2, 5),
-            "Maximum velocity [m $^{-1}$]": (30, 60),
+            "Speed [m s$^{-1}$]": (3, 10),
+            # "Maximum velocity [m $^{-1}$]": (30, 60),
             # "Radius of maximum velocity [m]": (10e3, 50e3),
         }
     )
@@ -108,14 +148,14 @@ def space() -> None:
 
     params = list(latin_cube.keys())
 
-    big_direc = os.path.join(DATA_PATH, "lhc")
+    big_direc = os.path.join(DATA_PATH, "2dlhc")
 
     if not os.path.exists(big_direc):
         os.mkdir(big_direc)
 
     for i in range(num_init_data_points):
         GenH80(
-            vmax=latin_cube[params[2]][i],
+            # vmax=latin_cube[params[2]][i],
             trans_speed=latin_cube[params[1]][i],
             angle=latin_cube[params[0]][i],
             output_direc=os.path.join(big_direc, str(i)),
@@ -253,4 +293,4 @@ if __name__ == "__main__":
     # python src/models/emulation.py
     # example_animation()
     # example_plot()
-    space()
+    plot_space()

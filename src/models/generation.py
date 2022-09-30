@@ -360,8 +360,9 @@ class GenH80:
         pc=92800,  # Pa
         pn=100500,  # pa
         angle=0.0,  # degrees
-        trans_speed=7.71,  # m s**-1
-        output_direc=os.path.join(DATA_PATH, "exp_h80"),  # string.
+        trans_speed=7.71,  # m s**-1,
+        point=NEW_ORLEANS,
+        output_direc=os.path.join(DATA_PATH, "kat_h80"),  # string.
     ) -> None:
         self.vmax = vmax  # m s**-1
         self.rmax = rmax  #  m
@@ -371,6 +372,7 @@ class GenH80:
         self.trans_speed = trans_speed  # m s**-1
         self.output_direc = output_direc  # string to output direc
         # impact time for katrina.
+        self.point = point
         self.impact_time = datetime.datetime(year=2005, month=8, day=29, hour=12)
 
     def center_from_time(self, time: np.datetime64) -> Point:
@@ -389,8 +391,8 @@ class GenH80:
         time_delta = time - self.impact_time
         distance = time_delta / datetime.timedelta(seconds=1) * self.trans_speed
         return Point(
-            NEW_ORLEANS.lon + np.sin(np.radians(self.angle)) * distance / 111e3,
-            NEW_ORLEANS.lat + np.cos(np.radians(self.angle)) * distance / 111e3,
+            self.point.lon + np.sin(np.radians(self.angle)) * distance / 111e3,
+            self.point.lat + np.cos(np.radians(self.angle)) * distance / 111e3,
         )
 
     def run_h80(self) -> None:
@@ -525,7 +527,11 @@ if __name__ == "__main__":
     #    plot_katrina_windfield_example(model=key)
     # plot_katrina_windfield_example(model="H08")
     # python src/models/generation.py
-    GenH80().run_h80()
+    from src.constants import NEW_ORLEANS
+    from sithom.place import Point
+
+    point = Point(NEW_ORLEANS.lon + 1.5, NEW_ORLEANS.lat)
+    GenH80(point=point, output_direc=os.path.join(DATA_PATH, "katd_h80")).run_h80()
     # print(NEW_ORLEANS)
     # mult_generation(1)
     # [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
