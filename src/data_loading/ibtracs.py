@@ -583,6 +583,17 @@ def prep_for_climada(input: xr.Dataset) -> xr.Dataset:
     return input
 
 
+
+def kat_stats() -> xr.Dataset:
+    """
+    Trim Katrina to key variables at Landfall at New Orleans
+
+    Returns:
+        xr.Dataset: Katrina statistics.
+    """
+    return si_ify(landings_only(katrina()).isel(date_time=2)[REQ_VAR])
+
+
 if __name__ == "__main__":
     # python src/data_loading/ibtracs.py
     # print(na_tcs())
