@@ -27,6 +27,27 @@ def hx(radius: float, rmax: float, xn: float, rn: float) -> float:
     return x_out
 
 
+@np.vectorize
+def sx(radius: float, rmax: float, xn: float, rn: float) -> float:
+    """
+    Simon's version
+
+    Args:
+        radius (float): Radius [m].
+        rmax (float): Radius maximum [m].
+        xn (float): x value at radius_n [dimensionless].
+        rn (float): radius_n [m].
+
+    Returns:
+        float: x value at radius [dimensionless].
+    """
+    if radius <= rmax:
+        x_out = 0.5
+    else:
+        x_out = xn
+    return x_out
+
+
 def h08(
     radius: float,
     rmax: float,
@@ -54,7 +75,7 @@ def h08(
         float: velocity [m s**-1]
     """
     b = vmax**2 * np.e * density / (pn - pc)
-    x = hx(radius, rmax, xn, r64)
+    x = sx(radius, rmax, xn, r64)
     return vmax * ((rmax / radius) ** b * np.exp(1 - (rmax / radius) ** b)) ** x
 
 
@@ -76,6 +97,7 @@ def h08_fitfunc(
     Returns:
         Callable: fit_func(radius, xn)
     """
+
     def v_func(radius: float, xn: float) -> float:
         return h08(radius, rmax, vmax, pc, pn, r64, xn, density=density)
 
@@ -98,16 +120,16 @@ def fit_h08(
 
     Args:
         rmax (float): Radius of velocity maximum [m s**-1].
-        vmax (float): Velocity maximum.
-        pc (float): _description_
-        pn (float): _description_
-        r64 (float): _description_
-        distances (Union[list, np.ndarray]): _description_
-        speeds (Union[list, np.ndarray]): _description_
-        density (float, optional): _description_. Defaults to 1.04.
+        vmax (float): Velocity maximum [m s**-1].
+        pc (float): Central pressure [Pa].
+        pn (float): Neutral pressure [Pa].
+        r64 (float): Radius of 64 knot wind [m].
+        distances (Union[list, np.ndarray]): Distances [m].
+        speeds (Union[list, np.ndarray]): Speeds [m s**-1].
+        density (float, optional): Surface air density [kg]. Defaults to 1.04.
 
     Returns:
-        Tuple[Callable, Callable, float]: _description_
+        Tuple[Callable, Callable, float]: v_func, p_func, xn
     """
 
     h08v = h08_fitfunc(rmax, vmax, pc, pn, r64, density=density)
