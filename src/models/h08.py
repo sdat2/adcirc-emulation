@@ -141,14 +141,14 @@ def fit_h08(
 
         return vel
 
-    def pres_f(xn) -> Callable:
+    def pres_f() -> Callable:
         def pres(radius):
             b = vmax**2 * np.e * density / (pn - pc)
             return pc + (pn - pc) * np.exp(-((rmax / radius) ** b))
 
         return pres
 
-    return vel_f(popt), pres_f(popt), float(popt)
+    return vel_f(popt), pres_f(), float(popt)
 
 
 if __name__ == "__main__":
