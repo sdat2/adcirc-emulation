@@ -30,7 +30,7 @@ def hx(radius: float, rmax: float, xn: float, rn: float) -> float:
 @np.vectorize
 def sx(radius: float, rmax: float, xn: float, rn: float) -> float:
     """
-    Simon's version
+    Simon's version: keep x at a constant value.
 
     Args:
         radius (float): Radius [m].
