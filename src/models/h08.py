@@ -23,7 +23,7 @@ def hx(radius: float, rmax: float, xn: float, rn: float) -> float:
     if radius <= rmax:
         x_out = 0.5
     else:
-        x_out = 0.5 + (radius - rmax) * (xn - 0.5) / (radius - rn)
+        x_out = 0.5 + (radius - rmax) * (xn - 0.5) / (rn - rmax)
     return x_out
 
 
