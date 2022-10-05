@@ -583,7 +583,6 @@ def prep_for_climada(input: xr.Dataset) -> xr.Dataset:
     return input
 
 
-
 def kat_stats() -> xr.Dataset:
     """
     Trim Katrina to key variables at Landfall at New Orleans
