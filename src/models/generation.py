@@ -352,6 +352,7 @@ class Holland80:
             * self.b_coeff
         )
 
+
 class Holland08:
     def __init__(self, pc, rmax, vmax) -> None:
         self.pc = pc  # Pa
@@ -370,6 +371,7 @@ class Holland08:
 
     def velocity(self, radii: np.ndarray) -> float:
         return self.vf(radii)
+
 
 class GenHolland:
     def __init__(
@@ -560,20 +562,36 @@ class GenHolland:
 @timeit
 def run_katrina_holland() -> None:
     """Run the Katrina as Holland 1980."""
-    from src.constants import NEW_ORLEANS
-    from sithom.place import Point
 
     point = Point(NEW_ORLEANS.lon + 1.5, NEW_ORLEANS.lat)
-    GenHolland(point=point, output_direc=os.path.join(DATA_PATH, "katd_h80")).run_holland()
+    GenHolland(
+        point=point, output_direc=os.path.join(DATA_PATH, "katd_h80")
+    ).run_holland()
 
 
 def run_katrina_h08() -> None:
     """Run the Katrina as Holland 2008."""
-    from src.constants import NEW_ORLEANS
-    from sithom.place import Point
 
     point = Point(NEW_ORLEANS.lon + 1.1, NEW_ORLEANS.lat)
-    GenHolland(point=point, output_direc=os.path.join(DATA_PATH, "kate_h08"), holland_model=Holland08).run_holland()
+    GenHolland(
+        point=point,
+        output_direc=os.path.join(DATA_PATH, "kate_h08"),
+        holland_model=Holland08,
+    ).run_holland()
+
+
+def point(x_diff: float) -> None:
+    """Run the Katrina as Holland 2008."""
+
+    point = Point(NEW_ORLEANS.lon + x_diff, NEW_ORLEANS.lat)
+    folder = os.path.join(DATA_PATH, "kat_move")
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+    GenHolland(
+        point=point,
+        output_direc=os.path.join(folder, "x{:.3f}".format(x_diff) + "_kat_move"),
+        holland_model=Holland08,
+    ).run_holland()
 
 
 if __name__ == "__main__":
@@ -585,7 +603,9 @@ if __name__ == "__main__":
     # mult_generation(1)
     # [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
     # comp()
-    run_katrina_h08()
+    # run_katrina_h08()
+    for x in np.linspace(-1, 2, num=100):
+        point(x)
     # run_katrina_h08()
     # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
