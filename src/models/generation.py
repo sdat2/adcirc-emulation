@@ -384,6 +384,14 @@ class GenHolland:
         output_direc: str = os.path.join(DATA_PATH, "kat_h80"),  # string.
         holland_model: any = Holland80,
     ) -> None:
+        """
+        Generate Holland Hurricane Model.
+
+        Args:
+            vmax (float, optional): vmax. Defaults to 54.01667.
+            point (Point, optional): point to hit. Defaults to NEW_ORLEANS.
+            output_direc (str, optional): Output directory. Defaults to os.path.join(DATA_PATH, "kat_h80").
+        """
 
         self.vmax = vmax  # m s**-1
         self.rmax = rmax  #  m
@@ -577,7 +585,8 @@ if __name__ == "__main__":
     # mult_generation(1)
     # [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
     # comp()
-    run_katrina_h08()
+    run_katrina_holland()
+    # run_katrina_h08()
     # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
     # adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
