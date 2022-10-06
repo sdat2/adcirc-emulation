@@ -352,8 +352,26 @@ class Holland80:
             * self.b_coeff
         )
 
+class Holland08:
+    def __init__(self, pc, rmax, vmax) -> None:
+        self.pc = pc  # Pa
+        self.xn = 1.1249
+        self.rho = 1.0  # 15  # kg m-3
+        self.pn = millibar_to_pascal(1010)  # Pa
+        self.r64 = 2e5
+        self.rmax = rmax  # meters
+        self.vmax = vmax  # meters per second
+        vf, pf = h08_vp(rmax, vmax, pc, self.pn, self.r64, self.rho, self.xn)
+        self.vf = vf
+        self.pf = pf
 
-class GenH80:
+    def pressure(self, radii: np.ndarray) -> np.ndarray:
+        return self.pf(radii)
+
+    def velocity(self, radii: np.ndarray) -> float:
+        return self.vf(radii)
+
+class GenHolland:
     def __init__(
         self,
         vmax: float = 54.01667,  # m s**-1
@@ -364,6 +382,7 @@ class GenH80:
         trans_speed: float = 7.71,  # m s**-1,
         point: Point = NEW_ORLEANS,
         output_direc: str = os.path.join(DATA_PATH, "kat_h80"),  # string.
+        holland_model: any = Holland80,
     ) -> None:
 
         self.vmax = vmax  # m s**-1
@@ -376,7 +395,7 @@ class GenH80:
         # impact time for katrina.
         self.point = point
         self.impact_time = datetime.datetime(year=2005, month=8, day=29, hour=12)
-        self.model = Holland80(self.pc, self.rmax, self.vmax)
+        self.holland_model = holland_model(pc, rmax, vmax)
 
     def center_from_time(self, time: np.datetime64) -> Point:
         """
@@ -398,7 +417,7 @@ class GenH80:
             self.point.lat + np.cos(np.radians(self.angle)) * distance / 111e3,
         )
 
-    def run_h80(self) -> None:
+    def run_holland(self) -> None:
         """
         H80
         """
@@ -457,7 +476,7 @@ class GenH80:
         vds_list = []
         pds_list = []
         for time in da.time.values:
-            vds, pds = self.tc_time_slice(da, time, self.model)
+            vds, pds = self.tc_time_slice(da, time)
             vds_list.append(vds)
             pds_list.append(pds)
 
@@ -467,7 +486,7 @@ class GenH80:
         print_wsp(vds, os.path.join(self.output_direc, forts[1]))
 
     def tc_time_slice(
-        self, da: xr.DataArray, time: np.datetime64, kath80: Holland80
+        self, da: xr.DataArray, time: np.datetime64
     ) -> Tuple[xr.Dataset, xr.Dataset]:
         """
         Tropical Cyclone Time Slice.
@@ -475,7 +494,6 @@ class GenH80:
         Args:
             da (xr.DataArray): dataarray.
             time (np.datetime64): Time to get center from.
-            kath80 (Holland80): Katrina 1980 object
 
         Returns:
             Tuple[xr.Dataset, xr.Dataset]: velocity ds, pressure ds.
@@ -498,12 +516,12 @@ class GenH80:
         ds.distance.attrs = {"units": "meters", "long_name": "Distance from center"}
         ds.angle.attrs = {"units": "degrees", "long_name": "Angle from center"}
 
-        windspeed = kath80.velocity(
+        windspeed = self.holland_model.velocity(
             ds.distance.values
         )  # self.windspeed_at_points(lats, lons, point)
         angles = np.radians(ds.angle.values - 90.0)
         u10, v10 = -np.sin(angles) * windspeed, -np.cos(angles) * windspeed
-        pressure = pascal_to_millibar(kath80.pressure(ds.distance.values))
+        pressure = pascal_to_millibar(self.holland_model.pressure(ds.distance.values))
         pds = xr.Dataset(
             data_vars=dict(
                 pressure=(["time", "lat", "lon"], pressure),
@@ -538,7 +556,16 @@ def run_katrina_holland() -> None:
     from sithom.place import Point
 
     point = Point(NEW_ORLEANS.lon + 1.5, NEW_ORLEANS.lat)
-    GenH80(point=point, output_direc=os.path.join(DATA_PATH, "katd_h80")).run_h80()
+    GenHolland(point=point, output_direc=os.path.join(DATA_PATH, "katd_h80")).run_holland()
+
+
+def run_katrina_h08() -> None:
+    """Run the Katrina as Holland 2008."""
+    from src.constants import NEW_ORLEANS
+    from sithom.place import Point
+
+    point = Point(NEW_ORLEANS.lon + 1.5, NEW_ORLEANS.lat)
+    GenHolland(point=point, output_direc=os.path.join(DATA_PATH, "katd_h08"), holland_model=Holland08).run_holland()
 
 
 if __name__ == "__main__":
@@ -550,7 +577,8 @@ if __name__ == "__main__":
     # mult_generation(1)
     # [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
     # comp()
-    print("ok")
+    run_katrina_h08()
+    # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
     # adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
     # command = f"cd {output_direc} \n {adcirc_exe} > adcirc_log.txt"
