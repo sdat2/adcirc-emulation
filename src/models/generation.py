@@ -427,7 +427,7 @@ class GenHolland:
 
     def run_holland(self) -> None:
         """
-        H80
+        Run Holland model.
         """
         source_direc = KAT_EX_PATH
         invariant_inputs = [
@@ -572,8 +572,8 @@ def run_katrina_h08() -> None:
     from src.constants import NEW_ORLEANS
     from sithom.place import Point
 
-    point = Point(NEW_ORLEANS.lon + 1.5, NEW_ORLEANS.lat)
-    GenHolland(point=point, output_direc=os.path.join(DATA_PATH, "katd_h08"), holland_model=Holland08).run_holland()
+    point = Point(NEW_ORLEANS.lon + 1.1, NEW_ORLEANS.lat)
+    GenHolland(point=point, output_direc=os.path.join(DATA_PATH, "kate_h08"), holland_model=Holland08).run_holland()
 
 
 if __name__ == "__main__":
@@ -585,7 +585,7 @@ if __name__ == "__main__":
     # mult_generation(1)
     # [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
     # comp()
-    run_katrina_holland()
+    run_katrina_h08()
     # run_katrina_h08()
     # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
