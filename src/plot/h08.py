@@ -16,7 +16,7 @@ def katrina_h08() -> None:
     """
     Katrina Hurricane 2008.
     """
-    ds = kat_stats() # .isel(date_time=2)
+    ds = kat_stats()  # .isel(date_time=2)
     pc = ds["usa_pres"].values
     pn = ds["usa_poci"].values
     r64 = np.mean(ds["usa_r64"].values)

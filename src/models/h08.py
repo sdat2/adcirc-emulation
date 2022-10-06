@@ -1,4 +1,5 @@
 """Holland Hurricane 2008."""
+from ast import Call
 import numpy as np
 from scipy.optimize import curve_fit
 from typing import Callable, Union, Tuple
@@ -133,7 +134,46 @@ def fit_h08(
     """
 
     h08v = h08_fitfunc(rmax, vmax, pc, pn, r64, density=density)
-    popt, _ = curve_fit(h08v, distances, speeds, p0=[1])
+    xn, _ = curve_fit(h08v, distances, speeds, p0=[1])
+    xn = float(xn)
+    vf, pf = h08_vp(
+        rmax,
+        vmax,
+        pc,
+        pn,
+        r64,
+        density,
+        xn,
+    )
+    return vf, pf, float(xn)
+
+
+def h08_vp(
+    rmax: float,
+    vmax: float,
+    pc: float,
+    pn: float,
+    r64: float,
+    density: float,
+    xn: float,
+) -> Tuple[Callable, Callable]:
+    """
+    Holland 2008.
+
+    Args:
+        rmax (float): Radius of maximum velocity.
+        vmax (float): Maximum velocity.
+        pc (float): Central pressure.
+        pn (float): Neutral pressure.
+        r64 (float): Radius [m].
+        density (float): Density [kg m**-3]
+        xn (float): Coefficient at xn.
+
+    Returns:
+        Tuple[Callable, Callable]: _description_
+    """
+
+    h08v = h08_fitfunc(rmax, vmax, pc, pn, r64, density=density)
 
     def vel_f(xn) -> Callable:
         def vel(radius):
@@ -148,7 +188,7 @@ def fit_h08(
 
         return pres
 
-    return vel_f(popt), pres_f(), float(popt)
+    return vel_f(xn), pres_f()
 
 
 if __name__ == "__main__":

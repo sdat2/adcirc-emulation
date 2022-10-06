@@ -24,7 +24,8 @@ from src.data_loading.adcirc import (
     read_pressures,
     read_windspeeds,
 )
-from src.data_loading.ibtracs import holland2010, katrina, prep_for_climada
+from src.data_loading.ibtracs import katrina, prep_for_climada
+from src.models.h08 import h08_vp
 
 MODEL_VANG = {"H08": 0, "H1980": 1, "H10": 2}
 
@@ -355,15 +356,16 @@ class Holland80:
 class GenH80:
     def __init__(
         self,
-        vmax=54.01667,  # m s**-1
-        rmax=40744,  #  m
-        pc=92800,  # Pa
-        pn=100500,  # pa
-        angle=0.0,  # degrees
-        trans_speed=7.71,  # m s**-1,
-        point=NEW_ORLEANS,
-        output_direc=os.path.join(DATA_PATH, "kat_h80"),  # string.
+        vmax: float = 54.01667,  # m s**-1
+        rmax: float = 40744,  #  m
+        pc: float = 92800,  # Pa
+        pn: float = 100500,  # pa
+        angle: float = 0.0,  # degrees
+        trans_speed: float = 7.71,  # m s**-1,
+        point: Point = NEW_ORLEANS,
+        output_direc: str = os.path.join(DATA_PATH, "kat_h80"),  # string.
     ) -> None:
+
         self.vmax = vmax  # m s**-1
         self.rmax = rmax  #  m
         self.pc = pc  # Pa
@@ -374,6 +376,7 @@ class GenH80:
         # impact time for katrina.
         self.point = point
         self.impact_time = datetime.datetime(year=2005, month=8, day=29, hour=12)
+        self.model = Holland80(self.pc, self.rmax, self.vmax)
 
     def center_from_time(self, time: np.datetime64) -> Point:
         """
@@ -450,16 +453,11 @@ class GenH80:
         Args:
             forts (Tuple[str]): e.g. ("fort.221", "fort.222")
         """
-
-        if not os.path.exists(self.output_direc):
-            os.mkdir(self.output_direc)
-
-        kath80 = Holland80(self.pc, self.rmax, self.vmax)
-        da = read_pressures(os.path.join(KAT_EX_PATH, "fort.221"))
+        da = read_pressures(os.path.join(KAT_EX_PATH, forts[0]))
         vds_list = []
         pds_list = []
         for time in da.time.values:
-            vds, pds = self.tc_time_slice(da, time, kath80)
+            vds, pds = self.tc_time_slice(da, time, self.model)
             vds_list.append(vds)
             pds_list.append(pds)
 
@@ -471,6 +469,17 @@ class GenH80:
     def tc_time_slice(
         self, da: xr.DataArray, time: np.datetime64, kath80: Holland80
     ) -> Tuple[xr.Dataset, xr.Dataset]:
+        """
+        Tropical Cyclone Time Slice.
+
+        Args:
+            da (xr.DataArray): dataarray.
+            time (np.datetime64): Time to get center from.
+            kath80 (Holland80): Katrina 1980 object
+
+        Returns:
+            Tuple[xr.Dataset, xr.Dataset]: velocity ds, pressure ds.
+        """
         center = self.center_from_time(time)
         lons, lats = np.meshgrid(da.lon, da.lat)
         distances = distances_to_points(center, lons, lats)
@@ -522,21 +531,26 @@ class GenH80:
         return vds, pds
 
 
-if __name__ == "__main__":
-    # for key in tc.MODEL_VANG:
-    #    plot_katrina_windfield_example(model=key)
-    # plot_katrina_windfield_example(model="H08")
-    # python src/models/generation.py
+@timeit
+def run_katrina_holland() -> None:
+    """Run the Katrina as Holland 1980."""
     from src.constants import NEW_ORLEANS
     from sithom.place import Point
 
     point = Point(NEW_ORLEANS.lon + 1.5, NEW_ORLEANS.lat)
     GenH80(point=point, output_direc=os.path.join(DATA_PATH, "katd_h80")).run_h80()
+
+
+if __name__ == "__main__":
+    # for key in tc.MODEL_VANG:
+    #    plot_katrina_windfield_example(model=key)
+    # plot_katrina_windfield_example(model="H08")
+    # python src/models/generation.py
     # print(NEW_ORLEANS)
     # mult_generation(1)
     # [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
     # comp()
-    # print("ok")
+    print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
     # adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
     # command = f"cd {output_direc} \n {adcirc_exe} > adcirc_log.txt"
