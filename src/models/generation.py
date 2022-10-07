@@ -593,6 +593,29 @@ def point(x_diff: float) -> None:
         holland_model=Holland08,
     ).run_holland()
 
+def points() -> None:
+    for x in np.linspace(-1, 2, num=100):
+        point(x)
+
+
+def angle_run(angle: float) -> None:
+    """Run the Katrina as Holland 2008."""
+
+    point = NEW_ORLEANS
+    folder = os.path.join(DATA_PATH, "kat_angle")
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+    GenHolland(
+        point=point,
+        angle=angle,
+        output_direc=os.path.join(folder, "a{:.3f}".format(angle) + "_kat_angle"),
+        holland_model=Holland08,
+    ).run_holland()
+
+def angles() -> None:
+    for angle in np.linspace(-90, 90, num=100):
+        angle_run(angle)
+
 
 if __name__ == "__main__":
     # for key in tc.MODEL_VANG:
@@ -604,8 +627,7 @@ if __name__ == "__main__":
     # [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
     # comp()
     # run_katrina_h08()
-    for x in np.linspace(-1, 2, num=100):
-        point(x)
+    angles()
     # run_katrina_h08()
     # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
