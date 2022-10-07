@@ -656,7 +656,7 @@ def landfall_speed(speed: float, prefix="c", lon_diff=1.2) -> None:
 
 def speeds() -> None:
     for speed in np.linspace(3, 12, num=20):
-        landfall_speed(speed, prefix="a", lon_diff=0)
+        landfall_speed(speed, prefix="c", lon_diff=1.2)
 
 
 if __name__ == "__main__":
