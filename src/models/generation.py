@@ -619,24 +619,44 @@ def angles() -> None:
         angle_run(angle)
 
 
-def cangle_run(angle: float) -> None:
+def cangle_run(angle: float, prefix="c", lon_diff=1.2) -> None:
     """Run the Katrina as Holland 2008."""
 
-    point = Point(NEW_ORLEANS.lon + 1.2, NEW_ORLEANS.lat)
+    point = Point(NEW_ORLEANS.lon + lon_diff, NEW_ORLEANS.lat)
     folder = os.path.join(DATA_PATH, "kat_angle")
     if not os.path.exists(folder):
         os.mkdir(folder)
     GenHolland(
         point=point,
         angle=angle,
-        output_direc=os.path.join(folder, "c{:.3f}".format(angle) + "_kat_angle"),
+        output_direc=os.path.join(folder, prefix + "{:.3f}".format(angle) + "_kat_angle"),
         holland_model=Holland08,
     ).run_holland()
 
 
 def cangles() -> None:
     for angle in np.linspace(-90, 90, num=100):
-        cangle_run(angle)
+        cangle_run(angle, prefix="e", lon_diff=-0.6)
+
+
+def landfall_speed(speed: float, prefix="c", lon_diff=1.2) -> None:
+    """Run the Katrina as Holland 2008."""
+
+    point = Point(NEW_ORLEANS.lon + lon_diff, NEW_ORLEANS.lat)
+    folder = os.path.join(DATA_PATH, "kat_landfall")
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+    GenHolland(
+        point=point,
+        trans_speed=speed,
+        output_direc=os.path.join(folder, prefix + "{:.3f}".format(speed) + "_kat_landfall"),
+        holland_model=Holland08,
+    ).run_holland()
+
+
+def speeds() -> None:
+    for speed in np.linspace(3, 12, num=20):
+        landfall_speed(speed, prefix="a", lon_diff=0)
 
 
 if __name__ == "__main__":
@@ -649,7 +669,8 @@ if __name__ == "__main__":
     # [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
     # comp()
     # run_katrina_h08()
-    cangles()
+    # cangles()
+    speeds()
     # run_katrina_h08()
     # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
