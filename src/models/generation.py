@@ -400,6 +400,7 @@ class GenHolland:
         self.pc = pc  # Pa
         self.pn = pn  # pa
         self.angle = angle  # degrees
+        self.debug = False # bool
         self.trans_speed = trans_speed  # m s**-1
         self.output_direc = output_direc  # string to output direc
         # impact time for katrina.
@@ -492,6 +493,11 @@ class GenHolland:
 
         vds = xr.merge(vds_list)
         pda = xr.merge(pds_list)["pressure"]
+        if self.debug:
+            vds.to_netcdf(os.path.join(self.output_direc, forts[0]) + ".nc")
+            print(vds)
+            pda.to_netcdf(os.path.join(self.output_direc, forts[1]) + ".nc")
+            print(pda)
         print_pressure(pda, os.path.join(self.output_direc, forts[0]))
         print_wsp(vds, os.path.join(self.output_direc, forts[1]))
 
@@ -506,7 +512,7 @@ class GenHolland:
             time (np.datetime64): Time to get center from.
 
         Returns:
-            Tuple[xr.Dataset, xr.Dataset]: velocity ds, pressure ds.
+            Tuple[xr.Dataset, xr.Dataset]: velocity_ds, pressure_ds.
         """
         center = self.center_from_time(time)
         lons, lats = np.meshgrid(da.lon, da.lat)
