@@ -1,4 +1,5 @@
 """Generate hurricane."""
+from distutils.log import debug
 import os
 import shutil
 from typing import Tuple, List
@@ -354,9 +355,15 @@ class Holland80:
 
 
 class Holland08:
-    def __init__(self, pc, rmax, vmax) -> None:
+    def __init__(
+        self,
+        pc: float = 92800,
+        rmax: float = 40744,
+        vmax: float = 54.01667,
+        xn: float = 1.1249,
+    ) -> None:
         self.pc = pc  # Pa
-        self.xn = 1.1249
+        self.xn = xn
         self.rho = 1.0  # 15  # kg m-3
         self.pn = millibar_to_pascal(1010)  # Pa
         self.r64 = 2e5
@@ -373,18 +380,56 @@ class Holland08:
         return self.vf(radii)
 
 
-class GenHolland:
+def vmax_from_pressure(pc: float, pn: float = millibar_to_pascal(1010)) -> float:
+    """
+    Vmax from pressures using Emanuel relationships.
+
+    V_{\max }=\sqrt{2 R_d T_s \ln \left(\frac{p_{\max }}{p_c}\right)},
+
+    Args:
+        pc (float): vmax.
+        pn (float, optional): Defaults to millibar_to_pascal(1010).
+
+    Returns:
+        float:
+    """
+    from scipy.constants import R
+    temp = 273.15 + 30
+    pmax = (pn - pc) * 1 / 10 + pc
+    return np.sqrt(2 * R * temp * np.log(pmax/pc))
+
+
+def vmax_from_pressure(pc: float, pn: float = millibar_to_pascal(1010)) -> float:
+    """
+    Vmax from pressures using Emanuel relationships.
+
+    V_{\max }=\sqrt{2 R_d T_s \ln \left(\frac{p_{\max }}{p_c}\right)},
+
+    Args:
+        pc (float): vmax.
+        pn (float, optional): Defaults to millibar_to_pascal(1010).
+
+    Returns:
+        float: vmax
+    """
+    from scipy.constants import R
+    temp = 273.15 + 30
+    pmax = (pn - pc) * 1 / 10 + pc
+    return np.sqrt(2 * R * temp * np.log(pmax/pc))
+
+class ImpactSymmetricTC:
     def __init__(
         self,
-        vmax: float = 54.01667,  # m s**-1
-        rmax: float = 40744,  #  m
-        pc: float = 92800,  # Pa
-        pn: float = 100500,  # pa
+        # vmax: float = 54.01667,  # m s**-1
+        # rmax: float = 40744,  #  m
+        # pc: float = 92800,  # Pa
+        # pn: float = 100500,  # pa
         angle: float = 0.0,  # degrees
         trans_speed: float = 7.71,  # m s**-1,
         point: Point = NEW_ORLEANS,
         output_direc: str = os.path.join(DATA_PATH, "kat_h80"),  # string.
-        holland_model: any = Holland80,
+        symetric_model: any = Holland08(),
+        debug: bool = False,
     ) -> None:
         """
         Generate Holland Hurricane Model.
@@ -394,19 +439,14 @@ class GenHolland:
             point (Point, optional): point to hit. Defaults to NEW_ORLEANS.
             output_direc (str, optional): Output directory. Defaults to os.path.join(DATA_PATH, "kat_h80").
         """
-
-        self.vmax = vmax  # m s**-1
-        self.rmax = rmax  #  m
-        self.pc = pc  # Pa
-        self.pn = pn  # pa
         self.angle = angle  # degrees
-        self.debug = False # bool
         self.trans_speed = trans_speed  # m s**-1
         self.output_direc = output_direc  # string to output direc
         # impact time for katrina.
         self.point = point
         self.impact_time = datetime.datetime(year=2005, month=8, day=29, hour=12)
-        self.holland_model = holland_model(pc, rmax, vmax)
+        self.symetric_model = symetric_model
+        self.debug = debug  # bool
 
     def center_from_time(self, time: np.datetime64) -> Point:
         """
@@ -428,7 +468,7 @@ class GenHolland:
             self.point.lat + np.cos(np.radians(self.angle)) * distance / 111e3,
         )
 
-    def run_holland(self) -> None:
+    def run_impact(self) -> None:
         """
         Run Holland model.
         """
@@ -494,9 +534,9 @@ class GenHolland:
         vds = xr.merge(vds_list)
         pda = xr.merge(pds_list)["pressure"]
         if self.debug:
-            vds.to_netcdf(os.path.join(self.output_direc, forts[0]) + ".nc")
+            pda.to_netcdf(os.path.join(self.output_direc, forts[0]) + ".nc")
             print(vds)
-            pda.to_netcdf(os.path.join(self.output_direc, forts[1]) + ".nc")
+            vds.to_netcdf(os.path.join(self.output_direc, forts[1]) + ".nc")
             print(pda)
         print_pressure(pda, os.path.join(self.output_direc, forts[0]))
         print_wsp(vds, os.path.join(self.output_direc, forts[1]))
@@ -532,12 +572,12 @@ class GenHolland:
         ds.distance.attrs = {"units": "meters", "long_name": "Distance from center"}
         ds.angle.attrs = {"units": "degrees", "long_name": "Angle from center"}
 
-        windspeed = self.holland_model.velocity(
+        windspeed = self.symetric_model.velocity(
             ds.distance.values
         )  # self.windspeed_at_points(lats, lons, point)
         angles = np.radians(ds.angle.values - 90.0)
         u10, v10 = -np.sin(angles) * windspeed, -np.cos(angles) * windspeed
-        pressure = pascal_to_millibar(self.holland_model.pressure(ds.distance.values))
+        pressure = pascal_to_millibar(self.symetric_model.pressure(ds.distance.values))
         pds = xr.Dataset(
             data_vars=dict(
                 pressure=(["time", "lat", "lon"], pressure),
@@ -570,20 +610,21 @@ def run_katrina_holland() -> None:
     """Run the Katrina as Holland 1980."""
 
     point = Point(NEW_ORLEANS.lon + 1.5, NEW_ORLEANS.lat)
-    GenHolland(
+    ImpactSymmetricTC(
         point=point, output_direc=os.path.join(DATA_PATH, "katd_h80")
-    ).run_holland()
+    ).run_impact()
 
 
 def run_katrina_h08() -> None:
     """Run the Katrina as Holland 2008."""
 
     point = Point(NEW_ORLEANS.lon + 1.1, NEW_ORLEANS.lat)
-    GenHolland(
+    ImpactSymmetricTC(
         point=point,
         output_direc=os.path.join(DATA_PATH, "kate_h08"),
-        holland_model=Holland08,
-    ).run_holland()
+        symetric_model=Holland08(),
+        debug=True,
+    ).run_impact()
 
 
 def point(x_diff: float) -> None:
@@ -593,11 +634,11 @@ def point(x_diff: float) -> None:
     folder = os.path.join(DATA_PATH, "kat_move")
     if not os.path.exists(folder):
         os.mkdir(folder)
-    GenHolland(
+    ImpactSymmetricTC(
         point=point,
         output_direc=os.path.join(folder, "x{:.3f}".format(x_diff) + "_kat_move"),
-        holland_model=Holland08,
-    ).run_holland()
+        symetric_model=Holland08(),
+    ).run_impact()
 
 
 def points() -> None:
@@ -612,12 +653,12 @@ def angle_run(angle: float) -> None:
     folder = os.path.join(DATA_PATH, "kat_angle")
     if not os.path.exists(folder):
         os.mkdir(folder)
-    GenHolland(
+    ImpactSymmetricTC(
         point=point,
         angle=angle,
         output_direc=os.path.join(folder, "a{:.3f}".format(angle) + "_kat_angle"),
-        holland_model=Holland08,
-    ).run_holland()
+        symetric_model=Holland08(),
+    ).run_impact()
 
 
 def angles() -> None:
@@ -632,12 +673,14 @@ def cangle_run(angle: float, prefix="c", lon_diff=1.2) -> None:
     folder = os.path.join(DATA_PATH, "kat_angle")
     if not os.path.exists(folder):
         os.mkdir(folder)
-    GenHolland(
+    ImpactSymmetricTC(
         point=point,
         angle=angle,
-        output_direc=os.path.join(folder, prefix + "{:.3f}".format(angle) + "_kat_angle"),
-        holland_model=Holland08,
-    ).run_holland()
+        output_direc=os.path.join(
+            folder, prefix + "{:.3f}".format(angle) + "_kat_angle"
+        ),
+        symetric_model=Holland08(),
+    ).run_impact()
 
 
 def cangles() -> None:
@@ -652,12 +695,14 @@ def landfall_speed(speed: float, prefix="c", lon_diff=1.2) -> None:
     folder = os.path.join(DATA_PATH, "kat_landfall")
     if not os.path.exists(folder):
         os.mkdir(folder)
-    GenHolland(
+    ImpactSymmetricTC(
         point=point,
         trans_speed=speed,
-        output_direc=os.path.join(folder, prefix + "{:.3f}".format(speed) + "_kat_landfall"),
-        holland_model=Holland08,
-    ).run_holland()
+        output_direc=os.path.join(
+            folder, prefix + "{:.3f}".format(speed) + "_kat_landfall"
+        ),
+        symetric_model=Holland08(),
+    ).run_impact()
 
 
 def speeds() -> None:
@@ -676,7 +721,8 @@ if __name__ == "__main__":
     # comp()
     # run_katrina_h08()
     # cangles()
-    speeds()
+    # run_katrina_h08()  # speeds()
+    print(vmax_from_pressure(92800))
     # run_katrina_h08()
     # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
