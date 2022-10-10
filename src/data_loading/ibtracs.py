@@ -598,16 +598,23 @@ def kat_stats() -> xr.Dataset:
 def landing_dataset() -> None:
     import os
     ib_ds = gom_tcs()
-    landing_ds_list = []
-    for storm_no in range(len(ib_ds.storm.values)):
-        storm_ds = ib_ds.isel(storm=storm_no)
-        storm_landing_ds = landings_only(storm_ds)
-        #.drop_dims(["storm"])
-        if storm_landing_ds is not None:
-            landing_ds_list.append(storm_landing_ds)
 
-    ds = xr.concat(landing_ds_list, dim="date_time")
-    ds.to_netcdf(os.path.join(DATA_PATH, "IBTrACS_GOM_LANDINGS.nc"))
+    @timeit
+    def landing_list():
+        landing_ds_list = []
+        print("starting loop")
+        for storm_no in range(len(ib_ds.storm.values)):
+            storm_ds = ib_ds.isel(storm=storm_no)
+            storm_landing_ds = landings_only(storm_ds)
+            if storm_landing_ds is None:
+                continue
+            else:
+                landing_ds_list.append(storm_landing_ds)
+        print("finished loop")
+        return landing_ds_list
+
+    ds = xr.concat(landing_list(), dim="date_time")
+    ds.to_netcdf(os.path.join(DATA_PATH, "IBTrACS_gom_landings.nc"))
 
 
 if __name__ == "__main__":
