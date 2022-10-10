@@ -1,10 +1,11 @@
 """IBTrACS data loading script."""
+from timeit import timeit
 from typing import Callable, Optional, List, Tuple
 import warnings
 import numpy as np
 from scipy import optimize
 import xarray as xr
-from src.constants import IBTRACS_NC, GOM_BBOX, NO_BBOX
+from src.constants import DATA_PATH, IBTRACS_NC, GOM_BBOX, NO_BBOX
 from src.conversions import fcor_from_lat, si_ify, knots_to_ms
 
 # from sithom.time import timeit
@@ -593,6 +594,22 @@ def kat_stats() -> xr.Dataset:
     return si_ify(landings_only(katrina()).isel(date_time=2)[REQ_VAR])
 
 
+@timeit
+def landing_dataset() -> None:
+    import os
+    ib_ds = gom_tcs()
+    landing_ds_list = []
+    for storm_no in range(len(ib_ds.storm.values)):
+        storm_ds = ib_ds.isel(storm=storm_no)
+        storm_landing_ds = landings_only(storm_ds)
+        #.drop_dims(["storm"])
+        if storm_landing_ds is not None:
+            landing_ds_list.append(storm_landing_ds)
+
+    ds = xr.concat(landing_ds_list, dim="date_time")
+    ds.to_netcdf(os.path.join(DATA_PATH, "IBTrACS_GOM_LANDINGS.nc"))
+
+
 if __name__ == "__main__":
     # python src/data_loading/ibtracs.py
     # print(na_tcs())
@@ -604,11 +621,12 @@ if __name__ == "__main__":
     # for var in ds:
     ##    if "units" in ds[var].attrs:
     #        print(ds[var].attrs["long_name"])
-    #        print(ds[var].attrs["units"])
+    #        print(ds[var].attrs["units"]
+    landing_dataset()
 
-    kat_stats = si_ify(landings_only(katrina()).isel(date_time=2)[REQ_VAR])
-    for var in kat_stats:
-        print(kat_stats[var])
+    #kat_stats = si_ify(landings_only(katrina()).isel(date_time=2)[REQ_VAR])
+    #for var in kat_stats:
+    #    print(kat_stats[var])
 
     vmax = 54.01667  # m s**-1
     rmax = 40744  #  m

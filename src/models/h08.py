@@ -1,5 +1,4 @@
 """Holland Hurricane 2008."""
-from ast import Call
 import numpy as np
 from scipy.optimize import curve_fit
 from typing import Callable, Union, Tuple
