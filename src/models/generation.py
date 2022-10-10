@@ -760,7 +760,7 @@ def pc_holliday(pc: float, prefix="c", lon_diff=1.2) -> None:
     vmax = vmax_from_pressure_holliday(pc)
     print(prefix, pc, vmax)
     point = Point(NEW_ORLEANS.lon + lon_diff, NEW_ORLEANS.lat)
-    folder = os.path.join(DATA_PATH, "kat_pc")
+    folder = os.path.join(DATA_PATH, "kat_pcf")
     if not os.path.exists(folder):
         os.mkdir(folder)
     ImpactSymmetricTC(
@@ -774,8 +774,7 @@ def pc_holliday(pc: float, prefix="c", lon_diff=1.2) -> None:
 
 def pcs() -> None:
     for pc in millibar_to_pascal(np.linspace(900, 980, num=100)):
-        if pc > 91630:
-            pc_holliday(pc, prefix="c", lon_diff=1.2)
+        pc_holliday(pc, prefix="a", lon_diff=0.0)
 
 
 def rmax_vary(rmax: float, prefix="c", lon_diff=1.2) -> None:
@@ -810,7 +809,8 @@ if __name__ == "__main__":
     # run_katrina_h08()
     # cangles()
     # run_katrina_h08()  # speeds()
-    rmaxs()
+    # rmaxs()
+    pcs()
     #print(vmax_from_pressure_holliday(92800))
     #print(vmax_from_pressure_emanuel(92800))
     # print(vmax_from_pressure_choi(92800))
