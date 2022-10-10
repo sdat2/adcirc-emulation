@@ -380,9 +380,9 @@ class Holland08:
         return self.vf(radii)
 
 
-def vmax_from_pressure(pc: float, pn: float = millibar_to_pascal(1010)) -> float:
+def vmax_from_pressure_emanuel(pc: float, pn: float = millibar_to_pascal(1010)) -> float:
     """
-    Vmax from pressures using Emanuel relationships.
+    Vmax from pressures using Emanuel 1988 relationships.
 
     V_{\max }=\sqrt{2 R_d T_s \ln \left(\frac{p_{\max }}{p_c}\right)},
 
@@ -395,15 +395,17 @@ def vmax_from_pressure(pc: float, pn: float = millibar_to_pascal(1010)) -> float
     """
     from scipy.constants import R
     temp = 273.15 + 30
-    pmax = (pn - pc) * 1 / 10 + pc
-    return np.sqrt(2 * R * temp * np.log(pmax/pc))
+    # pmax = (pn - pc) * 1 / 10 + pc
+    coeff = 54/20.66 # additional coeff added to fit Katrina
+    # changed form pmax to pc
+    return coeff * np.sqrt(2 * R * temp * np.log(pn/pc))
 
 
-def vmax_from_pressure(pc: float, pn: float = millibar_to_pascal(1010)) -> float:
+def vmax_from_pressure_holliday(pc: float, pn: float = millibar_to_pascal(1010)) -> float:
     """
-    Vmax from pressures using Emanuel relationships.
+    Vmax from pressures using Atkinson Holliday 1997
 
-    V_{\max }=\sqrt{2 R_d T_s \ln \left(\frac{p_{\max }}{p_c}\right)},
+    \mathrm{V}_{\max }=3.4(1010-\mathrm{MSLP})^{0.644}
 
     Args:
         pc (float): vmax.
@@ -412,10 +414,9 @@ def vmax_from_pressure(pc: float, pn: float = millibar_to_pascal(1010)) -> float
     Returns:
         float: vmax
     """
-    from scipy.constants import R
-    temp = 273.15 + 30
-    pmax = (pn - pc) * 1 / 10 + pc
-    return np.sqrt(2 * R * temp * np.log(pmax/pc))
+    coeff = 54.01667 / 58.07310377789465 # coeff to make it match Katrina
+    return coeff * 3.4 * pascal_to_millibar(pn - pc) ** 0.644
+
 
 class ImpactSymmetricTC:
     def __init__(
@@ -722,7 +723,8 @@ if __name__ == "__main__":
     # run_katrina_h08()
     # cangles()
     # run_katrina_h08()  # speeds()
-    print(vmax_from_pressure(92800))
+    print(vmax_from_pressure_holliday(92800))
+    print(vmax_from_pressure_emanuel(92800))
     # run_katrina_h08()
     # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
