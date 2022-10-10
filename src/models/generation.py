@@ -368,7 +368,7 @@ class Holland08:
         self.xn = xn
         self.rho = 1.0  # 15  # kg m-3
         self.pn = millibar_to_pascal(1010)  # Pa
-        self.r64 = 2e5
+        self.r64 = 2e5 # meters unused currently
         self.rmax = rmax  # meters
         self.vmax = vmax  # meters per second
         vf, pf = h08_vp(rmax, vmax, pc, self.pn, self.r64, self.rho, self.xn)

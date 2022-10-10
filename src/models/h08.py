@@ -166,11 +166,11 @@ def h08_vp(
         pc (float): Central pressure.
         pn (float): Neutral pressure.
         r64 (float): Radius [m].
-        density (float): Density [kg m**-3]
-        xn (float): Coefficient at xn.
+        density (float): Density [kg m**-3].
+        xn (float): Coefficient at xn [dimensionless].
 
     Returns:
-        Tuple[Callable, Callable]: _description_
+        Tuple[Callable, Callable]: vel_f(radius), pres_f(radius)
     """
 
     h08v = h08_fitfunc(rmax, vmax, pc, pn, r64, density=density)
