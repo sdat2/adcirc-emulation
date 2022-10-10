@@ -42,6 +42,25 @@ def nmile_to_meter(nmile_input: Union[float, np.ndarray]) -> Union[float, np.nda
     return (nmile_input * UREG.nautical_mile).to("meter").magnitude
 
 
+def meter_to_nmile(meter_input: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+    """
+    Meters to Nautical Miles.
+
+    Args:
+        meter_input (Union[float, np.ndarray]): meter input.
+
+    Returns:
+        Union[float, np.ndarray]: nmile output.
+
+    Example::
+        >>> from src.conversions import meter_to_nmile
+        >>> meter_to_nmile(1852.0)
+        1.0
+    """
+    return (meter_input * UREG.meter).to("nautical_mile").magnitude
+
+
+
 def distance_between_points(pt1: Point, pt2: Point) -> float:
     """
     Distance between lon/lat points.

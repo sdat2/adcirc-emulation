@@ -18,6 +18,7 @@ from src.conversions import (
     distances_to_points,
     angles_to_points,
     millibar_to_pascal,
+    nmile_to_meter,
     pascal_to_millibar,
 )
 from src.data_loading.adcirc import (
@@ -773,8 +774,28 @@ def pc_holliday(pc: float, prefix="c", lon_diff=1.2) -> None:
 
 def pcs() -> None:
     for pc in millibar_to_pascal(np.linspace(900, 980, num=100)):
-        if pc > 91500:
+        if pc > 91630:
             pc_holliday(pc, prefix="c", lon_diff=1.2)
+
+
+def rmax_vary(rmax: float, prefix="c", lon_diff=1.2) -> None:
+    print(prefix, rmax)
+    point = Point(NEW_ORLEANS.lon + lon_diff, NEW_ORLEANS.lat)
+    folder = os.path.join(DATA_PATH, "kat_rmax")
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+    ImpactSymmetricTC(
+        point=point,
+        output_direc=os.path.join(
+            folder, prefix + "{:.3f}".format(rmax) + "_kat_rmax"
+        ),
+        symetric_model=Holland08(rmax=rmax),
+    ).run_impact()
+
+
+def rmaxs() -> None:
+    for rmax in nmile_to_meter(np.linspace(10, 40, num=40)):
+        rmax_vary(rmax, prefix="a", lon_diff=0.0)
 
 
 if __name__ == "__main__":
@@ -789,7 +810,7 @@ if __name__ == "__main__":
     # run_katrina_h08()
     # cangles()
     # run_katrina_h08()  # speeds()
-    pcs()
+    rmaxs()
     #print(vmax_from_pressure_holliday(92800))
     #print(vmax_from_pressure_emanuel(92800))
     # print(vmax_from_pressure_choi(92800))
