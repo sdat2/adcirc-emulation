@@ -1,5 +1,6 @@
 """Generate hurricane."""
 from distutils.log import debug
+from http.client import OK
 import os
 import shutil
 from typing import Tuple, List
@@ -380,7 +381,9 @@ class Holland08:
         return self.vf(radii)
 
 
-def vmax_from_pressure_emanuel(pc: float, pn: float = millibar_to_pascal(1010)) -> float:
+def vmax_from_pressure_emanuel(
+    pc: float, pn: float = millibar_to_pascal(1010)
+) -> float:
     """
     Vmax from pressures using Emanuel 1988 relationships.
 
@@ -394,14 +397,17 @@ def vmax_from_pressure_emanuel(pc: float, pn: float = millibar_to_pascal(1010)) 
         float:
     """
     from scipy.constants import R
+
     temp = 273.15 + 30
     # pmax = (pn - pc) * 1 / 10 + pc
-    coeff = 54/20.66 # additional coeff added to fit Katrina
+    coeff = 54 / 20.66  # additional coeff added to fit Katrina
     # changed form pmax to pc
-    return coeff * np.sqrt(2 * R * temp * np.log(pn/pc))
+    return coeff * np.sqrt(2 * R * temp * np.log(pn / pc))
 
 
-def vmax_from_pressure_holliday(pc: float, pn: float = millibar_to_pascal(1010)) -> float:
+def vmax_from_pressure_holliday(
+    pc: float, pn: float = millibar_to_pascal(1010)
+) -> float:
     """
     Vmax from pressures using Atkinson Holliday 1997
 
@@ -414,8 +420,46 @@ def vmax_from_pressure_holliday(pc: float, pn: float = millibar_to_pascal(1010))
     Returns:
         float: vmax
     """
-    coeff = 54.01667 / 58.07310377789465 # coeff to make it match Katrina
+    coeff = 54.01667 / 58.07310377789465  # coeff to make it match Katrina
     return coeff * 3.4 * pascal_to_millibar(pn - pc) ** 0.644
+
+
+def pmin_from_vmax(
+    vmax: float, size: float, pn: float = millibar_to_pascal(1010)
+) -> float:
+    """
+    \begin{array}{l}
+    M S L P=23.286-0.483 V_{s r m}-\left(\frac{V_{s r m}}{24.254}\right)^2-12.587 S-0.483 \varphi
+    +P_{\text {env }}
+    \end{array}
+
+    Returns:
+        float: _description_
+    """
+    phi = NEW_ORLEANS.lat
+    return (
+        23.286 - 0.483 * vmax - (vmax / 24.254) ** 2 - 12.587 * size - 0.483 * phi + pn
+    )
+
+
+def _quad(a: float, b: float, c: float) -> Tuple[float]:
+    return (
+        (-b + np.sqrt(b**2 - 4 * a * c)) / 2 / a,
+        (-b - np.sqrt(b**2 - 4 * a * c)) / 2 / a,
+    )
+
+
+def vmax_from_pressure_choi(
+    pc: float, rmax: float = 40744, pn: float = millibar_to_pascal(1010)
+):
+    phi = NEW_ORLEANS.lat
+    pc = pascal_to_millibar(pc)
+    pn = pascal_to_millibar(pn)
+    size = rmax  / 10e3
+    vmax = _quad(
+        -1 / (24.254) ** 2, -0.483, pn - pc - 0.483 * phi - 12.587 * size + 23.286
+    )
+    return vmax
 
 
 class ImpactSymmetricTC:
@@ -725,6 +769,8 @@ if __name__ == "__main__":
     # run_katrina_h08()  # speeds()
     print(vmax_from_pressure_holliday(92800))
     print(vmax_from_pressure_emanuel(92800))
+    print(vmax_from_pressure_choi(92800))
+
     # run_katrina_h08()
     # print("ok")
     # output_direc = os.path.join(DATA_PATH, "mult2")
