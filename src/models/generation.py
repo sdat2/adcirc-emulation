@@ -768,7 +768,7 @@ def pc_holliday(pc: float, prefix="c", lon_diff=1.2) -> None:
         output_direc=os.path.join(
             folder, prefix + "{:.3f}".format(pc) + "_kat_pc"
         ),
-        symetric_model=Holland08(vmax=vmax),
+        symetric_model=Holland08(pc=pc, vmax=vmax),
     ).run_impact()
 
 
