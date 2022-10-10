@@ -757,6 +757,7 @@ def speeds() -> None:
 
 def pc_holliday(pc: float, prefix="c", lon_diff=1.2) -> None:
     vmax = vmax_from_pressure_holliday(pc)
+    print(prefix, pc, vmax)
     point = Point(NEW_ORLEANS.lon + lon_diff, NEW_ORLEANS.lat)
     folder = os.path.join(DATA_PATH, "kat_pc")
     if not os.path.exists(folder):
@@ -772,7 +773,8 @@ def pc_holliday(pc: float, prefix="c", lon_diff=1.2) -> None:
 
 def pcs() -> None:
     for pc in millibar_to_pascal(np.linspace(900, 980, num=100)):
-        pc_holliday(pc, prefix="a", lon_diff=0.0)
+        if pc > 91500:
+            pc_holliday(pc, prefix="c", lon_diff=1.2)
 
 
 if __name__ == "__main__":
