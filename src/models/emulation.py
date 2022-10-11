@@ -16,7 +16,7 @@ from sithom.plot import plot_defaults, label_subplots
 from sithom.misc import in_notebook
 from xarray.core.utils import FrozenDict
 from src.constants import DATA_PATH, FIGURE_PATH
-from src.models.generation import GenH80
+from src.models.generation import ImpactSymmetricTC, Holland08
 from emukit.core.initial_designs.latin_design import LatinDesign
 
 

@@ -504,8 +504,6 @@ def holland_b_landing_distribution(
     Example::
         >>> holland_b_landing_distribution(katrina()).tolist()
         [0.5153636160278224, 0.42659086887438924, 0.4443045372729071]
-        >>> holland_b_landing_distribution(katrina(), fit=True).tolist()
-        [0.2363810378430956, 2.220446049250313e-16, 0.20139260140129567]
 
     """
     output = []
@@ -591,12 +589,12 @@ def kat_stats() -> xr.Dataset:
     Returns:
         xr.Dataset: Katrina statistics.
     """
-    return si_ify(landings_only(katrina()).isel(date_time=2)[REQ_VAR])
+    return landings_only(katrina()).isel(date_time=2)[REQ_VAR]
 
 
 @timeit
 def make_landing_dataset() -> None:
-    ib_ds = gom_tcs()[REQ_VAR]
+    ib_ds = na_tcs()[REQ_VAR]
 
     @timeit
     def _landing_list():

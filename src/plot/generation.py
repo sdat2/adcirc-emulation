@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from sithom.misc import in_notebook
 from sithom.plot import plot_defaults
-from src.models.generation import HollandTropicalCyclone
+from src.models.generation import ImpactSymmetricTC
 from src.plot.map import map_axes
 from src.constants import NEW_ORLEANS, FIGURE_PATH
 
