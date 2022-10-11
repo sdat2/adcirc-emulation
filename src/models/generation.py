@@ -368,7 +368,7 @@ class Holland08:
         self.xn = xn
         self.rho = 1.0  # 15  # kg m-3
         self.pn = millibar_to_pascal(1010)  # Pa
-        self.r64 = 2e5 # meters unused currently
+        self.r64 = 2e5  # meters unused currently
         self.rmax = rmax  # meters
         self.vmax = vmax  # meters per second
         vf, pf = h08_vp(rmax, vmax, pc, self.pn, self.r64, self.rho, self.xn)
@@ -456,7 +456,7 @@ def vmax_from_pressure_choi(
     phi = NEW_ORLEANS.lat
     pc = pascal_to_millibar(pc)
     pn = pascal_to_millibar(pn)
-    size = rmax  / 10e3
+    size = rmax / 10e3
     vmax = _quad(
         -1 / (24.254) ** 2, -0.483, pn - pc - 0.483 * phi - 12.587 * size + 23.286
     )
@@ -765,9 +765,7 @@ def pc_holliday(pc: float, prefix="c", lon_diff=1.2) -> None:
         os.mkdir(folder)
     ImpactSymmetricTC(
         point=point,
-        output_direc=os.path.join(
-            folder, prefix + "{:.3f}".format(pc) + "_kat_pc"
-        ),
+        output_direc=os.path.join(folder, prefix + "{:.3f}".format(pc) + "_kat_pc"),
         symetric_model=Holland08(pc=pc, vmax=vmax),
     ).run_impact()
 
@@ -785,9 +783,7 @@ def rmax_vary(rmax: float, prefix="c", lon_diff=1.2) -> None:
         os.mkdir(folder)
     ImpactSymmetricTC(
         point=point,
-        output_direc=os.path.join(
-            folder, prefix + "{:.3f}".format(rmax) + "_kat_rmax"
-        ),
+        output_direc=os.path.join(folder, prefix + "{:.3f}".format(rmax) + "_kat_rmax"),
         symetric_model=Holland08(rmax=rmax),
     ).run_impact()
 
@@ -811,8 +807,8 @@ if __name__ == "__main__":
     # run_katrina_h08()  # speeds()
     # rmaxs()
     pcs()
-    #print(vmax_from_pressure_holliday(92800))
-    #print(vmax_from_pressure_emanuel(92800))
+    # print(vmax_from_pressure_holliday(92800))
+    # print(vmax_from_pressure_emanuel(92800))
     # print(vmax_from_pressure_choi(92800))
 
     # run_katrina_h08()

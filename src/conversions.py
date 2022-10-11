@@ -60,7 +60,6 @@ def meter_to_nmile(meter_input: Union[float, np.ndarray]) -> Union[float, np.nda
     return (meter_input * UREG.meter).to("nautical_mile").magnitude
 
 
-
 def distance_between_points(pt1: Point, pt2: Point) -> float:
     """
     Distance between lon/lat points.

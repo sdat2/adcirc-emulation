@@ -594,7 +594,7 @@ def kat_stats() -> xr.Dataset:
 
 @timeit
 def make_landing_dataset() -> xr.Dataset:
-    ib_ds = na_tcs() # [REQ_VAR]
+    ib_ds = na_tcs()  # [REQ_VAR]
 
     @timeit
     def _landing_list():
@@ -632,8 +632,8 @@ if __name__ == "__main__":
     #        print(ds[var].attrs["units"]
     make_landing_dataset()
 
-    #kat_stats = si_ify(landings_only(katrina()).isel(date_time=2)[REQ_VAR])
-    #for var in kat_stats:
+    # kat_stats = si_ify(landings_only(katrina()).isel(date_time=2)[REQ_VAR])
+    # for var in kat_stats:
     #    print(kat_stats[var])
 
     vmax = 54.01667  # m s**-1
