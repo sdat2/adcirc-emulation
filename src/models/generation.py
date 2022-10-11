@@ -793,6 +793,25 @@ def rmaxs() -> None:
         rmax_vary(rmax, prefix="a", lon_diff=0.0)
 
 
+def xn_vary(xn: float, prefix="c", lon_diff=1.2) -> None:
+    print(prefix, xn)
+    point = Point(NEW_ORLEANS.lon + lon_diff, NEW_ORLEANS.lat)
+    folder = os.path.join(DATA_PATH, "kat_xn")
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+    ImpactSymmetricTC(
+        point=point,
+        output_direc=os.path.join(folder, prefix + "{:.3f}".format(xn) + "_kat_xn"),
+        symetric_model=Holland08(xn=xn),
+    ).run_impact()
+
+
+def xns() -> None:
+    for xn in np.linspace(0.3, 2, num=40):
+        # xn_vary(xn, prefix="a", lon_diff=0.0)
+        # xn_vary(xn, prefix="b", lon_diff=0.6)
+        xn_vary(xn, prefix="c", lon_diff=1.2)
+
 if __name__ == "__main__":
     # for key in tc.MODEL_VANG:
     #    plot_katrina_windfield_example(model=key)
@@ -806,7 +825,7 @@ if __name__ == "__main__":
     # cangles()
     # run_katrina_h08()  # speeds()
     # rmaxs()
-    pcs()
+    xns()
     # print(vmax_from_pressure_holliday(92800))
     # print(vmax_from_pressure_emanuel(92800))
     # print(vmax_from_pressure_choi(92800))
