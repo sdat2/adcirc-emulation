@@ -1,6 +1,4 @@
 """Generate hurricane."""
-from distutils.log import debug
-from http.client import OK
 import os
 import shutil
 from typing import Tuple, List
@@ -811,6 +809,7 @@ def xns() -> None:
         # xn_vary(xn, prefix="a", lon_diff=0.0)
         # xn_vary(xn, prefix="b", lon_diff=0.6)
         xn_vary(xn, prefix="c", lon_diff=1.2)
+
 
 if __name__ == "__main__":
     # for key in tc.MODEL_VANG:
