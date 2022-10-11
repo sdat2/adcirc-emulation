@@ -17,6 +17,8 @@ DATA_PATH: str = os.path.join(PROJECT_PATH, "data")
 REPORT_PATH: str = os.path.join(PROJECT_PATH, "report")
 FIGURE_PATH: str = os.path.join(REPORT_PATH, "figures")
 
+LANDING_DS: str = os.path.join(DATA_PATH, "IBTrACS_gom_landings.nc")
+
 # Katrina example:
 KAT_EX_PATH = os.path.join(
     "/Users", "simon", "adcirc-swan", "adcirc-testsuite", "adcirc", "adcirc_katrina-2d"
