@@ -593,13 +593,13 @@ def kat_stats() -> xr.Dataset:
 
 
 @timeit
-def make_landing_dataset() -> None:
-    ib_ds = na_tcs()[REQ_VAR]
+def make_landing_dataset() -> xr.Dataset:
+    ib_ds = na_tcs() # [REQ_VAR]
 
     @timeit
     def _landing_list():
         landing_ds_list = []
-        print("starting loop")
+        print("Starting loop.")
         for storm_no in range(len(ib_ds.storm.values)):
             storm_ds = ib_ds.isel(storm=storm_no)
             storm_landing_ds = landings_only(storm_ds)
@@ -607,13 +607,15 @@ def make_landing_dataset() -> None:
                 continue
             else:
                 landing_ds_list.append(storm_landing_ds)
-        print("finished loop")
+        print("Finished loop.")
         return landing_ds_list
 
     ds = xr.concat(_landing_list(), dim="date_time")
     truth_array = ds.subbasin.values == b"GM"
     sel_ds = ds.isel(date_time=truth_array)
+    print(sel_ds["usa_pres"].values)
     sel_ds.to_netcdf(LANDING_DS)
+    return sel_ds.rename({"date_time": "time"})
 
 
 if __name__ == "__main__":
