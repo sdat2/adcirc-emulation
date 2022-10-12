@@ -14,7 +14,6 @@ from emukit.model_wrappers import GPyModelWrapper
 from emukit.experimental_design.acquisitions import ModelVariance
 from sithom.plot import plot_defaults, label_subplots
 from sithom.misc import in_notebook
-from xarray.core.utils import FrozenDict
 from src.constants import DATA_PATH, FIGURE_PATH
 from src.models.generation import ImpactSymmetricTC, Holland08
 from emukit.core.initial_designs.latin_design import LatinDesign
@@ -86,10 +85,12 @@ def plot_space() -> None:
     """
     Make parameter space.
     """
+    np.random.seed(0)
+    plot_defaults()
     param_dict = frozendict(
         {
             "Direction [degrees]": (-70, 70),
-            "Speed [m s$^{-1}$]": (3, 10),
+            "Translation Speed [m s$^{-1}$]": (3, 10),
         }
     )
 
@@ -154,12 +155,13 @@ def space() -> None:
         os.mkdir(big_direc)
 
     for i in range(num_init_data_points):
-        GenH80(
+        ImpactSymmetricTC(
             # vmax=latin_cube[params[2]][i],
             trans_speed=latin_cube[params[1]][i],
             angle=latin_cube[params[0]][i],
             output_direc=os.path.join(big_direc, str(i)),
-        ).run_h80()
+            symetric_model=Holland08(),
+        ).run_impact()
 
     plt.scatter(latin_cube[params[0]], latin_cube[params[1]], c=latin_cube[params[2]])
     plt.xlabel(params[0])
