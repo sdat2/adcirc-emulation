@@ -2,7 +2,7 @@
 
  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
  <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
- [![Python package](https://github.com/sdat2/new-orleans/actions/workflows/python-package.yml/badge.svg)](https://github.com/sdat2/new-orleans/actions/workflows/python-package.yml)
+ [![Python package](https://github.com/sdat2/new-orleans/actions/workflows/pytest.yml/badge.svg)](https://github.com/sdat2/new-orleans/actions/workflows/pytest.yml)
 
 ## Requirements
 
