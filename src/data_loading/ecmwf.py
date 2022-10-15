@@ -195,6 +195,55 @@ def katrina_netcdf(vars=ECMWF_AIR_VAR, file_name: str = KATRINA_ERA5_NC) -> None
     xr.open_mfdataset(file_name_list).to_netcdf(file_name)
 
 
+def katrina_example_netcdf(
+    file_name: str = os.path.join(DATA_PATH, "katrina_example_input.nc")
+) -> None:
+    """
+    ERA5 longer entry.
+    """
+    date_list = year_month_day_lists("2005-08-24", "2005-08-31")
+    client = cdsapi.Client()
+    file_name_list = [
+        os.path.join(DATA_PATH, "katex-" + str(i) + ".nc")
+        for i in range(len(date_list))
+    ]
+    for i in range(len(date_list)):
+        client.retrieve(
+            "reanalysis-era5-single-levels",
+            {
+                "product_type": "reanalysis",
+                "format": "netcdf",
+                "variable": [
+                    "10m_u_component_of_wind",
+                    "10m_v_component_of_wind",
+                    "mean_sea_level_pressure",
+                ],
+                "year": date_list[i][0],
+                "month": date_list[i][1],
+                "day": date_list[i][2],
+                "time": HOURS,
+                "area": [42.25, -99.5, 16.5, -73.75],
+            },
+            file_name_list[i],
+        )
+    ds = (
+        mon_increase(xr.open_mfdataset(file_name_list))
+        .rename(
+            {
+                "u10": "U10",
+                "v10": "V10",
+                "longitude": "lon",
+                "latitude": "lat",
+                "msl": "pres",
+            }
+        )
+        .sel(time=slice("2005-08-24T23", "2005-08-31T22"))
+        .coarsen(time=3)
+        .mean()
+    )
+    ds.to_netcdf(file_name)
+
+
 def monthly_avgs(vars=ECMWF_AIR_VAR + ECMWF_WATER_VAR) -> None:
     """
     Make all the monthly average netctdfs for rthe full time period.
@@ -224,7 +273,7 @@ def monthly_var_ds(var_list: List[str]) -> xr.Dataset:
     Monthly var ds.
 
     Args:
-        var_list (List[str]): variable list.
+        var_list (List[str]): Variable list.
 
     Returns:
         xr.Dataset: xarray dataset.
