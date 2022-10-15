@@ -1,4 +1,5 @@
 """ERA5 generate."""
+from typing import Tuple
 import os
 import datetime
 import numpy as np
@@ -7,7 +8,7 @@ from sithom.place import Point
 from sithom.time import timeit
 from src.constants import DATA_PATH, KAT_EX_PATH
 from src.data_loading.ecmwf import katrina_netcdf
-from src.data_loading.adcirc import print_pressure, print_wsp
+from src.data_loading.adcirc import print_pressure, print_wsp, read_pressures, read_windspeeds
 from src.conversions import pascal_to_millibar, distances_to_points, angles_to_points
 
 
