@@ -15,7 +15,7 @@ SRC_PATH: str = os.path.dirname(constants_path)
 PROJECT_PATH: str = os.path.dirname(SRC_PATH)
 DATA_PATH: str = os.path.join(PROJECT_PATH, "data")
 REPORT_PATH: str = os.path.join(PROJECT_PATH, "report")
-FIGURE_PATH: str = os.path.join(REPORT_PATH, "figures")
+FIGURE_PATH: str = os.path.join(REPORT_PATH, "no")
 
 LANDING_DS: str = os.path.join(DATA_PATH, "IBTrACS_gom_landings.nc")
 

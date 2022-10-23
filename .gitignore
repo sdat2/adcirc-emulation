@@ -23,6 +23,7 @@ parts/
 sdist/
 var/
 tmp/
+report/
 *.egg-info/
 .installed.cfg
 *.egg
