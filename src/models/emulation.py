@@ -17,6 +17,49 @@ from sithom.misc import in_notebook
 from src.constants import DATA_PATH, FIGURE_PATH
 from src.models.generation import ImpactSymmetricTC, Holland08
 from emukit.core.initial_designs.latin_design import LatinDesign
+from sithom.time import timeit
+import shutil
+import numpy as np
+import pandas as pd
+import xarray as xr
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from adcircpy.outputs import Maxele
+import imageio as io
+from frozendict import frozendict
+import GPy
+from GPy.kern import Linear, RBF
+from GPy.models import GPRegression
+from emukit.bayesian_optimization.acquisitions import ExpectedImprovement
+from emukit.bayesian_optimization.loops import BayesianOptimizationLoop
+from emukit.experimental_design.experimental_design_loop import ExperimentalDesignLoop
+from emukit.model_wrappers import SimpleGaussianProcessModel
+from emukit.core import ParameterSpace, ContinuousParameter
+from emukit.core.initial_designs.latin_design import LatinDesign
+from emukit.model_wrappers import GPyModelWrapper
+from emukit.experimental_design.acquisitions import ModelVariance
+from emukit.bayesian_optimization.acquisitions import (
+    MaxValueEntropySearch,
+    ProbabilityOfImprovement,
+    ExpectedImprovement,
+)
+from sithom.plot import plot_defaults, label_subplots
+from sithom.time import timeit
+from sithom.place import Point
+from sithom.misc import in_notebook
+from src.constants import DATA_PATH, FIGURE_PATH
+from src.models.generation import ImpactSymmetricTC, Holland08
+from src.constants import NEW_ORLEANS, DATA_PATH, NO_BBOX
+
+
+@np.vectorize
+def indices_in_bbox(lon, lat):
+    return (
+        lon > NO_BBOX.lon[0]
+        and lon < NO_BBOX.lon[1]
+        and lat > NO_BBOX.lat[0]
+        and lat < NO_BBOX.lat[1]
+    )
 
 
 def example_plot() -> None:
@@ -88,10 +131,7 @@ def plot_space() -> None:
     np.random.seed(0)
     plot_defaults()
     param_dict = frozendict(
-        {
-            "Direction [degrees]": (-70, 70),
-            "Translation Speed [m s$^{-1}$]": (3, 10),
-        }
+        {"Direction [degrees]": (-70, 70), "Translation Speed [m s$^{-1}$]": (3, 10),}
     )
 
     param_list = [
@@ -291,8 +331,284 @@ def example_animation(tmp_dir: str = "tmp/") -> None:
     writer.close()
 
 
+@np.vectorize
+def smash_func(angle: float, position: float, output_direc: str) -> float:
+    point = Point(NEW_ORLEANS.lon + position, NEW_ORLEANS.lat)
+    if os.path.exists(output_direc):
+        shutil.rmtree(output_direc)
+    ImpactSymmetricTC(
+        point=point, output_direc=output_direc, symetric_model=Holland08(), angle=angle,
+    ).run_impact()
+    path = os.path.join(output_direc, "maxele.63.nc")
+    maxele = Maxele(path, crs="EPSG:4326")
+    index_set = 27
+    indices = indices_in_bbox(maxele.x, maxele.y)
+    return maxele.values[indices][index_set]
+
+
+class EmulationSmash:
+    def __init__(
+        self,
+        seed=0,
+        init_num=40,
+        active_num=30,
+        indices=100,
+        acqusition_class=ExpectedImprovement,
+        loop_class=BayesianOptimizationLoop,
+        x1_range=[-90, 90],
+        x2_range=[-2, 3.2],
+        path="emu_angle_position",
+    ) -> None:
+        self.seed = seed
+        np.random.seed(seed)
+        self.indices = indices
+        x1_range, x2_range = self.to_gp_scale(np.array(x1_range), np.array(x2_range))
+        x1_range = x1_range.tolist()
+        x2_range = x2_range.tolist()
+        self.ap = ContinuousParameter("a_param", *x1_range)
+        self.bp = ContinuousParameter("b_param", *x2_range)
+        self.space = ParameterSpace([self.ap, self.bp])
+        self.design = LatinDesign(self.space)
+        self.init_num = init_num
+        self.active_num = active_num
+        self.figure_path = os.path.join(FIGURE_PATH, path)
+        self.data_path = os.path.join(DATA_PATH, path)
+        self.call_number = 0
+
+        for path in [self.figure_path, self.data_path]:
+            if not os.path.exists(path):
+                os.mkdir(path)
+
+        self.init_x_data = self.design.get_samples(self.init_num).astype("float32")
+        self.init_y_data = self.func(self.init_x_data)
+
+        self.model_gpy = GPRegression(
+            self.init_x_data,
+            self.init_y_data.reshape(len(self.init_y_data), 1),
+            RBF(2, 1),
+        )
+        self.model_gpy.optimize()
+
+        # active_learning
+        self.model_emukit = GPyModelWrapper(self.model_gpy)
+        if acqusition_class is MaxValueEntropySearch:
+            self.acquisition_function = acqusition_class(
+                model=self.model_emukit, space=self.space
+            )
+        else:
+            self.acquisition_function = acqusition_class(model=self.model_emukit)
+
+        self.loop = loop_class(
+            model=self.model_emukit,
+            space=self.space,
+            acquisition=self.acquisition_function,
+            batch_size=1,
+        )
+        self.active_x_data = np.array([[np.nan, np.nan]])
+        self.active_y_data = np.array([[np.nan]])
+
+        self.plot()
+        plt.savefig(os.path.join(self.figure_path, f"0.png"))
+        if in_notebook():
+            plt.show()
+        else:
+            plt.clf()
+
+        for i in range(1, active_num + 1):
+            print(i)
+            self.run_loop(1)
+            self.plot()
+            plt.savefig(os.path.join(self.figure_path, f"{i}.png"))
+            if in_notebook():
+                plt.show()
+            else:
+                plt.clf()
+
+        with io.get_writer(f"{self.figure_path}.gif", mode="I", duration=0.5) as writer:
+            for file_name in [
+                os.path.join(self.figure_path, f"{i}.png")
+                for i in range(self.active_num + 1)
+            ]:
+                image = io.imread(file_name)
+                writer.append_data(image)
+        writer.close()
+        self.save_data()
+
+    def save_data(self):
+        init_x, init_y = self.init_data()
+        active_x, active_y = self.active_data()
+        ds = xr.Dataset(
+            data_vars=dict(
+                init_x=(["inum", "var"], init_x),
+                init_y=(["inum"], init_y[:, 0]),
+                active_x=(["anum", "var"], active_x),
+                active_y=("anum", active_y[:, 0]),
+            ),
+            coords=dict(var=(["var"], ["x1", "x2"]),),
+            attrs=dict(description="Training Data"),
+        )
+        file_name = os.path.join(self.data_path, "data.nc")
+        if not os.path.exists(file_name):
+            ds.to_netcdf(os.path.join(self.data_path, "data.nc"))
+        else:
+            print("File Already Exists!")
+
+    def run_loop(self, new_iterations):
+        self.loop.run_loop(self.func, new_iterations)
+        self.active_x_data = self.loop.loop_state.X[len(self.init_x_data) :]
+        self.active_y_data = self.loop.loop_state.Y[len(self.init_x_data) :]
+
+    def init_data(self):
+        return (
+            self.merge(*self.to_real_scale(*self.split(self.init_x_data))),
+            -self.init_y_data,
+        )
+
+    def active_data(self):
+        return (
+            self.merge(*self.to_real_scale(*self.split(self.active_x_data))),
+            -self.active_y_data,
+        )
+
+    def __repr__(self) -> str:
+        return f"seed = {self.seed}, init_num = {self.init_num}, active_num = {self.active_num}"
+
+    def to_gp_scale(self, x1, x2):
+        return (x1 + 60) / 10, (x2 - 0.6) / 0.5
+
+    def to_real_scale(self, x1, x2):
+        return x1 * 10 - 60, x2 / 2 + 0.6
+
+    def merge(self, x1, x2):
+        return np.concatenate(
+            [x1.reshape(*x1.shape, 1), x2.reshape(*x2.shape, 1)], axis=-1
+        )
+
+    def split(self, data):
+        shape = data.shape
+        if len(shape) == 2:
+            return data[:, 0], data[:, 1]
+        elif len(shape) == 3:
+            return data[:, :, 0], data[:, :, 1]
+        else:
+            assert False
+
+    def ob_smash_func(self, angle: np.array, position: float) -> float:
+        # print(angle, position)
+        num = len(angle)
+        output_direc = [
+            os.path.join(self.data_path, str(self.call_number + i)) for i in range(num)
+        ]
+        self.call_number += num
+        return -smash_func(angle, position, output_direc)
+
+    def func(self, data) -> float:
+        output = self.ob_smash_func(*self.to_real_scale(*self.split(data)))
+        return output.reshape(len(output), 1)
+
+    def learnt_function(self, x1, x2):
+        mean, var = self.model_emukit.predict(self.merge(*self.to_gp_scale(x1, x2)))
+        return -mean, np.std(var)
+
+    def plot(self) -> None:
+        a_indices = np.linspace(self.ap.min, self.ap.max, num=self.indices)
+        b_indices = np.linspace(self.bp.min, self.bp.max, num=self.indices)
+        a_indices, b_indices = self.to_real_scale(a_indices, b_indices)
+        a_mesh, b_mesh = np.meshgrid(a_indices, b_indices)
+        length = len(a_indices) * len(b_indices)
+        a_array = a_mesh.ravel()
+        b_array = b_mesh.ravel()
+        comb_array = np.zeros([length, 2])
+        comb_array[:, 0] = a_array[:]
+        comb_array[:, 1] = b_array[:]
+        comb_array_gp = self.merge(*self.to_gp_scale(*self.split(comb_array)))
+
+        # Evaluate Gaussian Process
+        mean, var = self.model_emukit.predict(comb_array_gp)
+        mean_mesh = -mean[:, 0].reshape(self.indices, self.indices)
+        std_mesh = np.sqrt(var[:, 0]).reshape(self.indices, self.indices)
+        # Evaluate Acquisition Function
+        aq_mesh = self.acquisition_function.evaluate(comb_array_gp).reshape(
+            self.indices, self.indices
+        )
+
+        # Set up plot
+        plot_defaults()
+        fig, axs = plt.subplots(
+            2, 2, sharex=True, sharey=True  # , figsize=get_dim(ratio=1)
+        )
+        label_subplots(axs, override="outside")
+
+        ax = axs[0, 1]
+        ax.set_title("Acq. Func.")
+        im = ax.contourf(a_mesh, b_mesh, aq_mesh)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        fig.colorbar(im, cax=cax, orientation="vertical")
+
+        ax = axs[0, 0]
+        init_x, init_y = self.init_data()
+        active_x, active_y = self.active_data()
+        im = ax.scatter(
+            init_x[:, 0],
+            init_x[:, 1],
+            c=init_y,
+            marker="x",
+            label="original data points",
+        )
+        ax.scatter(
+            active_x[:, 0],
+            active_x[:, 1],
+            c=active_y,
+            marker="+",
+            label="new data points",
+        )
+        divider = make_axes_locatable(ax)
+        ax.set_title("Samples")
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        fig.colorbar(im, cax=cax, orientation="vertical")
+        ax.set_ylabel("Position [$^{\circ}$E]")
+
+        ax = axs[1, 0]
+        ax.set_title("Prediction Mean")
+        im = ax.contourf(a_mesh, b_mesh, mean_mesh)  # , vmin=0, vmax=5.6)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        fig.colorbar(im, cax=cax, orientation="vertical")
+        ax.set_ylabel("Position [$^{\circ}$E]")
+        ax.set_xlabel("Angle [$^{\circ}$]")
+        ax = axs[1, 1]
+        ax.set_title("Pred. Std. Dev. ")
+        im = ax.contourf(a_mesh, b_mesh, std_mesh)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        fig.colorbar(im, cax=cax, orientation="vertical")
+        ax.set_xlabel("Angle [$^{\circ}$]")
+
+
+def poi():
+    EmulationSmash(
+        acqusition_class=ProbabilityOfImprovement, path="emulation_angle_pos_poi"
+    )
+
+
+def poi_long():
+    EmulationSmash(
+        acqusition_class=ProbabilityOfImprovement, path="emulation_angle_pos_poi_long",
+        init_num=100,
+        active_num=50,
+    )
+
+
+def mves():
+    EmulationSmash(
+        acqusition_class=MaxValueEntropySearch, path="emulation_angle_pos_mves"
+    )
+
+
 if __name__ == "__main__":
     # python src/models/emulation.py
     # example_animation()
     # example_plot()
-    plot_space()
+    plot_defaults()
+    mves()

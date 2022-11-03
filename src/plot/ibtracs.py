@@ -293,7 +293,7 @@ def multi_dist(ds: xr.Dataset, var_list: List[List[str]]) -> None:
     var_array = np.array(var_list)
     shape = var_array.shape
     fig, axs = plt.subplots(*shape)
-    set_dim(fig, fraction_of_line_width=1.5, ratio=(5**0.5 - 1) / 2 * 2)
+    set_dim(fig, fraction_of_line_width=1.5, ratio=(5 ** 0.5 - 1) / 2 * 2)
 
     for i in range(shape[0]):
         for j in range(shape[1]):
