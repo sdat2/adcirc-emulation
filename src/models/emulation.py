@@ -606,9 +606,18 @@ def mves():
     )
 
 
+def inp_diff():
+    EmulationSmash(
+        path="emulation_angle_pos_big",
+        seed=20,
+        init_num=100,
+        active_num=30,
+    )
+
+
 if __name__ == "__main__":
     # python src/models/emulation.py
     # example_animation()
     # example_plot()
     plot_defaults()
-    mves()
+    inp_diff()
