@@ -35,7 +35,8 @@ def different_trajectories() -> None:
             s=1,
         )
         plt.scatter(
-            htc.point.lon, htc.point.lat,  # c=dates
+            htc.point.lon,
+            htc.point.lat,  # c=dates
         )
 
     # plt.colorbar(im, label="Time")

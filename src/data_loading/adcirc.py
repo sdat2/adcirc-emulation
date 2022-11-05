@@ -170,7 +170,11 @@ def read_windspeeds(windspeed_path: str) -> xr.Dataset:
                 U10=(["time", "lat", "lon"], data[:, 0, :, :]),
                 V10=(["time", "lat", "lon"], data[:, 1, :, :]),
             ),
-            coords=dict(lon=(["lon"], lons), lat=(["lat"], lats), time=dates,),
+            coords=dict(
+                lon=(["lon"], lons),
+                lat=(["lat"], lats),
+                time=dates,
+            ),
             attrs=dict(
                 description="Velocities could be the wrong way round",
                 grid_var=str(coords),
@@ -236,9 +240,15 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
         da = xr.DataArray(
             data=np.array(pressure_lol).reshape(len(dates), len(lats), len(lons)),
             dims=["time", "lat", "lon"],
-            coords=dict(lon=(["lon"], lons), lat=(["lat"], lats), time=dates,),
+            coords=dict(
+                lon=(["lon"], lons),
+                lat=(["lat"], lats),
+                time=dates,
+            ),
             attrs=dict(
-                long_name="Pressure", description="Surface pressure", units="mb",
+                long_name="Pressure",
+                description="Surface pressure",
+                units="mb",
             ),
         )
         da.lat.attrs = {"units": "degree_North", "long_name": "Latitude"}
@@ -255,12 +265,14 @@ def read_default_inputs() -> None:
         pr_ds = read_pressures(os.path.join(KAT_EX_PATH, file_tuple[0]))
         pr_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[0]) + ".nc")
         print_pressure(
-            pr_ds, os.path.join(DATA_PATH, file_tuple[0]),
+            pr_ds,
+            os.path.join(DATA_PATH, file_tuple[0]),
         )
         ws_ds = read_windspeeds(os.path.join(KAT_EX_PATH, file_tuple[1]))
         ws_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[1]) + ".nc")
         print_wsp(
-            ws_ds, os.path.join(DATA_PATH, file_tuple[1]),
+            ws_ds,
+            os.path.join(DATA_PATH, file_tuple[1]),
         )
 
 

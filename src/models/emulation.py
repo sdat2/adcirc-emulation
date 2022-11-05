@@ -1,5 +1,6 @@
 """EMUKIT"""
 import os
+from GPy import kern
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -17,7 +18,6 @@ from sithom.misc import in_notebook
 from src.constants import DATA_PATH, FIGURE_PATH
 from src.models.generation import ImpactSymmetricTC, Holland08
 from emukit.core.initial_designs.latin_design import LatinDesign
-from sithom.time import timeit
 import shutil
 import numpy as np
 import pandas as pd
@@ -28,7 +28,7 @@ from adcircpy.outputs import Maxele
 import imageio as io
 from frozendict import frozendict
 import GPy
-from GPy.kern import Linear, RBF
+from GPy.kern import Linear, RBF, Matern32, Matern52
 from GPy.models import GPRegression
 from emukit.bayesian_optimization.acquisitions import ExpectedImprovement
 from emukit.bayesian_optimization.loops import BayesianOptimizationLoop
@@ -131,7 +131,10 @@ def plot_space() -> None:
     np.random.seed(0)
     plot_defaults()
     param_dict = frozendict(
-        {"Direction [degrees]": (-70, 70), "Translation Speed [m s$^{-1}$]": (3, 10),}
+        {
+            "Direction [degrees]": (-70, 70),
+            "Translation Speed [m s$^{-1}$]": (3, 10),
+        }
     )
 
     param_list = [
@@ -337,7 +340,10 @@ def smash_func(angle: float, position: float, output_direc: str) -> float:
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
     ImpactSymmetricTC(
-        point=point, output_direc=output_direc, symetric_model=Holland08(), angle=angle,
+        point=point,
+        output_direc=output_direc,
+        symetric_model=Holland08(),
+        angle=angle,
     ).run_impact()
     path = os.path.join(output_direc, "maxele.63.nc")
     maxele = Maxele(path, crs="EPSG:4326")
@@ -355,6 +361,7 @@ class EmulationSmash:
         indices=100,
         acqusition_class=ExpectedImprovement,
         loop_class=BayesianOptimizationLoop,
+        kernel_class=RBF,
         x1_range=[-90, 90],
         x2_range=[-2, 3.2],
         path="emu_angle_position",
@@ -379,17 +386,19 @@ class EmulationSmash:
             if not os.path.exists(path):
                 os.mkdir(path)
 
+        # run initial data.
         self.init_x_data = self.design.get_samples(self.init_num).astype("float32")
         self.init_y_data = self.func(self.init_x_data)
 
+        # Fit initial GPyRegression
         self.model_gpy = GPRegression(
             self.init_x_data,
             self.init_y_data.reshape(len(self.init_y_data), 1),
-            RBF(2, 1),
+            kernel_class(2, 1),
         )
         self.model_gpy.optimize()
 
-        # active_learning
+        # active_learning - make acquisition file & loop.
         self.model_emukit = GPyModelWrapper(self.model_gpy)
         if acqusition_class is MaxValueEntropySearch:
             self.acquisition_function = acqusition_class(
@@ -404,9 +413,12 @@ class EmulationSmash:
             acquisition=self.acquisition_function,
             batch_size=1,
         )
+
+        # get ready for active learning.
         self.active_x_data = np.array([[np.nan, np.nan]])
         self.active_y_data = np.array([[np.nan]])
 
+        # make initial plot
         self.plot()
         plt.savefig(os.path.join(self.figure_path, f"0.png"))
         if in_notebook():
@@ -444,7 +456,9 @@ class EmulationSmash:
                 active_x=(["anum", "var"], active_x),
                 active_y=("anum", active_y[:, 0]),
             ),
-            coords=dict(var=(["var"], ["x1", "x2"]),),
+            coords=dict(
+                var=(["var"], ["x1", "x2"]),
+            ),
             attrs=dict(description="Training Data"),
         )
         file_name = os.path.join(self.data_path, "data.nc")
@@ -576,14 +590,14 @@ class EmulationSmash:
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(im, cax=cax, orientation="vertical")
         ax.set_ylabel("Position [$^{\circ}$E]")
-        ax.set_xlabel("Angle [$^{\circ}$]")
+        ax.set_xlabel("Bearing [$^{\circ}$]")
         ax = axs[1, 1]
         ax.set_title("Pred. Std. Dev. ")
         im = ax.contourf(a_mesh, b_mesh, std_mesh)
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(im, cax=cax, orientation="vertical")
-        ax.set_xlabel("Angle [$^{\circ}$]")
+        ax.set_xlabel("Bearing [$^{\circ}$]")
 
 
 def poi():
@@ -594,7 +608,8 @@ def poi():
 
 def poi_long():
     EmulationSmash(
-        acqusition_class=ProbabilityOfImprovement, path="emulation_angle_pos_poi_long",
+        acqusition_class=ProbabilityOfImprovement,
+        path="emulation_angle_pos_poi_long",
         init_num=100,
         active_num=50,
     )
@@ -615,9 +630,28 @@ def inp_diff():
     )
 
 
+def mattern52():
+    EmulationSmash(
+        path="emulation_angle_pos_Mattern52",
+        seed=30,
+        init_num=100,
+        active_num=30,
+        kernel_class=Matern52
+    )
+
+def mattern32():
+    EmulationSmash(
+        path="emulation_angle_pos_Mattern32",
+        seed=50,
+        init_num=100,
+        active_num=30,
+        kernel_class=Matern32
+    )
+
+
 if __name__ == "__main__":
     # python src/models/emulation.py
     # example_animation()
     # example_plot()
     plot_defaults()
-    inp_diff()
+    mattern52()
