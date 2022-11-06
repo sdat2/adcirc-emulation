@@ -630,7 +630,7 @@ def inp_diff():
     )
 
 
-def mattern52():
+def matern52():
     EmulationSmash(
         path="emulation_angle_pos_Mattern52",
         seed=30,
@@ -639,11 +639,20 @@ def mattern52():
         kernel_class=Matern52
     )
 
-def mattern32():
+def matern32():
     EmulationSmash(
         path="emulation_angle_pos_Mattern32",
         seed=50,
         init_num=100,
+        active_num=30,
+        kernel_class=Matern32
+    )
+
+def mat3252():
+    EmulationSmash(
+        path="emulation_angle_pos_Mattern32",
+        seed=80,
+        init_num=50,
         active_num=30,
         kernel_class=Matern32
     )
@@ -654,4 +663,4 @@ if __name__ == "__main__":
     # example_animation()
     # example_plot()
     plot_defaults()
-    mattern52()
+    matern52()
