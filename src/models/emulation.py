@@ -645,16 +645,17 @@ def matern32():
         seed=50,
         init_num=100,
         active_num=30,
-        kernel_class=Matern32
+        kernel_class=Matern32,
     )
 
-def mat3252():
+def mat32():
     EmulationSmash(
-        path="emulation_angle_pos_Mattern32",
-        seed=80,
-        init_num=50,
-        active_num=30,
-        kernel_class=Matern32
+        path="emulation_angle_pos_matern32_ent",
+        seed=100,
+        init_num=100,
+        active_num=50,
+        kernel_class=Matern32,
+        acqusition_class=MaxValueEntropySearch,
     )
 
 
@@ -663,4 +664,4 @@ if __name__ == "__main__":
     # example_animation()
     # example_plot()
     plot_defaults()
-    matern52()
+    mat32()
