@@ -659,9 +659,20 @@ def mat32():
     )
 
 
+def mat32var():
+    EmulationSmash(
+        path="emulation_angle_pos_matern32_variance",
+        seed=100,
+        init_num=200,
+        active_num=50,
+        kernel_class=Matern32,
+        acqusition_class=ModelVariance,
+    )
+
+
 if __name__ == "__main__":
     # python src/models/emulation.py
     # example_animation()
     # example_plot()
     plot_defaults()
-    mat32()
+    mat32var()
