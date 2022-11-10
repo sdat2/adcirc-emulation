@@ -463,7 +463,7 @@ class EmulationSmash:
         )
         file_name = os.path.join(self.data_path, "data.nc")
         if not os.path.exists(file_name):
-            ds.to_netcdf(os.path.join(self.data_path, "data.nc"))
+            ds.to_netcdf(file_name)
         else:
             print("File Already Exists!")
 
@@ -668,7 +668,6 @@ def mat32var():
         kernel_class=Matern32,
         acqusition_class=ModelVariance,
     )
-
 
 if __name__ == "__main__":
     # python src/models/emulation.py
