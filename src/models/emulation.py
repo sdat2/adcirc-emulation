@@ -617,8 +617,9 @@ def matern52():
         seed=30,
         init_num=100,
         active_num=30,
-        kernel_class=Matern52
+        kernel_class=Matern52,
     )
+
 
 def matern32():
     EmulationSmash(
@@ -628,6 +629,7 @@ def matern32():
         active_num=30,
         kernel_class=Matern32,
     )
+
 
 def mat32():
     EmulationSmash(
@@ -649,6 +651,7 @@ def mat32var():
         kernel_class=Matern32,
         acqusition_class=ModelVariance,
     )
+
 
 if __name__ == "__main__":
     # python src/models/emulation.py

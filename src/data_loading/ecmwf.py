@@ -295,9 +295,111 @@ def monthly_water_var_ds() -> xr.Dataset:
     return monthly_var_ds(ECMWF_WATER_VAR)
 
 
+def namibia():
+
+    c = cdsapi.Client()
+
+    c.retrieve(
+        "reanalysis-era5-single-levels",
+        {
+            "product_type": "reanalysis",
+            "format": "netcdf",
+            "variable": [
+                "eastward_turbulent_surface_stress",
+                "northward_turbulent_surface_stress",
+            ],
+            "year": [
+                "2000",
+                "2001",
+                "2002",
+                "2003",
+                "2004",
+                "2005",
+                "2006",
+                "2007",
+                "2008",
+                "2009",
+                "2010",
+                "2011",
+                "2012",
+                "2013",
+                "2014",
+                "2015",
+                "2016",
+                "2017",
+                "2018",
+                "2019",
+                "2020",
+                "2021",
+            ],
+            "month": [
+                "01",
+                "02",
+                "03",
+                "04",
+                "05",
+                "06",
+                "07",
+                "08",
+                "09",
+                "10",
+                "11",
+                "12",
+            ],
+            "day": [
+                "01",
+                "02",
+                "03",
+                "04",
+                "05",
+                "06",
+                "07",
+                "08",
+                "09",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15",
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21",
+                "22",
+                "23",
+                "24",
+                "25",
+                "26",
+                "27",
+                "28",
+                "29",
+                "30",
+                "31",
+            ],
+            "time": [
+                "00:00",
+                "06:00",
+                "12:00",
+                "18:00",
+            ],
+            "area": [
+                -24,
+                12,
+                -28.5,
+                16,
+            ],
+        },
+        "download.nc",
+    )
+
+
 if __name__ == "__main__":
     # python src/data_loading/ecmwf.py
     # print(year_month_day_lists("2003-08-11", "2006-01-02"))
-    katrina_netcdf(vars=ECMWF_AIR_VAR, file_name=KATRINA_ERA5_NC)
-    katrina_netcdf(vars=ECMWF_WATER_VAR, file_name=KATRINA_WATER_ERA5_NC)
+    # katrina_netcdf(vars=ECMWF_AIR_VAR, file_name=KATRINA_ERA5_NC)
+    namibia()
+    # katrina_netcdf(vars=ECMWF_WATER_VAR, file_name=KATRINA_WATER_ERA5_NC)
     # monthly_avgs()
