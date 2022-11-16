@@ -1,55 +1,36 @@
 """EMUKIT"""
 import os
-from GPy import kern
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import imageio as io
-from frozendict import frozendict
-import GPy
-from GPy.models import GPRegression
-from emukit.experimental_design.experimental_design_loop import ExperimentalDesignLoop
-from emukit.model_wrappers import SimpleGaussianProcessModel
-from emukit.core import ParameterSpace, ContinuousParameter
-from emukit.model_wrappers import GPyModelWrapper
-from emukit.experimental_design.acquisitions import ModelVariance
-from sithom.plot import plot_defaults, label_subplots
-from sithom.misc import in_notebook
-from src.constants import DATA_PATH, FIGURE_PATH
-from src.models.generation import ImpactSymmetricTC, Holland08
-from emukit.core.initial_designs.latin_design import LatinDesign
 import shutil
 import numpy as np
 import pandas as pd
 import xarray as xr
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from adcircpy.outputs import Maxele
-import imageio as io
 from frozendict import frozendict
 import GPy
+from GPy import kern
 from GPy.kern import Linear, RBF, Matern32, Matern52
 from GPy.models import GPRegression
 from emukit.bayesian_optimization.acquisitions import ExpectedImprovement
 from emukit.bayesian_optimization.loops import BayesianOptimizationLoop
 from emukit.experimental_design.experimental_design_loop import ExperimentalDesignLoop
-from emukit.model_wrappers import SimpleGaussianProcessModel
-from emukit.core import ParameterSpace, ContinuousParameter
+from emukit.model_wrappers import SimpleGaussianProcessModel, GPyModelWrapper
 from emukit.core.initial_designs.latin_design import LatinDesign
-from emukit.model_wrappers import GPyModelWrapper
 from emukit.experimental_design.acquisitions import ModelVariance
 from emukit.bayesian_optimization.acquisitions import (
     MaxValueEntropySearch,
     ProbabilityOfImprovement,
     ExpectedImprovement,
 )
+from emukit.core import ParameterSpace, ContinuousParameter
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import imageio as io
+from adcircpy.outputs import Maxele
 from sithom.plot import plot_defaults, label_subplots
 from sithom.time import timeit
 from sithom.place import Point
 from sithom.misc import in_notebook
-from src.constants import DATA_PATH, FIGURE_PATH
 from src.models.generation import ImpactSymmetricTC, Holland08
-from src.constants import NEW_ORLEANS, DATA_PATH, NO_BBOX
+from src.constants import DATA_PATH, FIGURE_PATH, NEW_ORLEANS, NO_BBOX
 
 
 @np.vectorize
