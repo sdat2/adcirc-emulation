@@ -11,5 +11,6 @@ dependencies:
   - torchaudio
   - pip
   - pip:
+    - gpytorch
     - hydra-core
     - -r dev-requirements.txt
