@@ -419,7 +419,7 @@ def vmax_from_pressure_holliday(
     Returns:
         float: vmax
     """
-    coeff = 54.01667 / 58.07310377789465  # coeff to make it match Katrina
+    coeff = 54.01667 / 58.07310377789465  # change coeff to make it match Katrina
     return coeff * 3.4 * pascal_to_millibar(pn - pc) ** 0.644
 
 
@@ -560,7 +560,7 @@ class ImpactSymmetricTC:
         # print(output, error)
 
     @timeit
-    def prepare_run(self, forts: Tuple[str]) -> None:
+    def prepare_run(self, forts: Tuple[str], timestep_smearing=True) -> None:
         """
         Prepare run.
 
@@ -568,15 +568,31 @@ class ImpactSymmetricTC:
             forts (Tuple[str]): e.g. ("fort.221", "fort.222")
         """
         da = read_pressures(os.path.join(KAT_EX_PATH, forts[0]))
+        average_timestep = (da.time.values[1:] - da.time.values[:-1]).mean()
         vds_list = []
         pds_list = []
+
         for time in da.time.values:
-            vds, pds = self.tc_time_slice(da, time)
+            # work out time step for smearing
+            # currently 3 hours -> subtract 1 hour + add 1 hour, then average?
+            if timestep_smearing:
+                vds1, pds1 = self.tc_time_slice(da, time - average_timestep / 2)
+                vds2, pds2 = self.tc_time_slice(da, time)
+                vds3, pds3 = self.tc_time_slice(da, time + average_timestep / 2)
+                vds = xr.merge([vds1, vds2, vds3]).mean("time").expand_dims(dim="time")
+                vds = vds.assign_coords({"time": [time]})
+                pds = xr.merge([pds1, pds2, pds3]).mean("time").expand_dims(dim="time")
+                pds = pds.assign_coords({"time": [time]})
+            else:
+                vds, pds = self.tc_time_slice(da, time)
+
             vds_list.append(vds)
             pds_list.append(pds)
 
-        vds = xr.merge(vds_list)
-        pda = xr.merge(pds_list)["pressure"]
+        print(type(vds_list))
+        print(vds_list[0])
+        vds = xr.concat(vds_list, dim="time")
+        pda = xr.concat(pds_list, dim="time")["pressure"]
         if self.debug:
             pda.to_netcdf(os.path.join(self.output_direc, forts[0]) + ".nc")
             print(vds)
@@ -675,7 +691,7 @@ def point(x_diff: float) -> None:
     """Run the Katrina as Holland 2008."""
 
     point = Point(NEW_ORLEANS.lon + x_diff, NEW_ORLEANS.lat)
-    folder = os.path.join(DATA_PATH, "kat_move")
+    folder = os.path.join(DATA_PATH, "kat_move_smeared")
     if not os.path.exists(folder):
         os.mkdir(folder)
     ImpactSymmetricTC(
@@ -824,7 +840,8 @@ if __name__ == "__main__":
     # cangles()
     # run_katrina_h08()  # speeds()
     # rmaxs()
-    xns()
+    # xns()
+    points()
     # print(vmax_from_pressure_holliday(92800))
     # print(vmax_from_pressure_emanuel(92800))
     # print(vmax_from_pressure_choi(92800))
