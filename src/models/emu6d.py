@@ -114,7 +114,8 @@ class TestFeature:
         True
     """
 
-    def __init__(self, dryrun=False) -> None:
+    def __init__(self, seed=0, dryrun=False) -> None:
+        np.random.seed(seed)
         self.dryrun = dryrun
         angles = ContinuousParameter("angle", -90, 90)
         speeds = ContinuousParameter("speed", 2, 14)
@@ -125,18 +126,23 @@ class TestFeature:
         xn = ContinuousParameter("xn", 0.8, 1.4)
         self.space = ParameterSpace([angles, speeds, point_east, rmax, pc, xn])
         self.names = self.space.parameter_names
-        self.ideal_space = ParameterSpace(
+        self.gp_space = ParameterSpace(
             [ContinuousParameter(name, 0, 1) for name in self.names]
         )
-        self.design = LatinDesign(self.space)
+        self.real_design = LatinDesign(self.space)
+        self.gp_design = LatinDesign(self.gp_space)
+
         bounds = self.space.get_bounds()
         self.lower_bounds = np.asarray(bounds)[:, 0].reshape(1, len(bounds))
         self.upper_bounds = np.asarray(bounds)[:, 1].reshape(1, len(bounds))
         self.diffs = self.upper_bounds - self.lower_bounds
         self.call_number = 0
 
-    def samples(self, num_samples: int) -> np.ndarray:
-        return self.design.get_samples(num_samples).astype("float32")
+    def real_samples(self, num_samples: int) -> np.ndarray:
+        return self.real_design.get_samples(num_samples).astype("float32")
+
+    def gp_samples(self, num_samples: int) -> np.ndarray:
+        return self.gp_design.get_samples(num_samples).astype("float32")
 
     def to_real(self, x_data: np.ndarray) -> np.ndarray:
         """
@@ -183,3 +189,13 @@ class TestFeature:
             self.call_number += 1
 
         return np.array(output_list).reshape(len(output_list), 1)
+
+
+if __name__ == "__main__":
+    # python src/models/emu6d.py
+    tf = TestFeature()
+    print(tf.real_samples(100)[:10])
+    print(tf.to_real(tf.gp_samples(100))[:10])
+    assert np.all(
+        np.isclose(tf.real_samples(100), tf.to_real(tf.gp_samples(100)), rtol=1e-3)
+    )
