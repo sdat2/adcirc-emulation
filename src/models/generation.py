@@ -576,9 +576,9 @@ class ImpactSymmetricTC:
             # work out time step for smearing
             # currently 3 hours -> subtract 1 hour + add 1 hour, then average?
             if timestep_smearing:
-                vds1, pds1 = self.tc_time_slice(da, time - average_timestep / 2)
+                vds1, pds1 = self.tc_time_slice(da, time - average_timestep / 3)
                 vds2, pds2 = self.tc_time_slice(da, time)
-                vds3, pds3 = self.tc_time_slice(da, time + average_timestep / 2)
+                vds3, pds3 = self.tc_time_slice(da, time + average_timestep / 3)
                 vds = xr.merge([vds1, vds2, vds3]).mean("time").expand_dims(dim="time")
                 vds = vds.assign_coords({"time": [time]})
                 pds = xr.merge([pds1, pds2, pds3]).mean("time").expand_dims(dim="time")

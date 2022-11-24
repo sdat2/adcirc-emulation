@@ -73,7 +73,7 @@ def indices_in_bbox(lon, lat):
 
 
 def real_func(param, output_direc: str) -> float:
-    point = Point(NEW_ORLEANS.lon + param["position_east"], NEW_ORLEANS.lat)
+    point = Point(NEW_ORLEANS.lon + param["point_east"], NEW_ORLEANS.lat)
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
     ImpactSymmetricTC(
@@ -294,7 +294,7 @@ class SixDOFSearch:
 
 if __name__ == "__main__":
     # python src/models/emu6d.py
-    tf = SixDOFSearch(dryrun=True)
+    tf = SixDOFSearch(dryrun=False, path="6DSearch")
     print(tf.real_samples(100)[:10])
     print(tf.to_real(tf.gp_samples(100))[:10])
     tf.run_initial()
