@@ -381,6 +381,7 @@ class EmulationSmash:
 
         # active_learning - make acquisition file & loop.
         self.model_emukit = GPyModelWrapper(self.model_gpy)
+
         if acqusition_class is MaxValueEntropySearch:
             self.acquisition_function = acqusition_class(
                 model=self.model_emukit, space=self.space
