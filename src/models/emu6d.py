@@ -294,12 +294,12 @@ class SixDOFSearch:
 
 if __name__ == "__main__":
     # python src/models/emu6d.py
-    tf = SixDOFSearch(dryrun=False, path="6DSearch")
+    tf = SixDOFSearch(dryrun=False, path="6D_Search_Holdout", seed=5)
     print(tf.real_samples(100)[:10])
     print(tf.to_real(tf.gp_samples(100))[:10])
-    tf.run_initial()
+    tf.run_initial(samples=200)
     tf.setup_active()
-    tf.run_active(200)
+    tf.run_active(100)
     tf.save_gp()
     print(tf.gp_predict()(tf.gp_samples(100)[:10]))
     print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
