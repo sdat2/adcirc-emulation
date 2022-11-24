@@ -240,6 +240,22 @@ class TestFeature:
         self.active_x_data = self.loop.loop_state.X[len(self.init_x_data) :]
         self.active_y_data = self.loop.loop_state.Y[len(self.init_x_data) :]
 
+    def save_gp(self) -> None:
+        np.save("X.npy", self.loop.loop_state.X)
+        np.save("Y.npy", self.loop.loop_state.Y)
+        np.save("model_save.npy", self.model_gpy.param_array)
+
+    def load_gp(self) -> None:
+        X = np.load("X.npy")
+        Y = np.load("Y.npy")
+        m_load = GPy.models.GPRegression(X, Y, initialize=False, kernel=Matern32(2, 1))
+        m_load.update_model(
+            False
+        )  # do not call the underlying expensive algebra on load
+        m_load.initialize_parameter()  # Initialize the parameters (connect the parameters up)
+        m_load[:] = np.load("model_save.npy")  # Load the parameters
+        m_load.update_model(True)  # Call the algebra only once
+
 
 if __name__ == "__main__":
     # python src/models/emu6d.py
