@@ -101,15 +101,15 @@ def fake_func(param, output_direc: str) -> float:
     if not os.path.exists(output_direc):
         os.mkdir(output_direc)
 
-    return 0.0
+    return np.mean([abs(param[key]) for key in param]) / 20
 
 
-class TestFeature:
+class SixDOFSearch:
     """
 
     Data conversion example::
         >>> import numpy as np
-        >>> tf = TestFeature()
+        >>> tf = SixDOFSearch()
         >>> x_data = tf.samples(300)
         >>> np.all(np.isclose(tf.to_real(tf.to_gp(x_data)), x_data, rtol=1e-6))
         True
@@ -210,9 +210,9 @@ class TestFeature:
             output_direc = os.path.join(self.data_path, str(self.call_number))
             print(output_direc)
             if self.dryrun:
-                output_list.append(fake_func(param, output_direc))
+                output_list.append(-fake_func(param, output_direc))
             else:
-                output_list.append(real_func(param, output_direc))
+                output_list.append(-real_func(param, output_direc))
             self.call_number += 1
 
         return np.array(output_list).reshape(len(output_list), 1)
@@ -259,7 +259,7 @@ class TestFeature:
         np.save(self.y_path, self.loop.loop_state.Y)
         np.save(self.model_path, self.model_gpy.param_array)
 
-    def load_gp(self) -> None:
+    def gp_predict(self) -> None:
         X = np.load(self.x_path)
         Y = np.load(self.y_path)
         m_load = GPy.models.GPRegression(X, Y, initialize=False, kernel=Matern32(2, 1))
@@ -271,17 +271,39 @@ class TestFeature:
         m_load.update_model(True)  # Call the algebra only once
         return m_load.predict
 
+    def gp_predict_real(self) -> None:
+        X = np.load(self.x_path)
+        Y = np.load(self.y_path)
+        m_load = GPy.models.GPRegression(X, Y, initialize=False, kernel=Matern32(2, 1))
+        m_load.update_model(
+            False
+        )  # do not call the underlying expensive algebra on load
+        m_load.initialize_parameter()  # Initialize the parameters (connect the parameters up)
+        m_load[:] = np.load(self.model_path)  # Load the parameters
+        m_load.update_model(True)  # Call the algebra only once
+
+        def func_return():
+            def func_ret(x_data):
+                mean, var = m_load.predict(self.to_gp(x_data))
+                return -mean, var
+
+            return func_ret
+
+        return func_return()
+
 
 if __name__ == "__main__":
     # python src/models/emu6d.py
-    tf = TestFeature(dryrun=True)
+    tf = SixDOFSearch(dryrun=True)
     print(tf.real_samples(100)[:10])
     print(tf.to_real(tf.gp_samples(100))[:10])
     tf.run_initial()
     tf.setup_active()
     tf.run_active(200)
     tf.save_gp()
-    print(tf.load_gp()(tf.gp_samples(100)[:10]))
+    print(tf.gp_predict()(tf.gp_samples(100)[:10]))
+    print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
+
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.gp_samples(100)), rtol=1e-3)
     # )
