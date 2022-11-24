@@ -96,6 +96,10 @@ def fake_func(param, output_direc: str) -> float:
     default_param = get_param({})
     assert np.all([key in default_param.keys() for key in param])
     print("called fake func")
+
+    if os.path.exists(output_direc):
+        shutil.rmtree(output_direc)
+
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
     return 0.0
@@ -146,6 +150,12 @@ class TestFeature:
         # main figure paths.
         self.figure_path = os.path.join(FIGURE_PATH, path)
         self.data_path = os.path.join(DATA_PATH, path)
+
+        # Setup-empty entries.
+        self.init_x_data = np.array([[np.nan, np.nan]])
+        self.init_y_data = np.array([[np.nan]])
+        self.active_x_data = np.array([[np.nan, np.nan]])
+        self.active_y_data = np.array([[np.nan]])
 
     def real_samples(self, num_samples: int) -> np.ndarray:
         return self.real_design.get_samples(num_samples).astype("float32")
@@ -198,30 +208,31 @@ class TestFeature:
 
         return np.array(output_list).reshape(len(output_list), 1)
 
-    def run_initial(self) -> None:
-        print("not yet implemented")
-        self.init_x_data = self.gp_samples(500)
+    def get_initial(self, samples=500):
+        self.init_x_data = self.gp_samples(samples)
         self.init_y_data = self.func(self.init_x_data)
+
+    def fit_initial(self, kernel_class=Matern32):
         self.model_gpy = GPRegression(
             self.init_x_data,
             self.init_y_data.reshape(len(self.init_y_data), 1),
-            self.kernel_class(6, 1),
+            kernel_class(6, 1),
         )
         self.model_gpy.optimize()
         self.model_emukit = GPyModelWrapper(self.model_gpy)
 
-    def run_active(self) -> None:
-        print("not yet implemented")
+    def run_initial(self, samples=500, kernel_class=Matern32) -> None:
+        self.get_initial(samples=samples)
+        self.fit_initial(kernel_class=kernel_class)
 
-        # get ready for active learning.
-        self.active_x_data = np.array([[np.nan, np.nan]])
-        self.active_y_data = np.array([[np.nan]])
+    def run_active(
+        self, acquisition_class=ModelVariance, loop_class=BayesianOptimizationLoop
+    ) -> None:
+        self.acquisition_function = acquisition_class(model=self.model_emukit)
 
-        self.acquisition_function = self.acqusition_class(model=self.model_emukit)
-
-        self.loop = self.loop_class(
+        self.loop = loop_class(
             model=self.model_emukit,
-            space=self.space,
+            space=self.gp_space,
             acquisition=self.acquisition_function,
             batch_size=1,
         )
@@ -232,9 +243,11 @@ class TestFeature:
 
 if __name__ == "__main__":
     # python src/models/emu6d.py
-    tf = TestFeature()
+    tf = TestFeature(dryrun=True)
     print(tf.real_samples(100)[:10])
     print(tf.to_real(tf.gp_samples(100))[:10])
+    tf.run_initial()
+    tf.run_active()
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.gp_samples(100)), rtol=1e-3)
     # )
