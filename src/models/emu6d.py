@@ -96,12 +96,11 @@ def fake_func(param, output_direc: str) -> float:
     default_param = get_param({})
     assert np.all([key in default_param.keys() for key in param])
     print("called fake func")
-
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
+    if not os.path.exists(output_direc):
+        os.mkdir(output_direc)
 
-    if os.path.exists(output_direc):
-        shutil.rmtree(output_direc)
     return 0.0
 
 
@@ -151,11 +150,20 @@ class TestFeature:
         self.figure_path = os.path.join(FIGURE_PATH, path)
         self.data_path = os.path.join(DATA_PATH, path)
 
+        for path in [self.figure_path, self.data_path]:
+            if not os.path.exists(path):
+                os.mkdir(path)
+
         # Setup-empty entries.
         self.init_x_data = np.array([[np.nan, np.nan]])
         self.init_y_data = np.array([[np.nan]])
         self.active_x_data = np.array([[np.nan, np.nan]])
         self.active_y_data = np.array([[np.nan]])
+
+        # Data paths.
+        self.x_path = os.path.join(self.data_path, "X.npy")
+        self.y_path = os.path.join(self.data_path, "Y.npy")
+        self.model_path = os.path.join(self.data_path, "model_save.npy")
 
     def real_samples(self, num_samples: int) -> np.ndarray:
         return self.real_design.get_samples(num_samples).astype("float32")
@@ -200,6 +208,7 @@ class TestFeature:
             param = self.to_param(real_data[i])
             print("Calling", param)
             output_direc = os.path.join(self.data_path, str(self.call_number))
+            print(output_direc)
             if self.dryrun:
                 output_list.append(fake_func(param, output_direc))
             else:
@@ -225,7 +234,7 @@ class TestFeature:
         self.get_initial(samples=samples)
         self.fit_initial(kernel_class=kernel_class)
 
-    def run_active(
+    def setup_active(
         self, acquisition_class=ModelVariance, loop_class=BayesianOptimizationLoop
     ) -> None:
         self.acquisition_function = acquisition_class(model=self.model_emukit)
@@ -240,21 +249,27 @@ class TestFeature:
         self.active_x_data = self.loop.loop_state.X[len(self.init_x_data) :]
         self.active_y_data = self.loop.loop_state.Y[len(self.init_x_data) :]
 
+    def run_active(self, new_iterations) -> None:
+        self.loop.run_loop(self.func, new_iterations)
+        self.active_x_data = self.loop.loop_state.X[len(self.init_x_data) :]
+        self.active_y_data = self.loop.loop_state.Y[len(self.init_x_data) :]
+
     def save_gp(self) -> None:
-        np.save("X.npy", self.loop.loop_state.X)
-        np.save("Y.npy", self.loop.loop_state.Y)
-        np.save("model_save.npy", self.model_gpy.param_array)
+        np.save(self.x_path, self.loop.loop_state.X)
+        np.save(self.y_path, self.loop.loop_state.Y)
+        np.save(self.model_path, self.model_gpy.param_array)
 
     def load_gp(self) -> None:
-        X = np.load("X.npy")
-        Y = np.load("Y.npy")
+        X = np.load(self.x_path)
+        Y = np.load(self.y_path)
         m_load = GPy.models.GPRegression(X, Y, initialize=False, kernel=Matern32(2, 1))
         m_load.update_model(
             False
         )  # do not call the underlying expensive algebra on load
         m_load.initialize_parameter()  # Initialize the parameters (connect the parameters up)
-        m_load[:] = np.load("model_save.npy")  # Load the parameters
+        m_load[:] = np.load(self.model_path)  # Load the parameters
         m_load.update_model(True)  # Call the algebra only once
+        return m_load.predict
 
 
 if __name__ == "__main__":
@@ -263,7 +278,10 @@ if __name__ == "__main__":
     print(tf.real_samples(100)[:10])
     print(tf.to_real(tf.gp_samples(100))[:10])
     tf.run_initial()
-    tf.run_active()
+    tf.setup_active()
+    tf.run_active(200)
+    tf.save_gp()
+    print(tf.load_gp()(tf.gp_samples(100)[:10]))
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.gp_samples(100)), rtol=1e-3)
     # )
