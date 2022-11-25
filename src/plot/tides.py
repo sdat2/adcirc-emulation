@@ -1,6 +1,8 @@
 """Tidal Comparison Plots."""
 import xarray as xr
 import datetime
+import matplotlib.pyplot as plt
+from sithom.plot import plot_defaults
 from src.data_loading.tides import filtered_tidal_gauges
 from src.data_loading.adcirc import select_coastal_cells
 
@@ -15,8 +17,8 @@ if __name__ == "__main__":
     lons, lats, heights = select_coastal_cells(
         float(psc.lon.values), float(psc.lat.values)
     )
-    start = datetime.datetime(year=2005, month=8, day=20)
-    time_step = datetime.timedelta(hours=1)
+    start = datetime.datetime(year=2005, month=8, day=19, hour=7)
+    time_step = datetime.timedelta(hours=1.33)
 
     print(heights.shape)
     ds = xr.Dataset(
@@ -28,3 +30,8 @@ if __name__ == "__main__":
         ),
     )
     print(ds)
+    # plot_defaults()
+
+    psc.water_level.plot()
+    ds.height.plot.line(hue="point", alpha=0.5)
+    plt.show()
