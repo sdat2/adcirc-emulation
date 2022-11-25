@@ -1,5 +1,6 @@
 """Download tidal guages."""
 from typing import List  # import pandas as pd
+import numpy as np
 import xarray as xr
 from dateutil import parser
 from src.constants import NEW_ORLEANS, DEFAULT_GAUGES, KATRINA_TIDE_NC
@@ -102,6 +103,14 @@ def is_after(time_a: str, time_b: str) -> bool:
     # print("time_a", time_a)
     # print("time_b", time_b)
     return time_a > time_b
+
+
+def tidal_gauges_during_katrina() -> None:
+    tide_ds = xr.open_dataset(KATRINA_TIDE_NC)
+    ftide_ds = tide_ds.isel(
+        stationid=~np.isnan(tide_ds.isel(date_time=2000).water_level.values)
+    )
+    # ftide_ds.isel(stationid=1).water_level.plot()
 
 
 if __name__ == "__main__":
