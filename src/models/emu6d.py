@@ -282,18 +282,14 @@ class SixDOFSearch:
         m_load[:] = np.load(self.model_path)  # Load the parameters
         m_load.update_model(True)  # Call the algebra only once
 
-        def func_return():
-            def func_ret(x_data):
-                mean, var = m_load.predict(self.to_gp(x_data))
-                return -mean, var
+        def func_ret(x_data):
+            mean, var = m_load.predict(self.to_gp(x_data))
+            return -mean, var
 
-            return func_ret
-
-        return func_return()
+        return func_ret
 
 
-if __name__ == "__main__":
-    # python src/models/emu6d.py
+def holdout_set():
     tf = SixDOFSearch(dryrun=False, path="6D_Search_Holdout", seed=5)
     print(tf.real_samples(100)[:10])
     print(tf.to_real(tf.gp_samples(100))[:10])
@@ -304,6 +300,10 @@ if __name__ == "__main__":
     print(tf.gp_predict()(tf.gp_samples(100)[:10]))
     print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
 
+
+if __name__ == "__main__":
+    # python src/models/emu6d.py
+    print("ok")
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.gp_samples(100)), rtol=1e-3)
     # )

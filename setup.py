@@ -7,6 +7,7 @@ REQUIRED: List[str] = [
     "typeguard",
     "pylint",
     "sithom>=0.0.3",
+    "https://github.com/sdat2/emukit/archive/sdat2.zip",
     "cdsapi",
     "xarray",
     "netCDF4",
@@ -22,7 +23,7 @@ REQUIRED: List[str] = [
 
 setup(
     name="src",
-    version="0.0.1",
+    version="0.0.0",
     author="sdat2",
     author_email="sdat2@cam.ac.uk",
     description="Scripts to run emulation of ADCIRC/SWAN in the vacinity of New Orleans",
