@@ -433,8 +433,8 @@ def select_coastal_cells(lon: float, lat: float, number: int = 10):
     index_list = []
     for _ in range(number):
         index = ((lons - lon) ** 2 + (lats - lat) ** 2).argmin()
-        print("index", index)
-        print(lons[index], lats[index])
+        # print("index", index)
+        # print(lons[index], lats[index])
         index_list.append(index)
         lons[index] = -100
         lats[index] = -100
