@@ -12,7 +12,7 @@ import numpy as np
 import xarray as xr
 from src.constants import DATA_PATH, KAT_EX_PATH
 import netCDF4 as nc
-from adcircpy.outputs import Maxele
+from adcircpy.outputs import Maxele, Fort63
 
 
 @np.vectorize
@@ -425,8 +425,9 @@ def main():
             print(e)
 
 
-def select_coastal_cells(lon: float, lat: float, number=int):
+def select_coastal_cells(lon: float, lat: float, number: int = 10):
     me = Maxele(os.path.join(KAT_EX_PATH, "maxele.63.nc"))
+    f63 = Fort63(os.path.join(KAT_EX_PATH, "fort.63.nc"))
     lats = me.y.copy()
     lons = me.x.copy()
     index_list = []
@@ -445,6 +446,8 @@ def select_coastal_cells(lon: float, lat: float, number=int):
     # nindices = indices[[x in coastals for x in index_list]]
     lats = me.y[indices]
     lons = me.y[indices]
+    heights = f63._ptr["zeta"][:, indices]
+    return me.x[indices], me.y[indices], heights
 
 
 if __name__ == "__main__":

@@ -105,9 +105,9 @@ def is_after(time_a: str, time_b: str) -> bool:
     return time_a > time_b
 
 
-def tidal_gauges_during_katrina() -> None:
+def filtered_tidal_gauges() -> xr.Dataset:
     tide_ds = xr.open_dataset(KATRINA_TIDE_NC)
-    ftide_ds = tide_ds.isel(
+    return tide_ds.isel(
         stationid=~np.isnan(tide_ds.isel(date_time=2000).water_level.values)
     )
     # ftide_ds.isel(stationid=1).water_level.plot()
