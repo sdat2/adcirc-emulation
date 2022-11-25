@@ -1,13 +1,17 @@
 import os
+from typing import Callable, Tuple, Union
 import shutil
 import numpy as np
 import pandas as pd
 import xarray as xr
-from frozendict import frozendict
+from typeguard import typechecked
 import GPy
-from GPy import kern
+from GPy.kern.src.kern import Kern
+from GPy.kern.src.stationary import Stationary
 from GPy.kern import Linear, RBF, Matern32, Matern52
 from GPy.models import GPRegression
+from emukit.core.loop import OuterLoop
+from emukit.core.acquisition import Acquisition
 from emukit.bayesian_optimization.acquisitions import ExpectedImprovement
 from emukit.bayesian_optimization.loops import BayesianOptimizationLoop
 from emukit.experimental_design.experimental_design_loop import ExperimentalDesignLoop
@@ -33,7 +37,7 @@ from src.constants import DATA_PATH, FIGURE_PATH, NEW_ORLEANS, NO_BBOX
 from src.models.generation import vmax_from_pressure_holliday
 
 
-def get_param(updates):
+def get_param(updates: dict) -> dict:
     defaults = {
         # Trajectory
         "angle": 0.0,  # degrees from North
@@ -56,14 +60,14 @@ def get_param(updates):
     return output
 
 
-def holliday_vmax(updates):
+def holliday_vmax(updates: dict) -> dict:
     assert "pc" in updates.keys()
     updates["vmax"] = vmax_from_pressure_holliday(92800)
     return updates
 
 
 @np.vectorize
-def indices_in_bbox(lon, lat):
+def indices_in_bbox(lon: float, lat: float) -> bool:
     return (
         lon > NO_BBOX.lon[0]
         and lon < NO_BBOX.lon[1]
@@ -72,7 +76,7 @@ def indices_in_bbox(lon, lat):
     )
 
 
-def real_func(param, output_direc: str) -> float:
+def real_func(param: dict, output_direc: str) -> float:
     point = Point(NEW_ORLEANS.lon + param["point_east"], NEW_ORLEANS.lat)
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
@@ -92,7 +96,7 @@ def real_func(param, output_direc: str) -> float:
     return maxele.values[indices][index_set]
 
 
-def fake_func(param, output_direc: str) -> float:
+def fake_func(param: dict, output_direc: str) -> float:
     default_param = get_param({})
     assert np.all([key in default_param.keys() for key in param])
     print("called fake func")
@@ -119,9 +123,9 @@ class SixDOFSearch:
 
     def __init__(
         self,
-        seed=0,
-        dryrun=False,
-        path="6D_search",
+        seed: int = 0,
+        dryrun: bool = False,
+        path: str = "6D_search",
     ) -> None:
         np.random.seed(seed)
         self.dryrun = dryrun
@@ -217,11 +221,11 @@ class SixDOFSearch:
 
         return np.array(output_list).reshape(len(output_list), 1)
 
-    def get_initial(self, samples=500):
+    def get_initial(self, samples: int = 500) -> None:
         self.init_x_data = self.gp_samples(samples)
         self.init_y_data = self.func(self.init_x_data)
 
-    def fit_initial(self, kernel_class=Matern32):
+    def fit_initial(self, kernel_class: Union[Kern, Stationary] = Matern32):
         self.model_gpy = GPRegression(
             self.init_x_data,
             self.init_y_data.reshape(len(self.init_y_data), 1),
@@ -230,12 +234,16 @@ class SixDOFSearch:
         self.model_gpy.optimize()
         self.model_emukit = GPyModelWrapper(self.model_gpy)
 
-    def run_initial(self, samples=500, kernel_class=Matern32) -> None:
+    def run_initial(
+        self, samples: int = 500, kernel_class: Union[Kern, Stationary] = Matern32
+    ) -> None:
         self.get_initial(samples=samples)
         self.fit_initial(kernel_class=kernel_class)
 
     def setup_active(
-        self, acquisition_class=ModelVariance, loop_class=BayesianOptimizationLoop
+        self,
+        acquisition_class: Acquisition = ModelVariance,
+        loop_class: OuterLoop = BayesianOptimizationLoop,
     ) -> None:
         self.acquisition_function = acquisition_class(model=self.model_emukit)
 
@@ -249,7 +257,7 @@ class SixDOFSearch:
         self.active_x_data = self.loop.loop_state.X[len(self.init_x_data) :]
         self.active_y_data = self.loop.loop_state.Y[len(self.init_x_data) :]
 
-    def run_active(self, new_iterations) -> None:
+    def run_active(self, new_iterations: int) -> None:
         self.loop.run_loop(self.func, new_iterations)
         self.active_x_data = self.loop.loop_state.X[len(self.init_x_data) :]
         self.active_y_data = self.loop.loop_state.Y[len(self.init_x_data) :]
@@ -259,7 +267,7 @@ class SixDOFSearch:
         np.save(self.y_path, self.loop.loop_state.Y)
         np.save(self.model_path, self.model_gpy.param_array)
 
-    def gp_predict(self) -> None:
+    def gp_predict(self) -> Callable:
         X = np.load(self.x_path)
         Y = np.load(self.y_path)
         m_load = GPy.models.GPRegression(X, Y, initialize=False, kernel=Matern32(2, 1))
@@ -271,7 +279,7 @@ class SixDOFSearch:
         m_load.update_model(True)  # Call the algebra only once
         return m_load.predict
 
-    def gp_predict_real(self) -> None:
+    def gp_predict_real(self) -> Callable:
         X = np.load(self.x_path)
         Y = np.load(self.y_path)
         m_load = GPy.models.GPRegression(X, Y, initialize=False, kernel=Matern32(2, 1))
@@ -282,15 +290,27 @@ class SixDOFSearch:
         m_load[:] = np.load(self.model_path)  # Load the parameters
         m_load.update_model(True)  # Call the algebra only once
 
-        def func_ret(x_data):
+        def func_ret(x_data) -> Tuple[np.ndarray, np.ndarray]:
             mean, var = m_load.predict(self.to_gp(x_data))
             return -mean, var
 
         return func_ret
 
 
-def holdout_set():
+def holdout_set() -> None:
     tf = SixDOFSearch(dryrun=False, path="6D_Search_Holdout", seed=5)
+    print(tf.real_samples(100)[:10])
+    print(tf.to_real(tf.gp_samples(100))[:10])
+    tf.run_initial(samples=200)
+    tf.setup_active()
+    tf.run_active(100)
+    tf.save_gp()
+    print(tf.gp_predict()(tf.gp_samples(100)[:10]))
+    print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
+
+
+def test() -> None:
+    tf = SixDOFSearch(dryrun=True, path="Test", seed=0)
     print(tf.real_samples(100)[:10])
     print(tf.to_real(tf.gp_samples(100))[:10])
     tf.run_initial(samples=200)
@@ -303,7 +323,7 @@ def holdout_set():
 
 if __name__ == "__main__":
     # python src/models/emu6d.py
-    print("ok")
+    test()
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.gp_samples(100)), rtol=1e-3)
     # )

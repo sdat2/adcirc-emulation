@@ -77,12 +77,7 @@ def plot_katrina_windfield_example(model: str = "H08") -> None:
 
 
 class TropicalCyclone:
-    def __init__(
-        self,
-        point: Point,
-        angle: float,
-        trans_speed: float,
-    ) -> None:
+    def __init__(self, point: Point, angle: float, trans_speed: float,) -> None:
         """
         Tropical cylone to hit coast at point.
 
@@ -155,11 +150,7 @@ class TropicalCyclone:
         ]
         time_list = [
             self.impact_time + x * self.time_delta
-            for x in range(
-                -time_steps_before,
-                time_steps_after + 1,
-                1,
-            )
+            for x in range(-time_steps_before, time_steps_after + 1, 1,)
         ]
         print(time_steps_before + time_steps_after + 1)
         return np.array(point_list), np.array(time_list)
@@ -180,10 +171,7 @@ class TropicalCyclone:
         print(traj.shape)
         print(dates.shape)
         return xr.Dataset(
-            data_vars=dict(
-                lon=(["time"], traj[:, 0]),
-                lat=(["time"], traj[:, 1]),
-            ),
+            data_vars=dict(lon=(["time"], traj[:, 0]), lat=(["time"], traj[:, 1]),),
             coords=dict(
                 time=dates,
                 # reference_time=self.impact_time,
@@ -338,7 +326,7 @@ class Holland80:
         self.pn = millibar_to_pascal(1010)  # Pa
         self.rmax = rmax  # meters
         self.vmax = vmax  # meters per second
-        self.b_coeff = self.vmax**2 / (self.pn - self.pc) * np.e  # dimensionless
+        self.b_coeff = self.vmax ** 2 / (self.pn - self.pc) * np.e  # dimensionless
 
     def pressure(self, radii: np.ndarray) -> np.ndarray:
         return self.pn - (self.pn - self.pc) * np.exp(
@@ -443,8 +431,8 @@ def pmin_from_vmax(
 
 def _quad(a: float, b: float, c: float) -> Tuple[float]:
     return (
-        (-b + np.sqrt(b**2 - 4 * a * c)) / 2 / a,
-        (-b - np.sqrt(b**2 - 4 * a * c)) / 2 / a,
+        (-b + np.sqrt(b ** 2 - 4 * a * c)) / 2 / a,
+        (-b - np.sqrt(b ** 2 - 4 * a * c)) / 2 / a,
     )
 
 
@@ -639,9 +627,7 @@ class ImpactSymmetricTC:
         u10, v10 = -np.sin(angles) * windspeed, -np.cos(angles) * windspeed
         pressure = pascal_to_millibar(self.symetric_model.pressure(ds.distance.values))
         pds = xr.Dataset(
-            data_vars=dict(
-                pressure=(["time", "lat", "lon"], pressure),
-            ),
+            data_vars=dict(pressure=(["time", "lat", "lon"], pressure),),
             coords=dict(
                 lat=(["lat"], da.lat.values),
                 lon=(["lon"], da.lon.values),
@@ -651,8 +637,7 @@ class ImpactSymmetricTC:
         pds.pressure.attrs = {"units": "mb", "long_name": "Surface pressure"}
         vds = xr.Dataset(
             data_vars=dict(
-                U10=(["time", "lat", "lon"], u10),
-                V10=(["time", "lat", "lon"], v10),
+                U10=(["time", "lat", "lon"], u10), V10=(["time", "lat", "lon"], v10),
             ),
             coords=dict(
                 lat=(["lat"], da.lat.values),

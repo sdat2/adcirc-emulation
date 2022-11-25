@@ -12,6 +12,7 @@ import numpy as np
 import xarray as xr
 from src.constants import DATA_PATH, KAT_EX_PATH
 import netCDF4 as nc
+from adcircpy.outputs import Maxele
 
 
 @np.vectorize
@@ -422,6 +423,28 @@ def main():
 
         except Exception as e:
             print(e)
+
+
+def select_coastal_cells(lon: float, lat: float, number=int):
+    me = Maxele(os.path.join(KAT_EX_PATH, "maxele.63.nc"))
+    lats = me.y.copy()
+    lons = me.x.copy()
+    index_list = []
+    for _ in range(number):
+        index = ((lons - lon) ** 2 + (lats - lat) ** 2).argmin()
+        print("index", index)
+        print(lons[index], lats[index])
+        index_list.append(index)
+        lons[index] = -100
+        lats[index] = -100
+
+    (uniq, freq) = np.unique(me.triangles, return_counts=True)
+    coastals = uniq[freq <= 4]
+    indices = np.array(index_list)
+    indices[[x in coastals for x in index_list]]
+    # nindices = indices[[x in coastals for x in index_list]]
+    lats = me.y[indices]
+    lons = me.y[indices]
 
 
 if __name__ == "__main__":

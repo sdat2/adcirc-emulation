@@ -74,7 +74,7 @@ def h08(
     Returns:
         float: velocity [m s**-1]
     """
-    b = vmax**2 * np.e * density / (pn - pc)
+    b = vmax ** 2 * np.e * density / (pn - pc)
     x = sx(radius, rmax, xn, r64)
     return vmax * ((rmax / radius) ** b * np.exp(1 - (rmax / radius) ** b)) ** x
 
@@ -135,15 +135,7 @@ def fit_h08(
     h08v = h08_fitfunc(rmax, vmax, pc, pn, r64, density=density)
     xn, _ = curve_fit(h08v, distances, speeds, p0=[1])
     xn = float(xn)
-    vf, pf = h08_vp(
-        rmax,
-        vmax,
-        pc,
-        pn,
-        r64,
-        density,
-        xn,
-    )
+    vf, pf = h08_vp(rmax, vmax, pc, pn, r64, density, xn,)
     return vf, pf, float(xn)
 
 
@@ -182,7 +174,7 @@ def h08_vp(
 
     def pres_f() -> Callable:
         def pres(radius):
-            b = vmax**2 * np.e * density / (pn - pc)
+            b = vmax ** 2 * np.e * density / (pn - pc)
             return pc + (pn - pc) * np.exp(-((rmax / radius) ** b))
 
         return pres

@@ -112,10 +112,7 @@ def plot_space() -> None:
     np.random.seed(0)
     plot_defaults()
     param_dict = frozendict(
-        {
-            "Direction [degrees]": (-70, 70),
-            "Translation Speed [m s$^{-1}$]": (3, 10),
-        }
+        {"Direction [degrees]": (-70, 70), "Translation Speed [m s$^{-1}$]": (3, 10),}
     )
 
     param_list = [
@@ -321,10 +318,7 @@ def smash_func(angle: float, position: float, output_direc: str) -> float:
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
     ImpactSymmetricTC(
-        point=point,
-        output_direc=output_direc,
-        symetric_model=Holland08(),
-        angle=angle,
+        point=point, output_direc=output_direc, symetric_model=Holland08(), angle=angle,
     ).run_impact()
     path = os.path.join(output_direc, "maxele.63.nc")
     maxele = Maxele(path, crs="EPSG:4326")
@@ -438,9 +432,7 @@ class EmulationSmash:
                 active_x=(["anum", "var"], active_x),
                 active_y=("anum", active_y[:, 0]),
             ),
-            coords=dict(
-                var=(["var"], ["x1", "x2"]),
-            ),
+            coords=dict(var=(["var"], ["x1", "x2"]),),
             attrs=dict(description="Training Data"),
         )
         file_name = os.path.join(self.data_path, "data.nc")
@@ -605,10 +597,7 @@ def mves():
 
 def inp_diff():
     EmulationSmash(
-        path="emulation_angle_pos_big",
-        seed=20,
-        init_num=100,
-        active_num=30,
+        path="emulation_angle_pos_big", seed=20, init_num=100, active_num=30,
     )
 
 
