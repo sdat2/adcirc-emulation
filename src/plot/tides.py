@@ -2,6 +2,7 @@
 import os
 import xarray as xr
 import datetime
+import netCDF4 as nc
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -80,6 +81,24 @@ def tide_plot(stationid=0):
 
 if __name__ == "__main__":
     # python src/plot/tides.py
-    tds = filtered_tidal_gauges()
-    stations = len(tds["stationid"].values)
-    _ = [tide_plot(x) for x in range(stations)]
+    # tds = filtered_tidal_gauges()
+    # stations = len(tds["stationid"].values)
+    # _ = [tide_plot(x) for x in range(stations)]
+    f63 = nc.Dataset(os.path.join(KAT_EX_PATH, "fort.63.nc"))
+    x = f63["x"][:].data.ravel()
+    y = f63["y"][:].data.ravel()
+    tri = (f63["element"][:] - 1).data
+    depth = f63["depth"][:].data
+    print("tri", tri.shape, type(tri))
+    print("x", x.shape, type(x))
+    print("y", y.shape, type(y))
+
+    plt.tricontourf(x, y, tri, depth)
+    plt.colorbar(label="Depth [m]")
+    # import matplotlib
+
+    # matplotlib.tri.Triangulation(
+    #    f63["x"][:], f63["y"][:], triangles=(f63["element"][:] - 1)
+    # )
+
+    plt.show()
