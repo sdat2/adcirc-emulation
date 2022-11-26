@@ -3,7 +3,8 @@ import os
 import xarray as xr
 import datetime
 import matplotlib.pyplot as plt
-from sithom.plot import plot_defaults
+import seaborn as sns
+from sithom.plot import plot_defaults, label_subplots, get_dim
 from src.data_loading.tides import filtered_tidal_gauges
 from src.data_loading.adcirc import select_coastal_cells
 from src.constants import KAT_EX_PATH, FIGURE_PATH
@@ -28,22 +29,35 @@ def tide_plot(stationid=0):
 
     print(heights.shape)
     ds = xr.Dataset(
-        data_vars=dict(height=(["time", "point"], heights)),
+        data_vars=dict(Height=(["time", "point"], heights)),
         coords=dict(
             lon=(["point"], lons),
             lat=(["point"], lats),
             time=[start + i * time_step for i in range(heights.shape[0])],
         ),
     )
+    ds["Height"].attrs["units"] = "m"
     print(ds)
     plot_defaults()
+    _, axs = plt.subplots(2, 1, figsize=get_dim(ratio=1))
+    psc.water_level.plot(ax=axs[0])
+    ds.Height.plot.line(ax=axs[0], hue="point", alpha=0.5)
+    sns.move_legend(axs[0], loc="upper left", bbox_to_anchor=(1, 1.05))
 
-    psc.water_level.plot()
-    ds.height.plot.line(hue="point", alpha=0.5)
+    axs[1].scatter(psc.lon.values, psc.lat.values, s=4)
+    axs[1].scatter(ds.lon.values, ds.lat.values, s=2)
+    axs[1].set_xlabel("Longitude [$^{\circ}$E]")
+    axs[1].set_ylabel("Latitude [$^{\circ}$N]")
+
+    label_subplots(axs)
+
+    plt.tight_layout()
     plt.savefig(os.path.join(FIGURE_PATH, "tide_gauge" + str(stationid) + ".png"))
     plt.clf()
 
 
 if __name__ == "__main__":
     # python src/plot/tides.py
-    [tide_plot(x) for x in range(4)]
+    tds = filtered_tidal_gauges()
+    stations = len(tds["stationid"].values)
+    [tide_plot(x) for x in range(stations)]
