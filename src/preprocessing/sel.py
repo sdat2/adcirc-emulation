@@ -67,7 +67,7 @@ def trim_tri(
     """
 
     @np.vectorize
-    def in_new_orleans(xi, yi):
+    def in_bbox(xi: float, yi: float) -> bool:
         return (
             xi > bbox.lon[0]
             and xi < bbox.lon[1]
@@ -75,7 +75,7 @@ def trim_tri(
             and yi < bbox.lat[1]
         )
 
-    tindices = in_new_orleans(x, y)
+    tindices = in_bbox(x, y)
     indices = np.where(tindices)[0]
     new_indices = np.where(indices)[0]
     neg_indices = np.where(~tindices)[0]
