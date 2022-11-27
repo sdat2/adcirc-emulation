@@ -1,5 +1,6 @@
 """Tidal Comparison Plots."""
 import os
+import numpy as np
 import xarray as xr
 import datetime
 import netCDF4 as nc
@@ -14,7 +15,7 @@ except ImportError:
 from sithom.plot import plot_defaults, label_subplots, get_dim
 from src.data_loading.tides import filtered_tidal_gauges
 from src.data_loading.adcirc import select_coastal_cells
-from src.constants import KAT_EX_PATH, FIGURE_PATH
+from src.constants import KAT_EX_PATH, FIGURE_PATH, NO_BBOX
 from src.plot.map import add_features
 
 
@@ -101,7 +102,48 @@ def tri_plot():
     print("tri", tri.shape, type(tri))
     print("x", x.shape, type(x))
     print("y", y.shape, type(y))
-    plt.triplot(x, y, tri)
+    plt.triplot(x, y, tri, linewidth=0.5)
+
+
+def tri_plot_filter():
+    f63 = nc.Dataset(os.path.join(KAT_EX_PATH, "fort.63.nc"))
+    x = f63["x"][:].data.ravel()
+    y = f63["y"][:].data.ravel()
+    tri = (f63["element"][:] - 1).data
+
+    @np.vectorize
+    def in_new_orleans(xi, yi):
+        return (
+            xi > NO_BBOX.lon[0]
+            and xi < NO_BBOX.lon[1]
+            and yi > NO_BBOX.lat[0]
+            and yi < NO_BBOX.lat[1]
+        )
+
+    tindices = in_new_orleans(x, y)
+    indices = np.where(tindices)[0]
+    new_indices = np.where(indices)[0]
+    neg_indices = np.where(~tindices)[0]
+    tri_list = tri.tolist()
+    new_tri_list = []
+    for el in tri_list:
+        if np.any([x in neg_indices for x in el]):
+            continue
+        else:
+            new_tri_list.append(el)
+
+    tri_new = np.array(new_tri_list)
+    print(tri.shape)
+    print(tri_new.shape)
+    print(indices[:10])
+    print(new_indices[:10])
+    tri_new = np.select(
+        [tri_new == x for x in indices.tolist()], new_indices.tolist(), tri_new
+    )
+    print(tri_new.max())
+    print(tri_new.min())
+
+    plt.triplot(x[tindices], y[tindices], tri_new, linewidth=0.5)
 
 
 if __name__ == "__main__":
@@ -110,7 +152,7 @@ if __name__ == "__main__":
     # stations = len(tds["stationid"].values)
     # _ = [tide_plot(x) for x in range(stations)]
 
-    tri_plot()
+    tri_plot_filter()
     # import matplotlib
 
     # matplotlib.tri.Triangulation(
