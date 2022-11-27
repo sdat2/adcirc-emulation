@@ -79,11 +79,7 @@ def tide_plot(stationid=0):
     plt.clf()
 
 
-if __name__ == "__main__":
-    # python src/plot/tides.py
-    # tds = filtered_tidal_gauges()
-    # stations = len(tds["stationid"].values)
-    # _ = [tide_plot(x) for x in range(stations)]
+def depth_plot():
     f63 = nc.Dataset(os.path.join(KAT_EX_PATH, "fort.63.nc"))
     x = f63["x"][:].data.ravel()
     y = f63["y"][:].data.ravel()
@@ -95,6 +91,26 @@ if __name__ == "__main__":
 
     plt.tricontourf(x, y, tri, depth)
     plt.colorbar(label="Depth [m]")
+
+
+def tri_plot():
+    f63 = nc.Dataset(os.path.join(KAT_EX_PATH, "fort.63.nc"))
+    x = f63["x"][:].data.ravel()
+    y = f63["y"][:].data.ravel()
+    tri = (f63["element"][:] - 1).data
+    print("tri", tri.shape, type(tri))
+    print("x", x.shape, type(x))
+    print("y", y.shape, type(y))
+    plt.triplot(x, y, tri)
+
+
+if __name__ == "__main__":
+    # python src/plot/tides.py
+    # tds = filtered_tidal_gauges()
+    # stations = len(tds["stationid"].values)
+    # _ = [tide_plot(x) for x in range(stations)]
+
+    tri_plot()
     # import matplotlib
 
     # matplotlib.tri.Triangulation(
