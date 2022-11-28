@@ -21,7 +21,7 @@ def add_features(ax: matplotlib.axes.Axes) -> matplotlib.axes.Axes:
     Returns:
         cartopy.mpl.geoaxes.GeoAxesSubplot: Cartopy axes.
     """
-    ax.add_feature(cartopy.feature.COASTLINE)
+    ax.add_feature(cartopy.feature.COASTLINE, alpha=0.5)
     ax.add_feature(cartopy.feature.LAKES, alpha=0.5)
     ax.add_feature(cartopy.feature.BORDERS, linestyle=":")
     ax.add_feature(cartopy.feature.RIVERS)

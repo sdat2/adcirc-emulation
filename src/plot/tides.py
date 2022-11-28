@@ -27,7 +27,7 @@ def tide_plot(stationid=0):
     print((float(psc.lon.values), float(psc.lat.values)))
 
     lons, lats, heights = select_coastal_cells(
-        float(psc.lon.values), float(psc.lat.values)
+        float(psc.lon.values), float(psc.lat.values), number=5
     )
     start = datetime.datetime(year=2005, month=8, day=19, hour=5)
     time_step = datetime.timedelta(hours=1, minutes=20)
@@ -56,16 +56,19 @@ def tide_plot(stationid=0):
     ds.Height.plot.line(ax=axs[0], hue="point", alpha=0.5)
     axs[0].set_title(str(psc.name.values))
     sns.move_legend(axs[0], loc="upper left", bbox_to_anchor=(1, 1.05))
+    add_features(axs[1])
+    tri_plot_filter(axs[1])
 
-    axs[1].scatter(psc.lon.values, psc.lat.values, s=4)
+    axs[1].scatter(psc.lon.values, psc.lat.values, s=5, marker="+", alpha=0.8)
+
     for point in ds.point.values:
         axs[1].scatter(
             ds.sel(point=point).lon.values,
             ds.sel(point=point).lat.values,
-            s=2,
+            s=3,
             label=str(point),
+            alpha=0.8,
         )
-    add_features(axs[1])
 
     axs[1].set_xlabel("Longitude [$^{\circ}$E]")
     axs[1].set_ylabel("Latitude [$^{\circ}$N]")
@@ -105,7 +108,7 @@ def tri_plot():
     plt.triplot(x, y, tri, linewidth=0.5)
 
 
-def tri_plot_filter():
+def tri_plot_filter(ax):
     f63 = nc.Dataset(os.path.join(KAT_EX_PATH, "fort.63.nc"))
     x = f63["x"][:].data.ravel()
     y = f63["y"][:].data.ravel()
@@ -143,20 +146,20 @@ def tri_plot_filter():
     print(tri_new.max())
     print(tri_new.min())
 
-    plt.triplot(x[tindices], y[tindices], tri_new, linewidth=0.5)
+    ax.triplot(x[tindices], y[tindices], tri_new, linewidth=0.5, color="grey")
 
 
 if __name__ == "__main__":
     # python src/plot/tides.py
-    # tds = filtered_tidal_gauges()
-    # stations = len(tds["stationid"].values)
-    # _ = [tide_plot(x) for x in range(stations)]
+    tds = filtered_tidal_gauges()
+    stations = len(tds["stationid"].values)
+    _ = [tide_plot(x) for x in range(stations)]
 
-    tri_plot_filter()
+    # tri_plot_filter()
     # import matplotlib
 
     # matplotlib.tri.Triangulation(
     #    f63["x"][:], f63["y"][:], triangles=(f63["element"][:] - 1)
     # )
 
-    plt.show()
+#  plt.show()
