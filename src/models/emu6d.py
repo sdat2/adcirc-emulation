@@ -132,9 +132,11 @@ class SixDOFSearch:
         angles = ContinuousParameter("angle", -90, 90)
         speeds = ContinuousParameter("speed", 2, 14)
         point_east = ContinuousParameter("point_east", -0.6, 1.2)
+        # rmax = ContinuousParameter("rmax", 2000, 60000)
+        # pc = ContinuousParameter("pc", 90000, 98000)
         rmax = ContinuousParameter("rmax", 2, 14)
         pc = ContinuousParameter("pc", 900, 980)
-        # vmax = ContinuousParameter("vmax", 20, )
+        # vmax = ContinuousParameter("vmax", 20)
         xn = ContinuousParameter("xn", 0.8, 1.4)
         self.space = ParameterSpace([angles, speeds, point_east, rmax, pc, xn])
         self.names = self.space.parameter_names
@@ -298,7 +300,11 @@ class SixDOFSearch:
         )
         # ds["maxele"] = y_real[:, 0]
         ds = ds.assign(maxele=("point", y_real[:, 0]))
+
+        ds.to_netcdf(os.path.join("data.nc"))
         print(ds)
+        # print(ds.max("maxele"))
+        print()
 
     def gp_predict_real(self) -> Callable:
         X = np.load(self.x_path)
