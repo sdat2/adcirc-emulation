@@ -279,6 +279,27 @@ class SixDOFSearch:
         m_load.update_model(True)  # Call the algebra only once
         return m_load.predict
 
+    def load_data(self) -> None:
+        X = np.load(self.x_path)
+        Y = np.load(self.y_path)
+        model_param = np.load(self.model_path)
+        # print(X, Y, model_param)
+        x_real = self.to_real(X)
+        y_real = -Y
+        print(self.names)  # , x_real, y_real)
+        points = list(range(X.shape[0]))
+        num_vars = list(range(len(self.names)))
+        ds = xr.Dataset(
+            data_vars={self.names[i]: (["point"], x_real[:, i]) for i in num_vars},
+            coords=dict(
+                point=points,
+            ),
+            attrs=dict(description="Hold Out Set. " + str(model_param)),
+        )
+        # ds["maxele"] = y_real[:, 0]
+        ds = ds.assign(maxele=("point", y_real[:, 0]))
+        print(ds)
+
     def gp_predict_real(self) -> Callable:
         X = np.load(self.x_path)
         Y = np.load(self.y_path)
@@ -309,6 +330,11 @@ def holdout_set() -> None:
     print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
 
 
+def load_holdout_set() -> None:
+    tf = SixDOFSearch(dryrun=False, path="6D_Search_Holdout", seed=5)
+    tf.load_data()
+
+
 def test() -> None:
     tf = SixDOFSearch(dryrun=True, path="Test", seed=0)
     print(tf.real_samples(100)[:10])
@@ -323,7 +349,7 @@ def test() -> None:
 
 if __name__ == "__main__":
     # python src/models/emu6d.py
-    test()
+    load_holdout_set()
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.gp_samples(100)), rtol=1e-3)
     # )
