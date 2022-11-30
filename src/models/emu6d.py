@@ -37,6 +37,7 @@ from src.constants import DATA_PATH, FIGURE_PATH, NEW_ORLEANS, NO_BBOX
 from src.models.generation import vmax_from_pressure_holliday
 
 
+@typechecked
 def get_param(updates: dict) -> dict:
     defaults = {
         # Trajectory

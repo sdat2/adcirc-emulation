@@ -1,0 +1,21 @@
+angle: 
+  nominal: 0.0  # degrees from North
+  units: degrees
+speed: 
+  nominal: 7.71
+  units: m s**-1
+point_east: 
+  nominal: 0.6  # degrees East of New Orleans
+  units: "degrees_East"
+rmax: 
+  nominal: 40744.0
+  units: meters
+pc:
+  nominal: 92800.0
+  units: Pa
+vmax: 
+  nominal: 54.01667
+  units: m s**-1
+xn: 
+  nominal: 1.1249
+  units: dimensionless
