@@ -12,6 +12,7 @@ RADIUS_EARTH = 6371.009 * UREG.kilometer
 # Note: constants should be UPPER_CASE
 constants_path: str = os.path.realpath(__file__)
 SRC_PATH: str = os.path.dirname(constants_path)
+CONFIG_PATH: str = os.path.join(SRC_PATH, "config")
 PROJECT_PATH: str = os.path.dirname(SRC_PATH)
 DATA_PATH: str = os.path.join(PROJECT_PATH, "data")
 REPORT_PATH: str = os.path.join(PROJECT_PATH, "report")
