@@ -283,6 +283,16 @@ class SixDOFSearch:
         # print(X, Y, model_param)
         self.save_gp(X, Y)
 
+    def save_initial_data(self) -> None:
+        X = self.loop.loop_state.X
+        Y = self.loop.loop_state.Y
+        self.save_gp(X, Y)
+
+    def save_loop_data(self) -> None:
+        X = self.init_x_data
+        Y = self.init_y_data
+        self.save_gp(X, Y)
+
     def save_gp(self, X, Y) -> None:
         x_real = self.to_real(X)
         y_real = -Y
@@ -302,6 +312,9 @@ class SixDOFSearch:
         # ds["maxele"] = y_real[:, 0]
         ds = ds.assign(maxele=("point", y_real[:, 0]))
         ds.to_netcdf(os.path.join(self.data_path, "data.nc"))
+
+    def load_real_data(self) -> xr.Dataset:
+        return xr.open_dataset(os.path.join(self.data_path, "data.nc"))
 
     def gp_predict(self) -> Callable:
         X = np.load(self.x_path)
@@ -350,6 +363,17 @@ def load_holdout_set() -> None:
     tf.load_data()
 
 
+def holdout_new() -> None:
+    tf = SixDOFSearch(dryrun=False, path="6D_Holdout", seed=5)
+    # print(tf.real_samples(100)[:10])
+    # print(tf.to_real(tf.gp_samples(100))[:10])
+    tf.run_initial(samples=100)
+    tf.save_initial_data()
+    tf.load_real_data()
+    # print(tf.gp_predict()(tf.gp_samples(100)[:10]))
+    # print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
+
+
 def test() -> None:
     tf = SixDOFSearch(dryrun=True, path="Test", seed=0)
     print(tf.real_samples(100)[:10])
@@ -364,7 +388,7 @@ def test() -> None:
 
 if __name__ == "__main__":
     # python src/models/emu6d.py
-    test()
+    holdout_new()
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.gp_samples(100)), rtol=1e-3)
     # )
