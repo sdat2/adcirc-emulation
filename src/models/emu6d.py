@@ -276,6 +276,33 @@ class SixDOFSearch:
         np.save(self.y_path, self.loop.loop_state.Y)
         np.save(self.model_path, self.model_gpy.param_array)
 
+    def load_data(self) -> None:
+        X = np.load(self.x_path)
+        Y = np.load(self.y_path)
+        # model_param = np.load(self.model_path)
+        # print(X, Y, model_param)
+        self.save_gp(X, Y)
+
+    def save_gp(self, X, Y) -> None:
+        x_real = self.to_real(X)
+        y_real = -Y
+        self.save_real(x_real, y_real)
+
+    def save_real(self, x_real, y_real) -> None:
+        print(self.names)  # , x_real, y_real)
+        points = list(range(x_real.shape[0]))
+        num_vars = list(range(len(self.names)))
+        ds = xr.Dataset(
+            data_vars={self.names[i]: (["point"], x_real[:, i]) for i in num_vars},
+            coords=dict(
+                point=points,
+            ),
+            attrs=dict(description="Data."),
+        )
+        # ds["maxele"] = y_real[:, 0]
+        ds = ds.assign(maxele=("point", y_real[:, 0]))
+        ds.to_netcdf(os.path.join(self.data_path, "data.nc"))
+
     def gp_predict(self) -> Callable:
         X = np.load(self.x_path)
         Y = np.load(self.y_path)
@@ -287,31 +314,6 @@ class SixDOFSearch:
         m_load[:] = np.load(self.model_path)  # Load the parameters
         m_load.update_model(True)  # Call the algebra only once
         return m_load.predict
-
-    def load_data(self) -> None:
-        X = np.load(self.x_path)
-        Y = np.load(self.y_path)
-        model_param = np.load(self.model_path)
-        # print(X, Y, model_param)
-        x_real = self.to_real(X)
-        y_real = -Y
-        print(self.names)  # , x_real, y_real)
-        points = list(range(X.shape[0]))
-        num_vars = list(range(len(self.names)))
-        ds = xr.Dataset(
-            data_vars={self.names[i]: (["point"], x_real[:, i]) for i in num_vars},
-            coords=dict(
-                point=points,
-            ),
-            attrs=dict(description="Hold Out Set. " + str(model_param)),
-        )
-        # ds["maxele"] = y_real[:, 0]
-        ds = ds.assign(maxele=("point", y_real[:, 0]))
-
-        ds.to_netcdf(os.path.join("data.nc"))
-        print(ds)
-        # print(ds.max("maxele"))
-        print()
 
     def gp_predict_real(self) -> Callable:
         X = np.load(self.x_path)
