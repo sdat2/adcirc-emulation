@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from typeguard import typechecked
+from omegaconf import OmegaConf
 import GPy
 from GPy.kern.src.kern import Kern
 from GPy.kern.src.stationary import Stationary
@@ -33,7 +34,7 @@ from sithom.time import timeit
 from sithom.place import Point
 from sithom.misc import in_notebook
 from src.models.generation import ImpactSymmetricTC, Holland08
-from src.constants import DATA_PATH, FIGURE_PATH, NEW_ORLEANS, NO_BBOX
+from src.constants import DATA_PATH, FIGURE_PATH, NEW_ORLEANS, NO_BBOX, CONFIG_PATH
 from src.models.generation import vmax_from_pressure_holliday
 
 
@@ -106,7 +107,7 @@ def fake_func(param: dict, output_direc: str) -> float:
     if not os.path.exists(output_direc):
         os.mkdir(output_direc)
 
-    return np.mean([abs(param[key]) for key in param]) / 20
+    return np.mean([abs(param[key]) for key in param]) / 20 / 100
 
 
 class SixDOFSearch:
@@ -129,17 +130,22 @@ class SixDOFSearch:
         path: str = "6D_search",
     ) -> None:
         np.random.seed(seed)
+        conf = OmegaConf.load(os.path.join(CONFIG_PATH, "sixd.yaml"))
         self.dryrun = dryrun
-        angles = ContinuousParameter("angle", -90, 90)
-        speeds = ContinuousParameter("speed", 2, 14)
-        point_east = ContinuousParameter("point_east", -0.6, 1.2)
+        # angles = ContinuousParameter("angle", -90, 90)
+        # speeds = ContinuousParameter("speed", 2, 14)
+        # point_east = ContinuousParameter("point_east", -0.6, 1.2)
         # rmax = ContinuousParameter("rmax", 2000, 60000)
         # pc = ContinuousParameter("pc", 90000, 98000)
-        rmax = ContinuousParameter("rmax", 2, 14)
-        pc = ContinuousParameter("pc", 900, 980)
+        # rmax = ContinuousParameter("rmax", 2, 14)
+        # pc = ContinuousParameter("pc", 900, 980)
         # vmax = ContinuousParameter("vmax", 20)
-        xn = ContinuousParameter("xn", 0.8, 1.4)
-        self.space = ParameterSpace([angles, speeds, point_east, rmax, pc, xn])
+        # xn = ContinuousParameter("xn", 0.8, 1.4)
+        self.space = ParameterSpace(
+            [ContinuousParameter(i, conf[i].min, conf[i].max) for i in conf]
+        )
+        # ['angle', 'speed', 'points_east', 'rmax', 'pc', 'xn']
+        # self.space = ParameterSpace([angles, speeds, point_east, rmax, pc, xn])
         self.names = self.space.parameter_names
         self.gp_space = ParameterSpace(
             [ContinuousParameter(name, 0, 1) for name in self.names]
@@ -356,7 +362,7 @@ def test() -> None:
 
 if __name__ == "__main__":
     # python src/models/emu6d.py
-    load_holdout_set()
+    test()
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.gp_samples(100)), rtol=1e-3)
     # )
