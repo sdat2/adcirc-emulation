@@ -469,12 +469,13 @@ def select_coastal_cells(
         heights = f63._ptr["zeta"][:, indices]
         start = datetime.datetime(year=2005, month=8, day=19, hour=5)
         time_step = datetime.timedelta(hours=1, minutes=20)
+        times = [start + i * time_step for i in range(heights.shape[0])]
         ds = xr.Dataset(  #
             data_vars=dict(Height=(["time", "point"], heights)),
             coords=dict(
                 lon=(["point"], lons),
                 lat=(["point"], lats),
-                time=[start + i * time_step for i in range(heights.shape[0])],
+                time=times,
             ),
         )
         ds["Height"].attrs["units"] = "m"
