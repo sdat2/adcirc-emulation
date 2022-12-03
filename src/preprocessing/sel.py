@@ -93,5 +93,9 @@ def trim_tri(
     )
     if z is None:
         return x[indices], y[indices], tri_new
-    else:
+    elif len(z.shape) == 1:
         return x[indices], y[indices], tri_new, z[indices]
+    elif len(z.shape) == 2:
+        return x[indices], y[indices], tri_new, z[:, indices]
+    else:
+        return None

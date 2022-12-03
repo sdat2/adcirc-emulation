@@ -19,34 +19,14 @@ from src.constants import KAT_EX_PATH, FIGURE_PATH, NO_BBOX
 from src.plot.map import add_features
 
 
-def tide_plot(stationid=0):
+def tide_plot(stationid: int = 0) -> None:
     # python src/plot/tides.py
     tds = filtered_tidal_gauges()
     print(tds)
     psc = tds.isel(stationid=stationid)
     print((float(psc.lon.values), float(psc.lat.values)))
 
-    lons, lats, heights = select_coastal_cells(
-        float(psc.lon.values), float(psc.lat.values), number=5
-    )
-    start = datetime.datetime(year=2005, month=8, day=19, hour=5)
-    time_step = datetime.timedelta(hours=1, minutes=20)
-    # start = datetime.datetime(year=2005, month=8, day=21, hour=18)
-    # time_step = datetime.timedelta(hours=1)
-    # time_step = datetime.timedelta(hours=1, minutes=15)
-    # start = datetime.datetime(year=2005, month=8, day=20, hour=18)
-
-    print(heights.shape)
-    ds = xr.Dataset(
-        data_vars=dict(Height=(["time", "point"], heights)),
-        coords=dict(
-            lon=(["point"], lons),
-            lat=(["point"], lats),
-            time=[start + i * time_step for i in range(heights.shape[0])],
-        ),
-    )
-    ds["Height"].attrs["units"] = "m"
-    print(ds)
+    ds = select_coastal_cells(float(psc.lon.values), float(psc.lat.values), number=10)
 
     plot_defaults()
     fig, axs = plt.subplots(2, 1, figsize=get_dim(ratio=1))

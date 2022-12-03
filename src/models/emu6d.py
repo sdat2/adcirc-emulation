@@ -79,6 +79,16 @@ def indices_in_bbox(lon: float, lat: float) -> bool:
 
 
 def real_func(param: dict, output_direc: str) -> float:
+    """
+    Feed the parameters into running the full tropical cyclone impact.
+
+    Args:
+        param (dict): _description_
+        output_direc (str): Where to store data.
+
+    Returns:
+        float: _description_
+    """
     point = Point(NEW_ORLEANS.lon + param["point_east"], NEW_ORLEANS.lat)
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
@@ -95,7 +105,9 @@ def real_func(param: dict, output_direc: str) -> float:
     maxele = Maxele(path, crs="EPSG:4326")
     index_set = 27
     indices = indices_in_bbox(maxele.x, maxele.y)
-    return maxele.values[indices][index_set]
+    height = maxele.values[indices][index_set]
+    print("height =  ", height, "m")
+    return height
 
 
 def fake_func(param: dict, output_direc: str) -> float:

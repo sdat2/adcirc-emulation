@@ -425,11 +425,24 @@ def main():
             print(e)
 
 
-def select_coastal_cells(lon: float, lat: float, number: int = 10):
-    me = Maxele(os.path.join(KAT_EX_PATH, "maxele.63.nc"))
+def select_coastal_cells(
+    lon: float, lat: float, number: int = 10
+) -> Optional[xr.Dataset]:
+    """
+    Select coastal cells.
+
+    Args:
+        lon (float): Longitude of central point.
+        lat (float): Latitude of central point.
+        number (int, optional): How many to choose initially. Defaults to 10.
+
+    Returns:
+        Optional[xr.Dataset]: coastal sealevel point dataset.
+    """
+    # me = Maxele(os.path.join(KAT_EX_PATH, "maxele.63.nc"))
     f63 = Fort63(os.path.join(KAT_EX_PATH, "fort.63.nc"))
-    lats = me.y.copy()
-    lons = me.x.copy()
+    lats = f63.y.copy()
+    lons = f63.x.copy()
     index_list = []
     for _ in range(number):
         index = ((lons - lon) ** 2 + (lats - lat) ** 2).argmin()
@@ -439,15 +452,35 @@ def select_coastal_cells(lon: float, lat: float, number: int = 10):
         lons[index] = -100
         lats[index] = -100
 
-    (uniq, freq) = np.unique(me.triangles, return_counts=True)
+    (uniq, freq) = np.unique(f63.triangles, return_counts=True)
     coastals = uniq[freq <= 4]
     indices = np.array(index_list)
-    indices[[x in coastals for x in index_list]]
+    print("Coastals", coastals, len(coastals))
+    print("Indices", indices, len(indices))
+
+    indices = indices[[x in coastals.tolist() for x in index_list]]
     # nindices = indices[[x in coastals for x in index_list]]
-    lats = me.y[indices]
-    lons = me.y[indices]
-    heights = f63._ptr["zeta"][:, indices]
-    return me.x[indices], me.y[indices], heights
+
+    print(indices)
+    if len(indices) > 0:
+        print(f63.x.shape, f63.y.shape, f63._ptr["zeta"].shape)
+        lats = f63.y[indices]
+        lons = f63.y[indices]
+        heights = f63._ptr["zeta"][:, indices]
+        start = datetime.datetime(year=2005, month=8, day=19, hour=5)
+        time_step = datetime.timedelta(hours=1, minutes=20)
+        ds = xr.Dataset(  #
+            data_vars=dict(Height=(["time", "point"], heights)),
+            coords=dict(
+                lon=(["point"], lons),
+                lat=(["point"], lats),
+                time=[start + i * time_step for i in range(heights.shape[0])],
+            ),
+        )
+        ds["Height"].attrs["units"] = "m"
+        return ds
+    else:
+        return ds
 
 
 if __name__ == "__main__":
