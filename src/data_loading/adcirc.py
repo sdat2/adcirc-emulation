@@ -459,7 +459,6 @@ def select_coastal_cells(
     print("Indices", indices, len(indices))
 
     indices = indices[[x in coastals.tolist() for x in index_list]]
-    # nindices = indices[[x in coastals for x in index_list]]
 
     print(indices)
     if len(indices) > 0:
