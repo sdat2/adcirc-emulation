@@ -4,7 +4,6 @@
 https://coast.nd.edu/reports_papers/SELA_2007_IDS_2_FinalDraft/App%20D%20PBL-C%20WIN_PRE%20File%20Format.pdf
 
 """
-from email.policy import default
 from typing import List, Union, Optional
 import os
 import datetime
@@ -13,6 +12,9 @@ import xarray as xr
 from src.constants import DATA_PATH, KAT_EX_PATH
 import netCDF4 as nc
 from adcircpy.outputs import Maxele, Fort63
+from sithom.place import BoundingBox
+from src.constants import KAT_EX_PATH, NEW_ORLEANS
+from src.preprocessing.sel import trim_tri
 
 
 @np.vectorize
@@ -481,6 +483,40 @@ def select_coastal_cells(
         return ds
     else:
         return ds
+
+
+def timeseries_height_ds(
+    path: str = KAT_EX_PATH, bbox: BoundingBox = NEW_ORLEANS.bbox(3)
+) -> xr.Dataset:
+    """
+    Open the fort.63.nc file in the path, read the contents, and get the dataset out.
+    """
+    f63 = Fort63(os.path.join(path, "fort.63.nc"))
+    x, y, tri, z = trim_tri(f63.x, f63.y, f63.triangles, bbox, f63._ptr["zeta"][:])
+    start = datetime.datetime(year=2005, month=8, day=19, hour=5)
+    time_step = datetime.timedelta(hours=1, minutes=20)
+    times = [start + i * time_step for i in range(z.shape[0])]
+    ds = xr.Dataset(
+        data_vars={
+            "zeta": (["time", "point"], z.data),
+            "mesh": (["triangle", "vertex"], tri),
+        },
+        coords={
+            "lon": (["point"], x),
+            "lat": (["point"], y),
+            "time": (["time"], times),
+        },
+    )
+    ds["time"].attrs["long_name"] = "Time"
+    ds["zeta"].attrs["units"] = "m"
+    ds["zeta"].attrs["long_name"] = "Sea Surface Height"
+    ds["mesh"].attrs["units"] = "dimensionless"
+    ds["mesh"].attrs["long_name"] = "ADCIRC Mesh"
+    ds["lon"].attrs["units"] = "degrees_East"
+    ds["lat"].attrs["units"] = "degrees_North"
+    ds.attrs["BoundingBox"] = str(bbox)
+    ds.zeta.values[ds.zeta.values == -99999.0] = 0
+    return ds
 
 
 if __name__ == "__main__":
