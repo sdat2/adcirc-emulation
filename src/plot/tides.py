@@ -4,6 +4,7 @@ import numpy as np
 import xarray as xr
 import datetime
 import netCDF4 as nc
+import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -20,6 +21,12 @@ from src.plot.map import add_features
 
 
 def tide_plot(stationid: int = 0) -> None:
+    """
+    Tide plot.
+
+    Args:
+        stationid (int, optional): stationid. Defaults to 0.
+    """
     # python src/plot/tides.py
     tds = filtered_tidal_gauges()
     print(tds)
@@ -55,15 +62,16 @@ def tide_plot(stationid: int = 0) -> None:
 
     plt.legend()
     sns.move_legend(axs[1], loc="upper left", bbox_to_anchor=(1, 1.05))
-
     label_subplots(axs)
-
     plt.tight_layout()
     plt.savefig(os.path.join(FIGURE_PATH, "tide_gauge" + str(stationid) + ".png"))
     plt.clf()
 
 
-def depth_plot():
+def depth_plot() -> None:
+    """
+    Depth plot.
+    """
     f63 = nc.Dataset(os.path.join(KAT_EX_PATH, "fort.63.nc"))
     x = f63["x"][:].data.ravel()
     y = f63["y"][:].data.ravel()
@@ -77,7 +85,7 @@ def depth_plot():
     plt.colorbar(label="Depth [m]")
 
 
-def tri_plot():
+def tri_plot() -> None:
     f63 = nc.Dataset(os.path.join(KAT_EX_PATH, "fort.63.nc"))
     x = f63["x"][:].data.ravel()
     y = f63["y"][:].data.ravel()
@@ -88,7 +96,7 @@ def tri_plot():
     plt.triplot(x, y, tri, linewidth=0.5)
 
 
-def tri_plot_filter(ax):
+def tri_plot_filter(ax: matplotlib.axes.Axes) -> None:
     f63 = nc.Dataset(os.path.join(KAT_EX_PATH, "fort.63.nc"))
     x = f63["x"][:].data.ravel()
     y = f63["y"][:].data.ravel()
@@ -134,12 +142,3 @@ if __name__ == "__main__":
     tds = filtered_tidal_gauges()
     stations = len(tds["stationid"].values)
     _ = [tide_plot(x) for x in range(stations)]
-
-    # tri_plot_filter()
-    # import matplotlib
-
-    # matplotlib.tri.Triangulation(
-    #    f63["x"][:], f63["y"][:], triangles=(f63["element"][:] - 1)
-    # )
-
-#  plt.show()
