@@ -2,14 +2,12 @@
 import os
 import numpy as np
 import xarray as xr
-import datetime
 import netCDF4 as nc
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 try:
-    import cartopy
     import cartopy.crs as ccrs
 except ImportError:
     print("cartopy not installed")
@@ -25,7 +23,7 @@ def tide_plot(stationid: int = 0) -> None:
     Tide plot.
 
     Args:
-        stationid (int, optional): stationid. Defaults to 0.
+        stationid (int, optional): stationid index number. Defaults to 0.
     """
     # python src/plot/tides.py
     tds = filtered_tidal_gauges()
