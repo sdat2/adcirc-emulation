@@ -49,7 +49,7 @@ def animate_height_timeseries(ds: xr.Dataset, output_path: str) -> None:
         plt.ylabel("Latitude [$^{\circ}$N]")
         time = ds.isel(time=num).time.values
         ts = pd.to_datetime(str(time))
-        plt.title(ts.strftime("%Y-%m-%d %H:%M"))
+        plt.title(ts.strftime("%Y-%m-%d  %H:%M"))
         plt.savefig(os.path.join(output_path, str(num) + ".png"))
         plt.clf()
 
@@ -78,4 +78,7 @@ def trim_and_animate(path_in: str, path_out: str) -> None:
 
 
 if __name__ == "__main__":
-    trim_and_animate("kate_h08", "katrina_hit5")
+    # python src/plot/animate.py
+    # trim_and_animate("kate_h08", "katrina_hit5")
+    # trim_and_animate("katd_h08", "katrina_hit5")
+    trim_and_animate("mult2", "katrina_mult2")
