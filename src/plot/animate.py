@@ -160,7 +160,9 @@ def plot_single_quiver():
         u="U10",
         v="V10",
     )
-    x_pos = 0.65
+    # x_pos = 0.65
+    # y_pos = -0.15
+    x_pos = 0.95
     y_pos = -0.15
     _ = plt.quiverkey(
         quiver,
@@ -168,7 +170,7 @@ def plot_single_quiver():
         x_pos,
         y_pos,  # 08,
         40,
-        str(r"$40$ m s$^{-1}$" + r" $\Delta \vec{u}$"),  # + "\n"
+        str(r"$40$ m s$^{-1}$"),  # + "\n"
         labelpos="E",
         coordinates="axes"
         # coordinates="figure"
