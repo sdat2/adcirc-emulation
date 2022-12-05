@@ -273,6 +273,7 @@ def animate_quiver_height(
             levels=levels,
             cmap="cmo.balance",
         )
+
         ax = plt.gca()
         cbar = plt.colorbar(label="Sea Surface Height [m]")
         cbar.set_ticks(cbar_levels)
@@ -336,10 +337,16 @@ if __name__ == "__main__":
     #     path_in="mult1", output_path="katrina_hit_larger", bbox=NEW_ORLEANS.bbox(5)
     # )
     bbox = NEW_ORLEANS.bbox(3)
-    bbox.lat = [x - 1 for x in bbox.lat]
+    bbox.lat = [x - 1.5 for x in bbox.lat]
 
     animate_quiver_height(
-        path_in="katd_h08",
-        output_path="katrina_hit_medium_holland",
+        path_in="kat_angle/b-53.636_kat_angle",
+        output_path="katrina_hit_near_max",
         bbox=bbox,
     )
+
+    # animate_quiver_height(
+    #    path_in="kat_move_smeared/x0.606_kat_move",
+    #    output_path="katrina_hit_holland0.6_smeared",
+    #   bbox=bbox,
+    # )
