@@ -179,9 +179,10 @@ def plot_single_quiver() -> None:
     NO_BBOX.ax_lim(plt.gca())
 
 
-def plot_quiver_height(path_in: str = "mult2", num: int = 188) -> None:
+def plot_quiver_height(path_in: str = "mult2", num: int = 180) -> None:
     path_in = os.path.join(DATA_PATH, path_in)
     ds = timeseries_height_ds(path=path_in, bbox=NO_BBOX)
+    print(ds)
     vmin, vmax = lim(ds.zeta.values, percentile=0, balance=True)
     vmin, vmax = np.min([-vmax, vmin]), np.max([-vmin, vmax])
     levels = np.linspace(vmin, vmax, num=400)
@@ -237,6 +238,8 @@ def plot_quiver_height(path_in: str = "mult2", num: int = 188) -> None:
     )
     NO_BBOX.ax_lim(plt.gca())
     plt.title(ts.strftime("%Y-%m-%d  %H:%M"))
+    plt.savefig(os.path.join(FIGURE_PATH, "example_colision.png"))
+    plt.clf()
 
 
 if __name__ == "__main__":
@@ -246,4 +249,3 @@ if __name__ == "__main__":
     # trim_and_animate("katd_h08", "katrina_hit5")
     # trim_and_animate("mult2", "katrina_mult2")
     plot_quiver_height()
-    plt.savefig(os.path.join(FIGURE_PATH, "example_colision.png"))
