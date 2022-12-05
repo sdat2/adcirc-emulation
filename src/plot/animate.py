@@ -179,7 +179,7 @@ def plot_single_quiver() -> None:
     NO_BBOX.ax_lim(plt.gca())
 
 
-def plot_quiver_height(path_in: str = "mult2", num: int = 180) -> None:
+def plot_quiver_height(path_in: str = "mult1", num: int = 185) -> None:
     path_in = os.path.join(DATA_PATH, path_in)
     ds = timeseries_height_ds(path=path_in, bbox=NO_BBOX)
     print(ds)
