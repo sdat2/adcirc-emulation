@@ -148,7 +148,7 @@ def pqp_part(
     )
 
 
-def plot_single_quiver():
+def plot_single_quiver() -> None:
     ds = read_windspeeds(os.path.join(DATA_PATH, "mult2", "fort.222"))
     print(ds.U10, ds.V10)
 
@@ -179,11 +179,71 @@ def plot_single_quiver():
     NO_BBOX.ax_lim(plt.gca())
 
 
+def plot_quiver_height(path_in: str = "mult2", num: int = 188) -> None:
+    path_in = os.path.join(DATA_PATH, path_in)
+    ds = timeseries_height_ds(path=path_in, bbox=NO_BBOX)
+    vmin, vmax = lim(ds.zeta.values, percentile=0, balance=True)
+    vmin, vmax = np.min([-vmax, vmin]), np.max([-vmin, vmax])
+    levels = np.linspace(vmin, vmax, num=400)
+    cbar_levels = np.linspace(vmin, vmax, num=5)
+
+    plt.tricontourf(
+        ds.lon.values,
+        ds.lat.values,
+        ds.mesh.values,
+        ds.zeta.values[num],
+        vmin=vmin,
+        vmax=vmax,
+        levels=levels,
+        cmap="cmo.balance",
+    )
+    ax = plt.gca()
+    cbar = plt.colorbar(label="Height [m]")
+    cbar.set_ticks(cbar_levels)
+    cbar.set_ticklabels(["{:.2f}".format(x) for x in cbar_levels.tolist()])
+    plt.xlabel("Longitude [$^{\circ}$E]")
+    plt.ylabel("Latitude [$^{\circ}$N]")
+    time = ds.isel(time=num).time.values
+    ts = pd.to_datetime(str(time))
+    # plt.savefig(os.path.join(output_path, str(num) + ".png"))
+    # plt.clf()
+    ds = read_windspeeds(os.path.join(path_in, "fort.222"))
+    # _, ax = plt.subplots(1, 1)
+    quiver = plot_units(
+        ds.sel(time=time, method="nearest"), x_dim="lon", y_dim="lat"
+    ).plot.quiver(
+        ax=ax,
+        x="lon",
+        y="lat",
+        u="U10",
+        v="V10",
+        add_guide=False,
+    )
+    # x_pos = 0.65
+    # y_pos = -0.15
+    x_pos = 0.95
+    y_pos = -0.15
+    _ = plt.quiverkey(
+        quiver,
+        # 1.08,
+        x_pos,
+        y_pos,  # 08,
+        40,
+        str(r"$40$ m s$^{-1}$"),  # + "\n"
+        labelpos="E",
+        coordinates="axes"
+        # coordinates="figure"
+        # ,
+    )
+    NO_BBOX.ax_lim(plt.gca())
+    plt.title(ts.strftime("%Y-%m-%d  %H:%M"))
+
+
 if __name__ == "__main__":
     plot_defaults()
     # python src/plot/animate.py
     # trim_and_animate("kate_h08", "katrina_hit5")
     # trim_and_animate("katd_h08", "katrina_hit5")
     # trim_and_animate("mult2", "katrina_mult2")
-    plot_single_quiver()
-    plt.show()
+    plot_quiver_height()
+    plt.savefig(os.path.join(FIGURE_PATH, "example_colision.png"))
