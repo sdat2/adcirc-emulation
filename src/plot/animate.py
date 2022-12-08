@@ -247,6 +247,14 @@ def animate_quiver_height(
     output_path: str = "katrina_hit",
     bbox: BoundingBox = NO_BBOX,
 ) -> None:
+    """
+    Animate windspeed and sea surface height.
+
+    Args:
+        path_in (str, optional): folder name for input. Defaults to "mult1".
+        output_path (str, optional): output folder name for images. Defaults to "katrina_hit".
+        bbox (BoundingBox, optional): Bounding box. Defaults to NO_BBOX.
+    """
     plot_defaults()
     output_path = os.path.join(FIGURE_PATH, output_path)
     if not os.path.exists(output_path):
