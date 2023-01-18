@@ -594,6 +594,14 @@ def kat_stats() -> xr.Dataset:
 
 @timeit
 def make_landing_dataset() -> xr.Dataset:
+    """
+    Make landing dataset.
+
+    Just get the landings from the IBTrACS dataset.
+
+    Returns:
+        xr.Dataset: IBTrACS dataset with only landings.
+    """
     ib_ds = na_tcs()  # [REQ_VAR]
 
     @timeit
@@ -636,6 +644,7 @@ if __name__ == "__main__":
     # for var in kat_stats:
     #    print(kat_stats[var])
 
+    # KATRINA
     vmax = 54.01667  # m s**-1
     rmax = 40744  #  m
     pc = 92800  # Pa
