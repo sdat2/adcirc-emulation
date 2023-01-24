@@ -221,8 +221,8 @@ def animate_quiver_height(
         cbar = plt.colorbar(label="Sea Surface Height, $\eta$ [m]")
         cbar.set_ticks(cbar_levels)
         cbar.set_ticklabels(["{:.2f}".format(x) for x in cbar_levels.tolist()])
-        plt.xlabel("Longitude [$^{\circ}$E]")
-        plt.ylabel("Latitude [$^{\circ}$N]")
+        # plt.xlabel("Longitude [$^{\circ}$E]")
+        # plt.ylabel("Latitude [$^{\circ}$N]")
         time = ds.isel(time=num).time.values
         ts = pd.to_datetime(str(time))
         # plt.savefig(os.path.join(output_path, str(num) + ".png"))
@@ -270,8 +270,8 @@ def animate_quiver_height(
         )
         # lon_formatter = LongitudeFormatter(zero_direction_label=True)
         # lat_formatter = LatitudeFormatter()
-        ax.xaxis.set_major_formatter(LATITUDE_FORMATTER)
-        ax.yaxis.set_major_formatter(LONGITUDE_FORMATTER)
+        ax.xaxis.set_major_formatter(LONGITUDE_FORMATTER)
+        ax.yaxis.set_major_formatter(LATITUDE_FORMATTER)
 
         # bbox.ax_lim(plt.gca())
         # bbox.ax_labels(plt.gca())
@@ -303,18 +303,18 @@ if __name__ == "__main__":
     bbox = NEW_ORLEANS.bbox(3)
     bbox.lat = [x - 1.5 for x in bbox.lat]
 
-    # animate_quiver_height(
-    #    path_in="kat_angle/b-53.636_kat_angle",
-    #    output_path="katrina_hit_near_max",
-    #    bbox=bbox,
-    # )
+    animate_quiver_height(
+        path_in="kat_angle/b-53.636_kat_angle",
+        output_path="katrina_hit_near_max",
+        bbox=bbox,
+    )
     animate_quiver_height(
         path_in="kat_move_smeared/x0.606_kat_move",
         output_path="katrina_hit_holland0.6_smeared",
         bbox=bbox,
     )
 
-    # animate_quiver_height(
+    # animate_quiver_hdeight(
     #    path_in="kat_move_smeared/x0.606_kat_move",
     #    output_path="katrina_hit_holland0.6_smeared",
     #   bbox=bbox,
