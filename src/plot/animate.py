@@ -6,8 +6,16 @@ import xarray as xr
 import matplotlib
 import matplotlib.pyplot as plt
 import imageio
+
+try:
+    import cartopy
+    import cartopy.crs as ccrs
+    from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+except ImportError:
+    print("cartopy not installed")
 from sithom.place import BoundingBox
 from sithom.plot import lim, plot_defaults
+from sithom.time import timeit
 from sithom.xr import plot_units
 from src.constants import FIGURE_PATH, DATA_PATH, NO_BBOX, NEW_ORLEANS
 from src.data_loading.adcirc import timeseries_height_ds, read_windspeeds
@@ -147,6 +155,7 @@ def plot_quiver_height(path_in: str = "mult1", num: int = 185) -> None:
     plt.clf()
 
 
+@timeit
 def animate_quiver_height(
     path_in: str = "mult1",
     output_path: str = "katrina_hit",
@@ -165,7 +174,7 @@ def animate_quiver_height(
     if not os.path.exists(output_path):
         os.mkdir(output_path)
     path_in = os.path.join(DATA_PATH, path_in)
-    ds = timeseries_height_ds(path=path_in, bbox=bbox).sel(
+    ds = timeseries_height_ds(path=path_in, bbox=bbox.pad(buffer=2)).sel(
         time=slice("2005-08-28", "2005-08-30")
     )
     dsw = read_windspeeds(os.path.join(path_in, "fort.222"))
@@ -176,6 +185,27 @@ def animate_quiver_height(
     cbar_levels = np.linspace(vmin, vmax, num=5)
 
     def plot_part(num=185):
+        ax = plt.axes(projection=ccrs.PlateCarree())
+        # maybe add a green-yellow backgroud here
+        ax.set_facecolor("#d1ffbd")
+        ax.add_feature(cartopy.feature.LAKES, alpha=0.5)
+        # ax.add_feature(
+        #    cartopy.feature.BORDERS, color="grey", alpha=0.5, linewidth=0.5
+        # )  # linestyle=":")
+        # ax.add_feature(
+        #    cartopy.feature.STATES, color="grey", alpha=0.5, linewidth=0.5
+        # )  # linestyle=":")
+        ax.add_feature(cartopy.feature.RIVERS, alpha=0.5)
+        plt.plot(
+            NEW_ORLEANS.lon, NEW_ORLEANS.lat, marker=".", markersize=4, color="purple"
+        )
+        plt.text(
+            NEW_ORLEANS.lon - 0.35,
+            NEW_ORLEANS.lat - 0.16,
+            "New Orleans",
+            fontsize=6,
+            color="purple",
+        )
         plt.tricontourf(
             ds.lon.values,
             ds.lat.values,
@@ -188,7 +218,7 @@ def animate_quiver_height(
         )
 
         ax = plt.gca()
-        cbar = plt.colorbar(label="Sea Surface Height [m]")
+        cbar = plt.colorbar(label="Sea Surface Height, $\eta$ [m]")
         cbar.set_ticks(cbar_levels)
         cbar.set_ticklabels(["{:.2f}".format(x) for x in cbar_levels.tolist()])
         plt.xlabel("Longitude [$^{\circ}$E]")
@@ -220,11 +250,32 @@ def animate_quiver_height(
             40,
             str(r"$40$ m s$^{-1}$"),  # + "\n"
             labelpos="E",
-            coordinates="axes"
+            coordinates="axes",
+            transform=ccrs.PlateCarree(),
             # coordinates="figure"
             # ,
         )
-        bbox.ax_lim(plt.gca())
+        ax.set_extent(bbox.cartopy(), crs=ccrs.PlateCarree())
+
+        # ax.yaxis.tick_right()
+        ax.set_yticks(
+            [26, 27, 28, 29, 30, 31],
+            # labels=[26, 27, 28, 29, 30, 31],
+            crs=ccrs.PlateCarree(),
+        )
+        ax.set_xticks(
+            [-93, -92, -91, -90, -89, -88],
+            # labels=[-93, -92, -91, -90, -89, -88],
+            crs=ccrs.PlateCarree(),
+        )
+        # lon_formatter = LongitudeFormatter(zero_direction_label=True)
+        # lat_formatter = LatitudeFormatter()
+        ax.xaxis.set_major_formatter(LATITUDE_FORMATTER)
+        ax.yaxis.set_major_formatter(LONGITUDE_FORMATTER)
+
+        # bbox.ax_lim(plt.gca())
+        # bbox.ax_labels(plt.gca())
+        # cartopy.mpl.gridliner.Gridliner(ax, ccrs.PlateCarree())
         plt.title(ts.strftime("%Y-%m-%d  %H:%M"))
         plt.savefig(os.path.join(output_path, str(num) + ".png"))
         plt.clf()
@@ -252,9 +303,14 @@ if __name__ == "__main__":
     bbox = NEW_ORLEANS.bbox(3)
     bbox.lat = [x - 1.5 for x in bbox.lat]
 
+    # animate_quiver_height(
+    #    path_in="kat_angle/b-53.636_kat_angle",
+    #    output_path="katrina_hit_near_max",
+    #    bbox=bbox,
+    # )
     animate_quiver_height(
-        path_in="kat_angle/b-53.636_kat_angle",
-        output_path="katrina_hit_near_max",
+        path_in="kat_move_smeared/x0.606_kat_move",
+        output_path="katrina_hit_holland0.6_smeared",
         bbox=bbox,
     )
 
