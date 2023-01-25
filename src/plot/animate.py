@@ -186,6 +186,7 @@ def animate_quiver_height(
 
     def plot_part(num=185):
         ax = plt.axes(projection=ccrs.PlateCarree())
+        ax.set_extent(bbox.cartopy(), crs=ccrs.PlateCarree())
         # maybe add a green-yellow backgroud here
         ax.set_facecolor("#d1ffbd")
         ax.add_feature(cartopy.feature.LAKES, alpha=0.5)
@@ -259,16 +260,28 @@ def animate_quiver_height(
             # coordinates="figure"
             # ,
         )
-        ax.set_extent(bbox.cartopy(), crs=ccrs.PlateCarree())
 
         # ax.yaxis.tick_right()
         ax.set_yticks(
-            [26, 27, 28, 29, 30, 31],
+                        [
+                x
+                for x in range(
+                    int((bbox.lat[0] // 1) + 1),
+                    int((bbox.lat[1] // 1) + 1),
+                )
+            ],
             # labels=[26, 27, 28, 29, 30, 31],
             crs=ccrs.PlateCarree(),
         )
         ax.set_xticks(
-            [-93, -92, -91, -90, -89, -88],
+            [
+                x
+                for x in range(
+                    int((bbox.lon[0] // 1) + 1),
+                    int((bbox.lon[1] // 1) + 1),
+                )
+            ],
+            # [-94, -93, -92, -91, -90, -89, -88, -87],
             # labels=[-93, -92, -91, -90, -89, -88],
             crs=ccrs.PlateCarree(),
         )
@@ -307,6 +320,7 @@ if __name__ == "__main__":
     #     path_in="mult1", output_path="katrina_hit_larger", bbox=NEW_ORLEANS.bbox(5)
     # )
     bbox = NEW_ORLEANS.bbox(3)
+    bbox.lon = [bbox.lon[0] - 1.5, bbox.lon[1] + 1.5]
     bbox.lat = [x - 1.5 for x in bbox.lat]
 
     animate_quiver_height(
