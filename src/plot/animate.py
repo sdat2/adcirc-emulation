@@ -197,7 +197,11 @@ def animate_quiver_height(
         # )  # linestyle=":")
         ax.add_feature(cartopy.feature.RIVERS, alpha=0.5)
         plt.plot(
-            NEW_ORLEANS.lon, NEW_ORLEANS.lat, marker=".", markersize=4, color="purple"
+            NEW_ORLEANS.lon,
+            NEW_ORLEANS.lat,
+            marker=".",
+            markersize=4,
+            color="purple",
         )
         plt.text(
             NEW_ORLEANS.lon - 0.35,
@@ -221,8 +225,8 @@ def animate_quiver_height(
         cbar = plt.colorbar(label="Sea Surface Height, $\eta$ [m]")
         cbar.set_ticks(cbar_levels)
         cbar.set_ticklabels(["{:.2f}".format(x) for x in cbar_levels.tolist()])
-        # plt.xlabel("Longitude [$^{\circ}$E]")
-        # plt.ylabel("Latitude [$^{\circ}$N]")
+        plt.xlabel("")
+        plt.ylabel("")
         time = ds.isel(time=num).time.values
         ts = pd.to_datetime(str(time))
         # plt.savefig(os.path.join(output_path, str(num) + ".png"))
@@ -240,8 +244,8 @@ def animate_quiver_height(
         )
         # x_pos = 0.65
         # y_pos = -0.15
-        x_pos = 0.95
-        y_pos = -0.15
+        x_pos = 1.01
+        y_pos = -0.10
         _ = plt.quiverkey(
             quiver,
             # 1.08,
@@ -268,6 +272,8 @@ def animate_quiver_height(
             # labels=[-93, -92, -91, -90, -89, -88],
             crs=ccrs.PlateCarree(),
         )
+        ax.set_xlabel("")
+        ax.set_ylabel("")
         # lon_formatter = LongitudeFormatter(zero_direction_label=True)
         # lat_formatter = LatitudeFormatter()
         ax.xaxis.set_major_formatter(LONGITUDE_FORMATTER)
