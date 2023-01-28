@@ -507,6 +507,7 @@ class EmulationSmash:
         return -mean, np.std(var)
 
     def plot(self) -> None:
+        # indices are chosen for the colormaps
         a_indices = np.linspace(self.ap.min, self.ap.max, num=self.indices)
         b_indices = np.linspace(self.bp.min, self.bp.max, num=self.indices)
         a_indices, b_indices = self.to_real_scale(a_indices, b_indices)
@@ -527,6 +528,18 @@ class EmulationSmash:
         aq_mesh = self.acquisition_function.evaluate(comb_array_gp).reshape(
             self.indices, self.indices
         )
+        # let's save the data to a file incase we want to use it later
+        xr.Dataset(
+            data_vars=dict(
+                mean=(["a", "b"], mean_mesh),
+                std=(["a", "b"], std_mesh),
+                aq=(["a", "b"], aq_mesh),
+            ),
+            coords=dict(a=(["a"], a_indices), b=(["b"], b_indices)),
+        ).to_netcdf(
+            os.path.join(self.data_path, "plotting_data" + self.call_number + ".nc")
+        )
+        # ok, now we have the data, let's plot it
 
         # Set up plot
         plot_defaults()
@@ -545,10 +558,17 @@ class EmulationSmash:
         ax = axs[0, 0]
         init_x, init_y = self.init_data()
         active_x, active_y = self.active_data()
+
+        cmap = plt.get_cmap("viridis")
+        vmin = np.min(init_y)
+        vmax = np.max(init_y)
+
         im = ax.scatter(
             init_x[:, 0],
             init_x[:, 1],
             c=init_y,
+            vmin=vmin,
+            vmax=vmax,
             marker="x",
             label="original data points",
         )
@@ -556,17 +576,19 @@ class EmulationSmash:
             active_x[:, 0],
             active_x[:, 1],
             c=active_y,
+            vmin=vmin,
+            vmax=vmax,
             marker="+",
             label="new data points",
         )
         divider = make_axes_locatable(ax)
-        ax.set_title("Samples")
+        ax.set_title("Samples [m]")
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(im, cax=cax, orientation="vertical")
         ax.set_ylabel("Position [$^{\circ}$E]")
 
         ax = axs[1, 0]
-        ax.set_title("Prediction Mean")
+        ax.set_title("Prediction Mean [m]")
         im = ax.contourf(a_mesh, b_mesh, mean_mesh)  # , vmin=0, vmax=5.6)
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
@@ -574,7 +596,7 @@ class EmulationSmash:
         ax.set_ylabel("Position [$^{\circ}$E]")
         ax.set_xlabel("Bearing [$^{\circ}$]")
         ax = axs[1, 1]
-        ax.set_title("Pred. Std. Dev. ")
+        ax.set_title("Prediction Std. Dev. [m]")
         im = ax.contourf(a_mesh, b_mesh, std_mesh)
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
@@ -654,9 +676,20 @@ def mat32var():
     )
 
 
+def mat32expimprovement():
+    EmulationSmash(
+        path="emulation_angle_pos_newei",
+        seed=100,
+        init_num=100,
+        active_num=50,
+        kernel_class=Matern32,
+        acqusition_class=ExpectedImprovement,
+    )
+
+
 if __name__ == "__main__":
     # python src/models/emulation.py
     # example_animation()
     # example_plot()
     plot_defaults()
-    mat32var()
+    mat32expimprovement()
