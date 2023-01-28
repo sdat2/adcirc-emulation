@@ -245,8 +245,10 @@ def animate_quiver_height(
         )
         # x_pos = 0.65
         # y_pos = -0.15
-        x_pos = 1.01
-        y_pos = -0.10
+        x_pos = 0.95
+        y_pos = 1.05
+        # x_pos = 0.5
+        # y_pos = -0.08
         _ = plt.quiverkey(
             quiver,
             # 1.08,
@@ -263,7 +265,7 @@ def animate_quiver_height(
 
         # ax.yaxis.tick_right()
         ax.set_yticks(
-                        [
+            [
                 x
                 for x in range(
                     int((bbox.lat[0] // 1) + 1),
@@ -320,7 +322,7 @@ if __name__ == "__main__":
     #     path_in="mult1", output_path="katrina_hit_larger", bbox=NEW_ORLEANS.bbox(5)
     # )
     bbox = NEW_ORLEANS.bbox(3)
-    bbox.lon = [bbox.lon[0] - 1.5, bbox.lon[1] + 1.5]
+    # bbox.lon = [bbox.lon[0] - 1.5, bbox.lon[1] + 1.5]
     bbox.lat = [x - 1.5 for x in bbox.lat]
 
     animate_quiver_height(
