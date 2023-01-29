@@ -1,4 +1,5 @@
-"""EMUKIT"""
+"""First implementation of EMUKIT emulation of ADCIRC model."""
+from typing import List, Tuple
 import os
 import shutil
 import numpy as np
@@ -34,7 +35,7 @@ from src.constants import DATA_PATH, FIGURE_PATH, NEW_ORLEANS, NO_BBOX
 
 
 @np.vectorize
-def indices_in_bbox(lon, lat):
+def indices_in_bbox(lon: float, lat: float):
     return (
         lon > NO_BBOX.lon[0]
         and lon < NO_BBOX.lon[1]
@@ -334,19 +335,38 @@ def smash_func(angle: float, position: float, output_direc: str) -> float:
 
 
 class EmulationSmash:
+    """2D emulation of the ADCIRC model for bearing and position.
+    Currently we're emulating the index point 27 in the maxele.63.nc file
+    which is a point to the North of New Orleans This is the point with the highest
+    storm surge in the 2005 Katrina event."""
+
     def __init__(
         self,
-        seed=0,
-        init_num=40,
-        active_num=30,
-        indices=100,
+        seed: int = 0,
+        init_num: int = 40,
+        active_num: int = 30,
+        indices: int = 100,
         acqusition_class=ExpectedImprovement,
         loop_class=BayesianOptimizationLoop,
         kernel_class=RBF,
-        x1_range=[-90, 90],
-        x2_range=[-2, 3.2],
-        path="emu_angle_position",
+        x1_range: List[int] = [-90, 90],
+        x2_range: List[int] = [-2, 3.2],
+        path: str = "emu_angle_position",
     ) -> None:
+        """Initialize the EmulationSmash class.
+
+        Args:
+            seed (int, optional): The seed for the random number generator.
+            init_num (int, optional): The number of initial points to use for the emulation.
+            active_num (int, optional): The number of active points to use for the emulation.
+            indices: The number of indices to use for the emulation.
+            acqusition_class (any, optional): The acquisition function to use for the emulation.
+            loop_class: The loop class to use for the emulation.
+            kernel_class: The kernel class to use for the emulation.
+            x1_range: The range of the bearing parameter [degrees North].
+            x2_range: The range of the position parameter [degrees East].
+
+        """
         self.seed = seed
         np.random.seed(seed)
         self.indices = indices
@@ -418,6 +438,7 @@ class EmulationSmash:
             else:
                 plt.clf()
 
+        # make animation.
         with io.get_writer(f"{self.figure_path}.gif", mode="I", duration=0.5) as writer:
             for file_name in [
                 os.path.join(self.figure_path, f"{i}.png")
@@ -429,6 +450,18 @@ class EmulationSmash:
         self.save_data()
 
     def save_data(self):
+        """Save the sample data to a netcdf file so that it can be used later.
+        The format is as follows:
+
+        variables:
+        init_x: The initial x data chosen by the latin hypercube design.
+        init_y: The initial y data chosen by the latin hypercube design.
+        active_x: The active x data chosen by the active learning loop.
+        active_y: The active y data chosen by the active learning loop.
+
+        coords:
+            var: The variable names for the x data.
+        """
         init_x, init_y = self.init_data()
         active_x, active_y = self.active_data()
         ds = xr.Dataset(
@@ -480,7 +513,7 @@ class EmulationSmash:
             [x1.reshape(*x1.shape, 1), x2.reshape(*x2.shape, 1)], axis=-1
         )
 
-    def split(self, data):
+    def split(self, data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         shape = data.shape
         if len(shape) == 2:
             return data[:, 0], data[:, 1]
@@ -507,6 +540,8 @@ class EmulationSmash:
         return -mean, np.std(var)
 
     def plot(self) -> None:
+        """Make a plot of the function, the sample data points, and the current
+        values of the data acquisition function."""
         # indices are chosen for the colormaps
         a_indices = np.linspace(self.ap.min, self.ap.max, num=self.indices)
         b_indices = np.linspace(self.bp.min, self.bp.max, num=self.indices)
