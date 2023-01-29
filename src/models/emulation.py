@@ -35,7 +35,7 @@ from src.constants import DATA_PATH, FIGURE_PATH, NEW_ORLEANS, NO_BBOX
 
 
 @np.vectorize
-def indices_in_bbox(lon: float, lat: float):
+def indices_in_bbox(lon: float, lat: float) -> bool:
     return (
         lon > NO_BBOX.lon[0]
         and lon < NO_BBOX.lon[1]

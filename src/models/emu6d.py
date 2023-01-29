@@ -40,6 +40,8 @@ from src.models.generation import vmax_from_pressure_holliday
 
 @typechecked
 def get_param(updates: dict) -> dict:
+    # Default values are taken from a fit of the Holland 2008 model to Hurricane Katrina
+    # At landfall.
     defaults = {
         # Trajectory
         "angle": 0.0,  # degrees from North
@@ -63,6 +65,15 @@ def get_param(updates: dict) -> dict:
 
 
 def holliday_vmax(updates: dict) -> dict:
+    """
+    Generate vmax from pressure using Holliday's formula.
+
+    Args:
+        updates (dict): the dictionary of parameters, must contain "pc".
+
+    Returns:
+        dict: updates dictionary, to be passed to get_param.
+    """
     assert "pc" in updates.keys()
     updates["vmax"] = vmax_from_pressure_holliday(92800)
     return updates
@@ -141,7 +152,16 @@ class SixDOFSearch:
         dryrun: bool = False,
         path: str = "6D_search",
     ) -> None:
+        """
+        Initialize the search space for emulation.
+
+        Args:
+            seed (int, optional): Random seed (used by lhs). Defaults to 0.
+            dryrun (bool, optional): Use a fake function. Defaults to False.
+            path (str, optional): Where to store the data. Defaults to "6D_search".
+        """
         np.random.seed(seed)
+        # default ranges is from the sixd.yaml file
         conf = OmegaConf.load(os.path.join(CONFIG_PATH, "sixd.yaml"))
         self.dryrun = dryrun
         # angles = ContinuousParameter("angle", -90, 90)
@@ -153,6 +173,7 @@ class SixDOFSearch:
         # pc = ContinuousParameter("pc", 900, 980)
         # vmax = ContinuousParameter("vmax", 20)
         # xn = ContinuousParameter("xn", 0.8, 1.4)
+        # set up all of the parameters automatically.
         self.space = ParameterSpace(
             [ContinuousParameter(i, conf[i].min, conf[i].max) for i in conf]
         )
