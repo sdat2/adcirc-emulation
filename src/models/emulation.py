@@ -367,6 +367,7 @@ class EmulationSmash:
             x2_range: The range of the position parameter [degrees East].
 
         """
+        # add option to use fake cheap function for testing
         self.seed = seed
         np.random.seed(seed)
         self.indices = indices
@@ -382,11 +383,24 @@ class EmulationSmash:
         self.figure_path = os.path.join(FIGURE_PATH, path)
         self.data_path = os.path.join(DATA_PATH, path)
         self.call_number = 0
+        self.acqusition_class = acqusition_class
+        self.kernel_class = kernel_class
+        self.loop_class = loop_class
 
         for path in [self.figure_path, self.data_path]:
             if not os.path.exists(path):
                 os.mkdir(path)
 
+        # make empty arrays for data
+        self.init_x_data = np.array([[np.nan, np.nan]])
+        self.init_y_data = np.array([[np.nan]])
+        self.active_x_data = np.array([[np.nan, np.nan]])
+        self.active_y_data = np.array([[np.nan]])
+
+        # could this not have been seperated into two or more functions?
+
+    def setup_emulation(self) -> None:
+        """Setup the emulation by running the function for the inital samples."""
         # run initial data.
         self.init_x_data = self.design.get_samples(self.init_num).astype("float32")
         self.init_y_data = self.func(self.init_x_data)
@@ -395,30 +409,30 @@ class EmulationSmash:
         self.model_gpy = GPRegression(
             self.init_x_data,
             self.init_y_data.reshape(len(self.init_y_data), 1),
-            kernel_class(2, 1),
+            self.kernel_class(2, 1),
         )
         self.model_gpy.optimize()
 
         # active_learning - make acquisition file & loop.
         self.model_emukit = GPyModelWrapper(self.model_gpy)
 
-        if acqusition_class is MaxValueEntropySearch:
-            self.acquisition_function = acqusition_class(
+        if self.acqusition_class is MaxValueEntropySearch:
+            self.acquisition_function = self.acqusition_class(
                 model=self.model_emukit, space=self.space
             )
         else:
-            self.acquisition_function = acqusition_class(model=self.model_emukit)
+            self.acquisition_function = self.acqusition_class(model=self.model_emukit)
 
-        self.loop = loop_class(
+        self.loop = self.loop_class(
             model=self.model_emukit,
             space=self.space,
             acquisition=self.acquisition_function,
             batch_size=1,
         )
 
-        # get ready for active learning.
-        self.active_x_data = np.array([[np.nan, np.nan]])
-        self.active_y_data = np.array([[np.nan]])
+    def active_learning(self) -> None:
+        """Run the active learning loop for active_num.
+        Setup emulation must have been run first."""
 
         # make initial plot
         self.plot()
@@ -428,7 +442,7 @@ class EmulationSmash:
         else:
             plt.clf()
 
-        for i in range(1, active_num + 1):
+        for i in range(1, self.active_num + 1):
             print(i)
             self.run_loop(1)
             self.plot()
@@ -449,7 +463,7 @@ class EmulationSmash:
         writer.close()
         self.save_data()
 
-    def save_data(self):
+    def save_data(self) -> None:
         """Save the sample data to a netcdf file so that it can be used later.
         The format is as follows:
 
@@ -482,18 +496,18 @@ class EmulationSmash:
         else:
             print("File Already Exists!")
 
-    def run_loop(self, new_iterations):
+    def run_loop(self, new_iterations: int) -> None:
         self.loop.run_loop(self.func, new_iterations)
         self.active_x_data = self.loop.loop_state.X[len(self.init_x_data) :]
         self.active_y_data = self.loop.loop_state.Y[len(self.init_x_data) :]
 
-    def init_data(self):
+    def init_data(self) -> Tuple[np.ndarray, np.ndarray]:
         return (
             self.merge(*self.to_real_scale(*self.split(self.init_x_data))),
             -self.init_y_data,
         )
 
-    def active_data(self):
+    def active_data(self) -> Tuple[np.ndarray, np.ndarray]:
         return (
             self.merge(*self.to_real_scale(*self.split(self.active_x_data))),
             -self.active_y_data,
@@ -502,13 +516,17 @@ class EmulationSmash:
     def __repr__(self) -> str:
         return f"seed = {self.seed}, init_num = {self.init_num}, active_num = {self.active_num}"
 
-    def to_gp_scale(self, x1, x2):
+    def to_gp_scale(
+        self, x1: np.ndarray, x2: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray]:
         return (x1 + 60) / 10, (x2 - 0.6) / 0.5
 
-    def to_real_scale(self, x1, x2):
+    def to_real_scale(
+        self, x1: np.ndarray, x2: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray]:
         return x1 * 10 - 60, x2 / 2 + 0.6
 
-    def merge(self, x1, x2):
+    def merge(self, x1: np.ndarray, x2: np.ndarray) -> np.ndarray:
         return np.concatenate(
             [x1.reshape(*x1.shape, 1), x2.reshape(*x2.shape, 1)], axis=-1
         )
@@ -531,11 +549,13 @@ class EmulationSmash:
         self.call_number += num
         return -smash_func(angle, position, output_direc)
 
-    def func(self, data) -> float:
+    def func(self, data: np.ndarray) -> float:
         output = self.ob_smash_func(*self.to_real_scale(*self.split(data)))
         return output.reshape(len(output), 1)
 
     def learnt_function(self, x1, x2):
+        # take real space inputs, get real space output of learnt function
+        # Gaussian process eman and standard deviation.
         mean, var = self.model_emukit.predict(self.merge(*self.to_gp_scale(x1, x2)))
         return -mean, np.std(var)
 
@@ -712,7 +732,7 @@ def mat32var():
 
 
 def mat32expimprovement():
-    EmulationSmash(
+    e = EmulationSmash(
         path="emulation_angle_pos_newei",
         seed=100,
         init_num=100,
@@ -720,6 +740,8 @@ def mat32expimprovement():
         kernel_class=Matern32,
         acqusition_class=ExpectedImprovement,
     )
+    e.setup_emulation()
+    e.active_learning()
 
 
 if __name__ == "__main__":
