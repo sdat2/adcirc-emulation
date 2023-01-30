@@ -304,12 +304,13 @@ class SixDOFSearch:
         self.active_x_data = self.loop.loop_state.X[len(self.init_x_data) :]
         self.active_y_data = self.loop.loop_state.Y[len(self.init_x_data) :]
 
-    def save_gp(self) -> None:
+    def save_gp_all(self) -> None:
         np.save(self.x_path, self.loop.loop_state.X)
         np.save(self.y_path, self.loop.loop_state.Y)
         np.save(self.model_path, self.model_gpy.param_array)
 
     def load_data(self) -> None:
+        # curently doesn't seem to load other data.
         X = np.load(self.x_path)
         Y = np.load(self.y_path)
         # model_param = np.load(self.model_path)
