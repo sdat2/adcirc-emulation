@@ -200,6 +200,7 @@ class SixDOFSearch:
         self.space = ParameterSpace(
             [ContinuousParameter(i, conf[i].min, conf[i].max) for i in conf]
         )
+        self.units = {i: conf[i].units for i in conf}
         # ['angle', 'speed', 'points_east', 'rmax', 'pc', 'xn']
         # self.space = ParameterSpace([angles, speeds, point_east, rmax, pc, xn])
         self.names = self.space.parameter_names
@@ -236,12 +237,15 @@ class SixDOFSearch:
         self.test_y_data = np.array([[np.nan]])
 
         # Load test data.
-        self.load_test_data()
+        #  self.load_test_data()
 
         # Data paths.
         self.x_path = os.path.join(self.data_path, "X.npy")
         self.y_path = os.path.join(self.data_path, "Y.npy")
         self.model_path = os.path.join(self.data_path, "model_save.npy")
+
+    def __repr__(self) -> str:
+        return f"SixDOFSearch({self.space}), units={self.units}), dryrun={self.dryrun})"
 
     def real_samples(self, num_samples: int) -> np.ndarray:
         return self.real_design.get_samples(num_samples).astype("float32")
@@ -352,25 +356,26 @@ class SixDOFSearch:
 
     def load_data(self) -> None:
         # curently doesn't seem to load other data.
+        # needs to run save_as_normalized first.
         X = np.load(self.x_path)
         Y = np.load(self.y_path)
         # model_param = np.load(self.model_path)
         # print(X, Y, model_param)
-        self.save_normalized(X, Y)
+        self.save_normalized_to_netcdf(X, Y)
 
     def save_initial_data(self) -> None:
         # won't work if setup action hasn't been run.
         X = self.loop.loop_state.X
         Y = self.loop.loop_state.Y
         # print(X, Y)
-        self.save_normalized(X, Y)
+        self.save_normalized_to_netcdf(X, Y)
 
     def save_loop_data(self) -> None:
         X = self.init_x_data
         Y = self.init_y_data
-        self.save_normalized(X, Y)
+        self.save_normalized_to_netcdf(X, Y)
 
-    def save_normalized(self, X, Y) -> None:
+    def save_normalized_to_netcdf(self, X, Y) -> None:
         x_real = self.to_real(X)
         y_real = -Y
         self.save_real(x_real, y_real)
@@ -381,6 +386,7 @@ class SixDOFSearch:
         points = list(range(x_real.shape[0]))
         num_vars = list(range(len(self.names)))
         # adding units would be good.
+        # are the units in sixd.yaml?
         ds = xr.Dataset(
             data_vars={self.names[i]: (["point"], x_real[:, i]) for i in num_vars},
             coords=dict(
@@ -389,16 +395,29 @@ class SixDOFSearch:
             attrs=dict(description="Data."),
         )
         # ds["maxele"] = y_real[:, 0]
+        for i in [j for j in ds.variables if j in self.units]:
+            ds[i].attrs = dict(units=self.units[i])
+
         ds = ds.assign(maxele=("point", y_real[:, 0]))
         ds.to_netcdf(os.path.join(self.data_path, "data.nc"))
 
     def load_real_data(self, data_path=None) -> xr.Dataset:
-        if data_path == None:
+        if data_path is None:
             data_path = self.data_path
         # add option to use this for loading test data.
-        return xr.open_dataset(os.path.join(self.data_path, "data.nc"))
+        return xr.open_dataset(os.path.join(data_path, "data.nc"))
+
+    def load_real_df(self, data_path=None) -> pd.DataFrame:
+        if data_path == None:
+            data_path = self.data_path
+        ds = self.load_real_data(data_path=data_path)
+        df = ds.to_dataframe()
+        return df.rename(
+            columns={i: i + " [" + self.units[i] + "]" for i in self.names}
+        )
 
     def load_normalized_data(self, data_path=None) -> Tuple[np.ndarray, np.ndarray]:
+        print("loading data from", data_path)
         if data_path == None:
             data_path = self.data_path
         # load data from netcdf file and reconvert it to
@@ -409,7 +428,7 @@ class SixDOFSearch:
         return self.to_normalized(xr.T), -yr.T
 
     def load_test_data(self, test_data_path=None) -> None:
-        if test_data_path == None:
+        if test_data_path is None:
             test_data_path = self.test_data_path
         Xtest, Ytest = self.load_normalized_data(data_path=test_data_path)
         self.test_x_data = Xtest
@@ -452,7 +471,7 @@ def holdout_set() -> None:
     tf.run_initial(samples=200)
     tf.setup_active()
     tf.run_active(100)
-    tf.save_normalized()
+    tf.save_normalized_to_netcdf()
     print(tf.gp_predict()(tf.normalized_samples(100)[:10]))
     print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
 
@@ -480,7 +499,7 @@ def test() -> None:
     tf.run_initial(samples=200)
     tf.setup_active()
     tf.run_active(100)
-    tf.save_normalized()
+    tf.save_normalized_to_netcdf()
     print(tf.gp_predict()(tf.normalized_samples(100)[:10]))
     print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
 
