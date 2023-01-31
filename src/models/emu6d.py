@@ -172,6 +172,7 @@ class SixDOFSearch:
         seed: int = 0,
         dryrun: bool = False,
         path: str = "6D_search",
+        test_data_path: str = "6D_test",  # where to get the test data.
     ) -> None:
         """
         Initialize the search space for emulation.
@@ -180,6 +181,7 @@ class SixDOFSearch:
             seed (int, optional): Random seed (used by lhs). Defaults to 0.
             dryrun (bool, optional): Use a fake function. Defaults to False.
             path (str, optional): Where to store the data. Defaults to "6D_search".
+            test_data_path (str, optional): Where to get the test data. Defaults to "6D_test".
         """
         np.random.seed(seed)
         # default ranges is from the sixd.yaml file
@@ -204,7 +206,9 @@ class SixDOFSearch:
         self.normalized_space = ParameterSpace(
             [ContinuousParameter(name, 0, 1) for name in self.names]
         )
+        # This seems somewhat redundant, but I guess I've included it for completeness.
         self.real_design = LatinDesign(self.space)
+        # This latin hypercube design is used to generate the samples.
         self.normalized_design = LatinDesign(self.normalized_space)
 
         bounds = self.space.get_bounds()
@@ -216,16 +220,23 @@ class SixDOFSearch:
         # main figure paths.
         self.figure_path = os.path.join(FIGURE_PATH, path)
         self.data_path = os.path.join(DATA_PATH, path)
+        self.test_data_path = os.path.join(DATA_PATH, test_data_path)
 
+        # make file locations if they don't exist.
         for path in [self.figure_path, self.data_path]:
             if not os.path.exists(path):
                 os.mkdir(path)
 
         # Setup-empty entries.
-        self.init_x_data = np.array([[np.nan, np.nan]])
+        self.init_x_data = np.array([[np.nan for _ in range(len(self.names))]])
         self.init_y_data = np.array([[np.nan]])
-        self.active_x_data = np.array([[np.nan, np.nan]])
+        self.active_x_data = np.array([[np.nan for _ in range(len(self.names))]])
         self.active_y_data = np.array([[np.nan]])
+        self.test_x_data = np.array([[np.nan for _ in range(len(self.names))]])
+        self.test_y_data = np.array([[np.nan]])
+
+        # Load test data.
+        self.load_test_data()
 
         # Data paths.
         self.x_path = os.path.join(self.data_path, "X.npy")
@@ -275,7 +286,7 @@ class SixDOFSearch:
         if shape[0] == 1:
             r = range(1)
         else:
-            r = trange(shape[0])
+            r = trange(shape[0], desc=f"Sweep, dryrun={self.dryrun}")
 
         for i in r:
             param = self.to_param(real_data[i])
@@ -351,7 +362,7 @@ class SixDOFSearch:
         # won't work if setup action hasn't been run.
         X = self.loop.loop_state.X
         Y = self.loop.loop_state.Y
-        print(X, Y)
+        # print(X, Y)
         self.save_normalized(X, Y)
 
     def save_loop_data(self) -> None:
@@ -366,7 +377,7 @@ class SixDOFSearch:
 
     def save_real(self, x_real, y_real) -> None:
 
-        print(self.names)  # , x_real, y_real)
+        # print(self.names)  # , x_real, y_real)
         points = list(range(x_real.shape[0]))
         num_vars = list(range(len(self.names)))
         # adding units would be good.
@@ -381,19 +392,28 @@ class SixDOFSearch:
         ds = ds.assign(maxele=("point", y_real[:, 0]))
         ds.to_netcdf(os.path.join(self.data_path, "data.nc"))
 
-    def load_real_data(self) -> xr.Dataset:
+    def load_real_data(self, data_path=None) -> xr.Dataset:
+        if data_path == None:
+            data_path = self.data_path
         # add option to use this for loading test data.
         return xr.open_dataset(os.path.join(self.data_path, "data.nc"))
 
-    def load_normalized_data(self) -> None:
+    def load_normalized_data(self, data_path=None) -> Tuple[np.ndarray, np.ndarray]:
+        if data_path == None:
+            data_path = self.data_path
         # load data from netcdf file and reconvert it to
         # normalised.
-        ds = self.load_real_data()
+        ds = self.load_real_data(data_path=data_path)
         data = ds.to_array().values
-        xr = data[:-1]
-        yr = data[-1:]
-        X, Y = self.to_normalized(xr.T), -yr.T
-        return X, Y
+        xr, yr = data[:-1], data[-1:]
+        return self.to_normalized(xr.T), -yr.T
+
+    def load_test_data(self, test_data_path=None) -> None:
+        if test_data_path == None:
+            test_data_path = self.test_data_path
+        Xtest, Ytest = self.load_normalized_data(data_path=test_data_path)
+        self.test_x_data = Xtest
+        self.test_y_data = Ytest
 
     def gp_predict(self) -> Callable:
         X = np.load(self.x_path)
