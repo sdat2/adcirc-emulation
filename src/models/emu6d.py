@@ -28,6 +28,7 @@ from emukit.core import ParameterSpace, ContinuousParameter
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import imageio as io
+from tqdm import tqdm
 from adcircpy.outputs import Maxele
 from sithom.plot import plot_defaults, label_subplots
 from sithom.time import timeit
@@ -40,6 +41,15 @@ from src.models.generation import vmax_from_pressure_holliday
 
 @typechecked
 def get_param(updates: dict) -> dict:
+    """
+    Get the parameters dictionary for the model (input to ADCIRC Holland Hurricane values).
+
+    Args:
+        updates (dict): The parameters that have been specified.
+
+    Returns:
+        dict: All required parameters, where those unspecified are set to Katrina's values.
+    """
     # Default values are taken from a fit of the Holland 2008 model to Hurricane Katrina
     # At landfall.
     defaults = {
@@ -53,9 +63,10 @@ def get_param(updates: dict) -> dict:
         "vmax": 54.01667,  # m s**-1
         "xn": 1.1249,  # dimensionless
     }
-    # no surprises
+    # no surprises allowed
     assert np.all([x in defaults.keys() for x in updates.keys()])
 
+    # is this necessary?
     output = defaults.copy()
 
     for key in updates:
@@ -98,7 +109,7 @@ def real_func(param: dict, output_direc: str) -> float:
         output_direc (str): Where to store data.
 
     Returns:
-        float: _description_
+        float: The sea surface height at the point of interest.
     """
     point = Point(NEW_ORLEANS.lon + param["point_east"], NEW_ORLEANS.lat)
     if os.path.exists(output_direc):
@@ -122,6 +133,16 @@ def real_func(param: dict, output_direc: str) -> float:
 
 
 def fake_func(param: dict, output_direc: str) -> float:
+    """
+    A fake function to check the emulation would work.
+
+    Args:
+        param (dict): Parameters to be passed to the function.
+        output_direc (str): Where to store data for this test.
+
+    Returns:
+        float: The mean of the absolute values of the parameters / 200.
+    """
     default_param = get_param({})
     assert np.all([key in default_param.keys() for key in param])
     print("called fake func")
@@ -250,20 +271,24 @@ class SixDOFSearch:
         shape = np.shape(real_data)
         output_list = []
 
-        for i in range(shape[0]):
+        # incorporate the tqdm progress bar.
+        for i in tqdm(range(shape[0])):
             param = self.to_param(real_data[i])
-            print("Calling", param)
+            # print("Calling", param)
             output_direc = os.path.join(self.data_path, str(self.call_number))
-            print(output_direc)
+            # print(output_direc)
             if self.dryrun:
+                # take the negative for minimization.
                 output_list.append(-fake_func(param, output_direc))
             else:
+                # take the negative for minimization.
                 output_list.append(-real_func(param, output_direc))
             self.call_number += 1
 
         return np.array(output_list).reshape(len(output_list), 1)
 
     def get_initial(self, samples: int = 500) -> None:
+        # call func some number of times
         self.init_x_data = self.gp_samples(samples)
         self.init_y_data = self.func(self.init_x_data)
 
