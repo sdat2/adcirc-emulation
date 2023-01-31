@@ -161,7 +161,7 @@ class SixDOFSearch:
         >>> import numpy as np
         >>> tf = SixDOFSearch()
         >>> x_data = tf.samples(300)
-        >>> np.all(np.isclose(tf.to_real(tf.to_gp(x_data)), x_data, rtol=1e-6))
+        >>> np.all(np.isclose(tf.to_real(tf.to_normalized(x_data)), x_data, rtol=1e-6))
         True
         >>> np.all(tf.from_param(tf.to_param(x_data[0])) == x_data[0])
         True
@@ -201,11 +201,11 @@ class SixDOFSearch:
         # ['angle', 'speed', 'points_east', 'rmax', 'pc', 'xn']
         # self.space = ParameterSpace([angles, speeds, point_east, rmax, pc, xn])
         self.names = self.space.parameter_names
-        self.gp_space = ParameterSpace(
+        self.normalized_space = ParameterSpace(
             [ContinuousParameter(name, 0, 1) for name in self.names]
         )
         self.real_design = LatinDesign(self.space)
-        self.gp_design = LatinDesign(self.gp_space)
+        self.normalized_design = LatinDesign(self.normalized_space)
 
         bounds = self.space.get_bounds()
         self.lower_bounds = np.asarray(bounds)[:, 0].reshape(1, len(bounds))
@@ -235,8 +235,8 @@ class SixDOFSearch:
     def real_samples(self, num_samples: int) -> np.ndarray:
         return self.real_design.get_samples(num_samples).astype("float32")
 
-    def gp_samples(self, num_samples: int) -> np.ndarray:
-        return self.gp_design.get_samples(num_samples).astype("float32")
+    def normalized_samples(self, num_samples: int) -> np.ndarray:
+        return self.normalized_design.get_samples(num_samples).astype("float32")
 
     def to_real(self, x_data: np.ndarray) -> np.ndarray:
         """
@@ -245,7 +245,7 @@ class SixDOFSearch:
         ones = np.ones((x_data.shape[0], 1))
         return np.dot(ones, self.lower_bounds) + x_data * np.dot(ones, self.diffs)
 
-    def to_gp(self, x_data: np.ndarray) -> np.ndarray:
+    def to_normalized(self, x_data: np.ndarray) -> np.ndarray:
         """
         x_data: assume last dimension is the variables.
         """
@@ -294,7 +294,7 @@ class SixDOFSearch:
 
     def get_initial(self, samples: int = 500) -> None:
         # call func some number of times
-        self.init_x_data = self.gp_samples(samples)
+        self.init_x_data = self.normalized_samples(samples)
         self.init_y_data = self.func(self.init_x_data)
 
     def fit_initial(self, kernel_class: Union[Kern, Stationary] = Matern32):
@@ -321,7 +321,7 @@ class SixDOFSearch:
 
         self.loop = loop_class(
             model=self.model_emukit,
-            space=self.gp_space,
+            space=self.normalized_space,
             acquisition=self.acquisition_function,
             batch_size=1,
         )
@@ -334,7 +334,7 @@ class SixDOFSearch:
         self.active_x_data = self.loop.loop_state.X[len(self.init_x_data) :]
         self.active_y_data = self.loop.loop_state.Y[len(self.init_x_data) :]
 
-    def save_gp_all(self) -> None:
+    def save_as_normalized(self) -> None:
         np.save(self.x_path, self.loop.loop_state.X)
         np.save(self.y_path, self.loop.loop_state.Y)
         np.save(self.model_path, self.model_gpy.param_array)
@@ -345,21 +345,21 @@ class SixDOFSearch:
         Y = np.load(self.y_path)
         # model_param = np.load(self.model_path)
         # print(X, Y, model_param)
-        self.save_gp(X, Y)
+        self.save_normalized(X, Y)
 
     def save_initial_data(self) -> None:
         # won't work if setup action hasn't been run.
         X = self.loop.loop_state.X
         Y = self.loop.loop_state.Y
         print(X, Y)
-        self.save_gp(X, Y)
+        self.save_normalized(X, Y)
 
     def save_loop_data(self) -> None:
         X = self.init_x_data
         Y = self.init_y_data
-        self.save_gp(X, Y)
+        self.save_normalized(X, Y)
 
-    def save_gp(self, X, Y) -> None:
+    def save_normalized(self, X, Y) -> None:
         x_real = self.to_real(X)
         y_real = -Y
         self.save_real(x_real, y_real)
@@ -385,12 +385,14 @@ class SixDOFSearch:
         # add option to use this for loading test data.
         return xr.open_dataset(os.path.join(self.data_path, "data.nc"))
 
-    def load_gp_data(self) -> None:
+    def load_normalized_data(self) -> None:
+        # load data from netcdf file and reconvert it to
+        # normalised.
         ds = self.load_real_data()
         data = ds.to_array().values
         xr = data[:-1]
         yr = data[-1:]
-        X, Y = self.to_gp(xr.T), -yr.T
+        X, Y = self.to_normalized(xr.T), -yr.T
         return X, Y
 
     def gp_predict(self) -> Callable:
@@ -417,7 +419,7 @@ class SixDOFSearch:
         m_load.update_model(True)  # Call the algebra only once
 
         def func_ret(x_data) -> Tuple[np.ndarray, np.ndarray]:
-            mean, var = m_load.predict(self.to_gp(x_data))
+            mean, var = m_load.predict(self.to_normalized(x_data))
             return -mean, var
 
         return func_ret
@@ -426,12 +428,12 @@ class SixDOFSearch:
 def holdout_set() -> None:
     tf = SixDOFSearch(dryrun=False, path="6D_Search_Holdout", seed=5)
     print(tf.real_samples(100)[:10])
-    print(tf.to_real(tf.gp_samples(100))[:10])
+    print(tf.to_real(tf.normalized_samples(100))[:10])
     tf.run_initial(samples=200)
     tf.setup_active()
     tf.run_active(100)
-    tf.save_gp()
-    print(tf.gp_predict()(tf.gp_samples(100)[:10]))
+    tf.save_normalized()
+    print(tf.gp_predict()(tf.normalized_samples(100)[:10]))
     print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
 
 
@@ -443,23 +445,23 @@ def load_holdout_set() -> None:
 def holdout_new() -> None:
     tf = SixDOFSearch(dryrun=False, path="6D_Holdout", seed=5)
     # print(tf.real_samples(100)[:10])
-    # print(tf.to_real(tf.gp_samples(100))[:10])
+    # print(tf.to_real(tf.normalized_samples(100))[:10])
     tf.run_initial(samples=100)
     tf.save_initial_data()
     tf.load_real_data()
-    # print(tf.gp_predict()(tf.gp_samples(100)[:10]))
+    # print(tf.gp_predict()(tf.normalized_samples(100)[:10]))
     # print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
 
 
 def test() -> None:
     tf = SixDOFSearch(dryrun=True, path="Test", seed=0)
     print(tf.real_samples(100)[:10])
-    print(tf.to_real(tf.gp_samples(100))[:10])
+    print(tf.to_real(tf.normalized_samples(100))[:10])
     tf.run_initial(samples=200)
     tf.setup_active()
     tf.run_active(100)
-    tf.save_gp()
-    print(tf.gp_predict()(tf.gp_samples(100)[:10]))
+    tf.save_normalized()
+    print(tf.gp_predict()(tf.normalized_samples(100)[:10]))
     print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
 
 
@@ -467,5 +469,5 @@ if __name__ == "__main__":
     # python src/models/emu6d.py
     holdout_new()
     # assert np.all(
-    #    np.isclose(tf.real_samples(100), tf.to_real(tf.gp_samples(100)), rtol=1e-3)
+    #    np.isclose(tf.real_samples(100), tf.to_real(tf.normalized_samples(100)), rtol=1e-3)
     # )
