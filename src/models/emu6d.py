@@ -28,7 +28,7 @@ from emukit.core import ParameterSpace, ContinuousParameter
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import imageio as io
-from tqdm import tqdm
+from tqdm import tqdm, trange
 from adcircpy.outputs import Maxele
 from sithom.plot import plot_defaults, label_subplots
 from sithom.time import timeit
@@ -145,7 +145,7 @@ def fake_func(param: dict, output_direc: str) -> float:
     """
     default_param = get_param({})
     assert np.all([key in default_param.keys() for key in param])
-    print("called fake func")
+    # print("called fake func")
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
     if not os.path.exists(output_direc):
@@ -271,8 +271,13 @@ class SixDOFSearch:
         shape = np.shape(real_data)
         output_list = []
 
-        # incorporate the tqdm progress bar.
-        for i in tqdm(range(shape[0])):
+        # incorporate the tqdm progress bar if choosing more than one point.
+        if shape[0] == 1:
+            r = range(1)
+        else:
+            r = trange(shape[0])
+
+        for i in r:
             param = self.to_param(real_data[i])
             # print("Calling", param)
             output_direc = os.path.join(self.data_path, str(self.call_number))
@@ -343,8 +348,10 @@ class SixDOFSearch:
         self.save_gp(X, Y)
 
     def save_initial_data(self) -> None:
+        # won't work if setup action hasn't been run.
         X = self.loop.loop_state.X
         Y = self.loop.loop_state.Y
+        print(X, Y)
         self.save_gp(X, Y)
 
     def save_loop_data(self) -> None:
