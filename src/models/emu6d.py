@@ -365,9 +365,11 @@ class SixDOFSearch:
         self.save_real(x_real, y_real)
 
     def save_real(self, x_real, y_real) -> None:
+
         print(self.names)  # , x_real, y_real)
         points = list(range(x_real.shape[0]))
         num_vars = list(range(len(self.names)))
+        # adding units would be good.
         ds = xr.Dataset(
             data_vars={self.names[i]: (["point"], x_real[:, i]) for i in num_vars},
             coords=dict(
@@ -380,7 +382,16 @@ class SixDOFSearch:
         ds.to_netcdf(os.path.join(self.data_path, "data.nc"))
 
     def load_real_data(self) -> xr.Dataset:
+        # add option to use this for loading test data.
         return xr.open_dataset(os.path.join(self.data_path, "data.nc"))
+
+    def load_gp_data(self) -> None:
+        ds = self.load_real_data()
+        data = ds.to_array().values
+        xr = data[:-1]
+        yr = data[-1:]
+        X, Y = self.to_gp(xr.T), -yr.T
+        return X, Y
 
     def gp_predict(self) -> Callable:
         X = np.load(self.x_path)
