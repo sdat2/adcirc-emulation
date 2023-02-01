@@ -312,7 +312,7 @@ class SixDOFSearch:
         self.init_x_data = self.normalized_samples(samples)
         self.init_y_data = self.func(self.init_x_data)
 
-    def fit_initial(self, kernel_class: Union[Kern, Stationary] = Matern32):
+    def _fit_initial(self, kernel_class: Union[Kern, Stationary] = Matern32):
         self.model_gpy = GPRegression(
             self.init_x_data,
             self.init_y_data.reshape(len(self.init_y_data), 1),
@@ -325,7 +325,7 @@ class SixDOFSearch:
         self, samples: int = 500, kernel_class: Union[Kern, Stationary] = Matern32
     ) -> None:
         self.get_initial(samples=samples)
-        self.fit_initial(kernel_class=kernel_class)
+        self._fit_initial(kernel_class=kernel_class)
 
     def setup_active(
         self,
@@ -434,6 +434,22 @@ class SixDOFSearch:
         Xtest, Ytest = self.load_normalized_data(data_path=test_data_path)
         self.test_x_data = Xtest
         self.test_y_data = Ytest
+
+    def test_metrics(self) -> None:
+        # Test data need to be loaded first.
+        import wandb
+        from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+
+        mean, var = self.model_gpy.predict(self.test_x_data)
+        rmse, mae, r2 = (
+            mean_squared_error(self.test_y_data, mean, squared=False),
+            mean_absolute_error(self.test_y_data, mean),
+            r2_score(self.test_y_data, mean),
+        )
+        print("rmse", rmse, "mae", mae, "r2", r2)
+        # check if wandb is running.
+        if wandb.run is not None:
+            wandb.log({"rmse": rmse, "mae": mae, "r2": r2})
 
     def gp_predict(self) -> Callable:
         X = np.load(self.x_path)
