@@ -344,6 +344,32 @@ class SixDOFSearch:
         self.active_x_data = self.loop.loop_state.X[len(self.init_x_data) :]
         self.active_y_data = self.loop.loop_state.Y[len(self.init_x_data) :]
 
+    def resetup_active(
+        self,
+        acquisition_class: Acquisition = ModelVariance,
+        loop_class: OuterLoop = BayesianOptimizationLoop,
+    ) -> None:
+        # Add all data to the initial data variable.
+        self.init_x_data = self.loop.loop_state.X
+        self.init_y_data = self.loop.loop_state.Y
+        if isinstance(acquisition_class, ModelVariance):
+            self.acquisition_function = acquisition_class(model=self.model_emukit)
+        # some acquisition functions require the space to be passed.
+        elif isinstance(acquisition_class, MaxValueEntropySearch):
+            self.acquisition_function = acquisition_class(
+                model=self.model_emukit, space=self.normalized_space
+            )
+
+        self.loop = loop_class(
+            model=self.model_emukit,
+            space=self.normalized_space,
+            acquisition=self.acquisition_function,
+            batch_size=1,
+        )
+        # remove all data from the active data variable.
+        self.active_x_data = self.loop.loop_state.X[len(self.init_x_data) :]
+        self.active_y_data = self.loop.loop_state.Y[len(self.init_x_data) :]
+
     def run_active(self, new_iterations: int) -> None:
         self.loop.run_loop(self.func, new_iterations)
         self.active_x_data = self.loop.loop_state.X[len(self.init_x_data) :]
