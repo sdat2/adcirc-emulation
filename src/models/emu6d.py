@@ -364,6 +364,7 @@ class SixDOFSearch:
         self.save_normalized_to_netcdf(X, Y)
 
     def save_initial_data(self) -> None:
+        # maybe this could just be called save_data?
         # won't work if setup action hasn't been run.
         X = self.loop.loop_state.X
         Y = self.loop.loop_state.Y
