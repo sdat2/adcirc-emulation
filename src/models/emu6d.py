@@ -1,3 +1,6 @@
+"""
+Six dimensional emulation of the Holland 2008 model.
+"""
 import os
 from typing import Callable, Tuple, Union
 import shutil
@@ -6,6 +9,7 @@ import pandas as pd
 import xarray as xr
 from typeguard import typechecked
 from omegaconf import OmegaConf
+import wandb
 import GPy
 from GPy.kern.src.kern import Kern
 from GPy.kern.src.stationary import Stationary
@@ -111,6 +115,9 @@ def real_func(param: dict, output_direc: str) -> float:
     Returns:
         float: The sea surface height at the point of interest.
     """
+    import wandb
+
+    wandb.init(project="6D_individual", entity="sdat2")
     point = Point(NEW_ORLEANS.lon + param["point_east"], NEW_ORLEANS.lat)
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
@@ -129,6 +136,7 @@ def real_func(param: dict, output_direc: str) -> float:
     indices = indices_in_bbox(maxele.x, maxele.y)
     height = maxele.values[indices][index_set]
     print("height =  ", height, "m")
+    wandb.log(dict(**param, height=height))
     return height
 
 
@@ -156,6 +164,9 @@ def fake_func(param: dict, output_direc: str) -> float:
 
 class SixDOFSearch:
     """
+    Six degrees of freedom search emulation.
+
+    We could change the dimensions of the search space, but for now we will keep it as is.
 
     Data conversion example::
         >>> import numpy as np
