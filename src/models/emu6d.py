@@ -91,7 +91,7 @@ def holliday_vmax(updates: dict) -> dict:
         dict: updates dictionary, to be passed to get_param.
     """
     assert "pc" in updates.keys()
-    updates["vmax"] = vmax_from_pressure_holliday(92800)
+    updates["vmax"] = vmax_from_pressure_holliday(updates["pc"])
     return updates
 
 
@@ -278,6 +278,7 @@ class SixDOFSearch:
         return (x_data - np.dot(ones, self.lower_bounds)) * np.dot(ones, 1 / self.diffs)
 
     def to_param(self, x_data_point: np.ndarray) -> dict:
+        # Currently seem broken.
         assert len(x_data_point) == len(self.names)
         assert len(np.shape(x_data_point)) == 1
         return holliday_vmax(
@@ -562,7 +563,7 @@ def test() -> None:
 
 if __name__ == "__main__":
     # python src/models/emu6d.py
-    holdout_small()
+    holdout_new()
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.normalized_samples(100)), rtol=1e-3)
     # )
