@@ -10,6 +10,7 @@ import xarray as xr
 from typeguard import typechecked
 from omegaconf import OmegaConf
 import wandb
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import GPy
 from GPy.kern.src.kern import Kern
 from GPy.kern.src.stationary import Stationary
@@ -115,9 +116,7 @@ def real_func(param: dict, output_direc: str) -> float:
     Returns:
         float: The sea surface height at the point of interest.
     """
-    import wandb
-
-    wandb.init(project="6D_individual", entity="sdat2")
+    wandb.init(project="6D_individual", entity="sdat2", reinit=True, config=param)
     point = Point(NEW_ORLEANS.lon + param["point_east"], NEW_ORLEANS.lat)
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
@@ -474,9 +473,6 @@ class SixDOFSearch:
 
     def test_metrics(self) -> None:
         # Test data need to be loaded first.
-        import wandb
-        from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
-
         mean, var = self.model_gpy.predict(self.test_x_data)
         rmse, mae, r2 = (
             mean_squared_error(self.test_y_data, mean, squared=False),
