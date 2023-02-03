@@ -536,14 +536,12 @@ def load_holdout_set() -> None:
 
 
 def holdout_new() -> None:
-    tf = SixDOFSearch(dryrun=False, path="6D_Holdout", seed=5)
-    # print(tf.real_samples(100)[:10])
-    # print(tf.to_real(tf.normalized_samples(100))[:10])
-    tf.run_initial(samples=100)
-    tf.save_initial_data()
-    tf.load_real_data()
-    # print(tf.gp_predict()(tf.normalized_samples(100)[:10]))
-    # print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
+    realholdout = SixDOFSearch(
+        seed=5, dryrun=False, path="6D_Holdout", test_data_path="6DFake"
+    )
+    realholdout.run_initial(samples=1000)
+    realholdout.setup_active()
+    realholdout.save_initial_data()
 
 
 def test() -> None:
