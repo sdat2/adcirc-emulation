@@ -278,7 +278,6 @@ class SixDOFSearch:
         return (x_data - np.dot(ones, self.lower_bounds)) * np.dot(ones, 1 / self.diffs)
 
     def to_param(self, x_data_point: np.ndarray) -> dict:
-        # Currently seem broken.
         assert len(x_data_point) == len(self.names)
         assert len(np.shape(x_data_point)) == 1
         return holliday_vmax(
