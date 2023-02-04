@@ -143,8 +143,8 @@ def real_func(param: dict, output_direc: str) -> float:
     atchafayala = 82
     dulac = 86
     akers = 2
-    v = maxele.values[indices]
     indices = NO_BBOX.indices_inside(maxele.x, maxele.y)
+    v = maxele.values[indices]
     height = v[ansley]
     print("height =  ", height, "m")
     wandb.log(
