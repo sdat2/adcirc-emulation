@@ -78,7 +78,7 @@ def datetime_to_int(date: Union[datetime.datetime, np.datetime64]) -> int:
     )
 
 
-def read_data_line(line: str) -> List[float]:
+def read_owi_data_line(line: str) -> List[float]:
     """
     Read data line.
 
@@ -92,14 +92,14 @@ def read_data_line(line: str) -> List[float]:
     return [float(x) for x in line.strip("\n").split(" ") if x != ""]
 
 
-def read_coord_line(line, names) -> dict:
+def read_owi_coord_line(line, names) -> dict:
     """
     Process line.
 
     Example::
         >>> names = ["iLat", "iLong", "DX", "DY", "SWLat", "SWLon", "DT"]
         >>> line = "iLat=  46iLong=  60DX=0.0500DY=0.0500SWLat=28.60000SWLon=-90.2800DT=200508250000"
-        >>> read_coord_line(line, names)
+        >>> read_owi_coord_line(line, names)
         {'iLat': 46.0,
          'iLong': 60.0,
          'DX': 0.05,
@@ -122,7 +122,7 @@ def read_coord_line(line, names) -> dict:
     return result_dict
 
 
-def read_windspeeds(windspeed_path: str) -> xr.Dataset:
+def read_owi_windspeeds(windspeed_path: str) -> xr.Dataset:
     """
     Read windspeeds.
 
@@ -143,21 +143,25 @@ def read_windspeeds(windspeed_path: str) -> xr.Dataset:
         # print(wsp_list[0])
         # print (wsp_list[1])
         # print (wsp_list[2])
-        # print (read_data_line(wsp_list[2]))
+        # print (read_owi_data_line(wsp_list[2]))
 
         wsp_lol.append([])
         for i in range(2, len_wsp):
             if wsp_list[i].startswith(" "):
-                wsp_lol[-1].append(read_data_line(wsp_list[i]))
+                wsp_lol[-1].append(read_owi_data_line(wsp_list[i]))
             else:
                 # print (wsp_list[i])
                 wsp_lol.append([])
 
         names = ["iLat", "iLong", "DX", "DY", "SWLat", "SWLon", "DT"]
-        coords = read_coord_line(wsp_list[1], names)
+        coords = read_owi_coord_line(wsp_list[1], names)
         dates = int_to_datetime(
             np.array(
-                [read_coord_line(x, names)["DT"] for x in wsp_list if x.startswith("i")]
+                [
+                    read_owi_coord_line(x, names)["DT"]
+                    for x in wsp_list
+                    if x.startswith("i")
+                ]
             ).astype(int)
         )
         lats = np.array(
@@ -190,7 +194,7 @@ def read_windspeeds(windspeed_path: str) -> xr.Dataset:
         return ds
 
 
-def read_pressures(pressure_path: str) -> xr.DataArray:
+def read_owi_pressures(pressure_path: str) -> xr.DataArray:
     """
     Read pressures.
 
@@ -210,15 +214,15 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
         # print (pressure_list[0])
         # print (pressure_list[1])
         # print (pressure_list[2])
-        # print (read_data_line(pressure_list[2]))
+        # print (read_owi_data_line(pressure_list[2]))
 
         names = ["iLat", "iLong", "DX", "DY", "SWLat", "SWLon", "DT"]
-        coords = read_coord_line(pressure_list[1], names)
+        coords = read_owi_coord_line(pressure_list[1], names)
 
         pressure_lol.append([])
         for i in range(2, len_pressure):
             if pressure_list[i].startswith(" "):
-                pressure_lol[-1].append(read_data_line(pressure_list[i]))
+                pressure_lol[-1].append(read_owi_data_line(pressure_list[i]))
             else:
                 # print (pressure_list[i])
                 pressure_lol.append([])
@@ -226,7 +230,7 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
         dates = int_to_datetime(
             np.array(
                 [
-                    read_coord_line(x, names)["DT"]
+                    read_owi_coord_line(x, names)["DT"]
                     for x in pressure_list
                     if x.startswith("i")
                 ]
@@ -259,21 +263,21 @@ def read_pressures(pressure_path: str) -> xr.DataArray:
         return da
 
 
-def read_default_inputs() -> None:
+def read_owi_default_inputs() -> None:
     for file_tuple in [
         ("fort.217", "fort.218"),
         ("fort.221", "fort.222"),
         ("fort.223", "fort.224"),
     ]:
-        pr_ds = read_pressures(os.path.join(KAT_EX_PATH, file_tuple[0]))
+        pr_ds = read_owi_pressures(os.path.join(KAT_EX_PATH, file_tuple[0]))
         pr_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[0]) + ".nc")
-        print_pressure(
+        write_owi_pressures(
             pr_ds,
             os.path.join(DATA_PATH, file_tuple[0]),
         )
-        ws_ds = read_windspeeds(os.path.join(KAT_EX_PATH, file_tuple[1]))
+        ws_ds = read_owi_windspeeds(os.path.join(KAT_EX_PATH, file_tuple[1]))
         ws_ds.to_netcdf(os.path.join(DATA_PATH, file_tuple[1]) + ".nc")
-        print_wsp(
+        write_owi_windspeeds(
             ws_ds,
             os.path.join(DATA_PATH, file_tuple[1]),
         )
@@ -309,7 +313,7 @@ def make_line(inp: List[float]) -> str:
     return "".join(list(map(entry, inp)))
 
 
-def print_pressure(da: xr.DataArray, output_path: str) -> None:
+def write_owi_pressures(da: xr.DataArray, output_path: str) -> None:
     """
     Print pressure text files.
 
@@ -353,7 +357,7 @@ def print_pressure(da: xr.DataArray, output_path: str) -> None:
     # iLat=  46iLong=  60DX=0.0500DY=0.0500SWLat=28.60000SWLon=-90.2800DT=200508250000
 
 
-def print_wsp(wds: xr.Dataset, output_path: str) -> None:
+def write_owi_windspeeds(wds: xr.Dataset, output_path: str) -> None:
     """
     Print windspeed.
 
@@ -521,5 +525,5 @@ def timeseries_height_ds(
 
 if __name__ == "__main__":
     # python src/data_loading/adcirc.py
-    read_default_inputs()
+    read_owi_default_inputs()
     # test()

@@ -27,10 +27,10 @@ from src.conversions import (
     pascal_to_millibar,
 )
 from src.data_loading.adcirc import (
-    print_pressure,
-    print_wsp,
-    read_pressures,
-    read_windspeeds,
+    write_owi_pressures,
+    write_owi_windspeeds,
+    read_owi_pressures,
+    read_owi_windspeeds,
 )
 from src.data_loading.ibtracs import katrina, prep_for_climada
 from src.models.h08 import h08_vp
@@ -288,16 +288,16 @@ def mult_generation(mult: int = 1) -> None:
 
         for file in pressure_inputs:
             orginal_file = os.path.join(source_direc, file)
-            ds = read_pressures(orginal_file)
+            ds = read_owi_pressures(orginal_file)
             final_file = os.path.join(output_direc, file)
-            print_pressure(ds, final_file)
+            write_owi_pressures(ds, final_file)
 
         for file in wsp_inputs:
             orginal_file = os.path.join(source_direc, file)
-            ds = read_windspeeds(orginal_file)
+            ds = read_owi_windspeeds(orginal_file)
             final_file = os.path.join(output_direc, file)
             ds = ds * mult
-            print_wsp(ds, final_file)
+            write_owi_windspeeds(ds, final_file)
 
     @timeit
     def run_adcirc() -> int:
@@ -576,7 +576,7 @@ class ImpactSymmetricTC:
         Args:
             forts (Tuple[str]): e.g. ("fort.221", "fort.222")
         """
-        da = read_pressures(os.path.join(KAT_EX_PATH, forts[0]))
+        da = read_owi_pressures(os.path.join(KAT_EX_PATH, forts[0]))
         average_timestep = (da.time.values[1:] - da.time.values[:-1]).mean()
         # smearing?
         vds_list = []
@@ -610,8 +610,8 @@ class ImpactSymmetricTC:
             print(vds)
             vds.to_netcdf(os.path.join(self.output_direc, forts[1]) + ".nc")
             print(pda)
-        print_pressure(pda, os.path.join(self.output_direc, forts[0]))
-        print_wsp(vds, os.path.join(self.output_direc, forts[1]))
+        write_owi_pressures(pda, os.path.join(self.output_direc, forts[0]))
+        write_owi_windspeeds(vds, os.path.join(self.output_direc, forts[1]))
 
     def tc_time_slice(
         self, da: xr.DataArray, time: np.datetime64
