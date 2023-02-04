@@ -492,6 +492,7 @@ class ImpactSymmetricTC:
         """
         self.angle = angle  # degrees
         self.trans_speed = trans_speed  # m s**-1
+        print("Intializing", output_direc)
         self.output_direc = output_direc  # string to output direc
         # impact time for katrina.
         self.point = point
@@ -556,10 +557,13 @@ class ImpactSymmetricTC:
 
         @timeit
         def run_adcirc() -> int:
+            print("Running ADCIRC", self.output_direc)
             command = f"cd {self.output_direc} \n {ADCIRC_EXE} > adcirc_log.txt"
+            # Run ADCIRC in terminal
             return os.system(command)
 
         create_inputs()
+        # quit if ADCIRC run fails.
         assert run_adcirc() == 0
         # output, error = process.communicate()
         # print(output, error)
@@ -606,8 +610,8 @@ class ImpactSymmetricTC:
             print(vds)
             vds.to_netcdf(os.path.join(self.output_direc, forts[1]) + ".nc")
             print(pda)
-        # print_pressure(pda, os.path.join(self.output_direc, forts[0]))
-        # print_wsp(vds, os.path.join(self.output_direc, forts[1]))
+        print_pressure(pda, os.path.join(self.output_direc, forts[0]))
+        print_wsp(vds, os.path.join(self.output_direc, forts[1]))
 
     def tc_time_slice(
         self, da: xr.DataArray, time: np.datetime64

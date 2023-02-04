@@ -115,6 +115,7 @@ def real_func(param: dict, output_direc: str) -> float:
     point = Point(NEW_ORLEANS.lon + param["point_east"], NEW_ORLEANS.lat)
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
+    print("Running ImpactSymmetricTC", output_direc)
     ImpactSymmetricTC(
         point=point,
         output_direc=output_direc,
