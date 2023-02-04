@@ -10,6 +10,7 @@ UREG = UnitRegistry()
 RADIUS_EARTH = 6371.009 * UREG.kilometer
 
 # Note: constants should be UPPER_CASE
+ADCIRC_EXE: str = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
 constants_path: str = os.path.realpath(__file__)
 SRC_PATH: str = os.path.dirname(constants_path)
 CONFIG_PATH: str = os.path.join(SRC_PATH, "config")

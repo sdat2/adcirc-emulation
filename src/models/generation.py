@@ -8,7 +8,14 @@ import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import climada.hazard.trop_cyclone as tc
-from src.constants import DATA_PATH, FIGURE_PATH, KAT_EX_PATH, NEW_ORLEANS, NO_BBOX
+from src.constants import (
+    DATA_PATH,
+    FIGURE_PATH,
+    KAT_EX_PATH,
+    NEW_ORLEANS,
+    NO_BBOX,
+    ADCIRC_EXE,
+)
 from sithom.plot import plot_defaults, label_subplots
 from sithom.place import Point
 from sithom.time import timeit
@@ -529,8 +536,6 @@ class ImpactSymmetricTC:
             "fort.74.nc",
         ]
 
-        adcirc_exe = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
-
         @timeit
         def create_inputs() -> None:
             if not os.path.exists(self.output_direc):
@@ -551,7 +556,7 @@ class ImpactSymmetricTC:
 
         @timeit
         def run_adcirc() -> int:
-            command = f"cd {self.output_direc} \n {adcirc_exe} > adcirc_log.txt"
+            command = f"cd {self.output_direc} \n {ADCIRC_EXE} > adcirc_log.txt"
             return os.system(command)
 
         create_inputs()

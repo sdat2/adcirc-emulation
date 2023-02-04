@@ -98,16 +98,6 @@ def holliday_vmax(updates: dict) -> dict:
     return updates
 
 
-@np.vectorize
-def indices_in_bbox(lon: float, lat: float) -> bool:
-    return (
-        lon > NO_BBOX.lon[0]
-        and lon < NO_BBOX.lon[1]
-        and lat > NO_BBOX.lat[0]
-        and lat < NO_BBOX.lat[1]
-    )
-
-
 def real_func(param: dict, output_direc: str) -> float:
     """
     Feed the parameters into running the full tropical cyclone impact.
