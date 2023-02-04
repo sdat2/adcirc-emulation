@@ -569,12 +569,15 @@ class ImpactSymmetricTC:
         """
         da = read_pressures(os.path.join(KAT_EX_PATH, forts[0]))
         average_timestep = (da.time.values[1:] - da.time.values[:-1]).mean()
+        # smearing?
         vds_list = []
         pds_list = []
 
         for time in da.time.values:
             # work out time step for smearing
             # currently 3 hours -> subtract 1 hour + add 1 hour, then average?
+            # This is where the time smearing happens.
+            # TODO: make this more general.
             if timestep_smearing:
                 vds1, pds1 = self.tc_time_slice(da, time - average_timestep / 3)
                 vds2, pds2 = self.tc_time_slice(da, time)
@@ -589,8 +592,8 @@ class ImpactSymmetricTC:
             vds_list.append(vds)
             pds_list.append(pds)
 
-        print(type(vds_list))
-        print(vds_list[0])
+        # print(type(vds_list))
+        # print(vds_list[0])
         vds = xr.concat(vds_list, dim="time")
         pda = xr.concat(pds_list, dim="time")["pressure"]
         if self.debug:
@@ -598,8 +601,8 @@ class ImpactSymmetricTC:
             print(vds)
             vds.to_netcdf(os.path.join(self.output_direc, forts[1]) + ".nc")
             print(pda)
-        print_pressure(pda, os.path.join(self.output_direc, forts[0]))
-        print_wsp(vds, os.path.join(self.output_direc, forts[1]))
+        # print_pressure(pda, os.path.join(self.output_direc, forts[0]))
+        # print_wsp(vds, os.path.join(self.output_direc, forts[1]))
 
     def tc_time_slice(
         self, da: xr.DataArray, time: np.datetime64

@@ -119,7 +119,9 @@ def real_func(param: dict, output_direc: str) -> float:
     Returns:
         float: The sea surface height at the point of interest.
     """
-    wandb.init(project="6D_individual", entity="sdat2", reinit=True, config=param)
+    wandb.init(
+        project="6d_individual_version2", entity="sdat2", reinit=True, config=param
+    )
     point = Point(NEW_ORLEANS.lon + param["point_east"], NEW_ORLEANS.lat)
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
@@ -134,11 +136,28 @@ def real_func(param: dict, output_direc: str) -> float:
     ).run_impact()
     path = os.path.join(output_direc, "maxele.63.nc")
     maxele = Maxele(path, crs="EPSG:4326")
-    index_set = 27
+    ansley = 27
+    new_orleans = 5
+    diamondhead = 17
+    mississippi = 77
+    atchafayala = 82
+    dulac = 86
+    akers = 2
+    v = maxele.values[indices]
     indices = NO_BBOX.indices_inside(maxele.x, maxele.y)
-    height = maxele.values[indices][index_set]
+    height = v[ansley]
     print("height =  ", height, "m")
-    wandb.log(dict(**param, height=height))
+    wandb.log(
+        {
+            "ansley": v[ansley],
+            "akers": v[akers],
+            "new_orleans": v[new_orleans],
+            "diamondhead": v[diamondhead],
+            "mississippi": v[mississippi],
+            "atchafayala": v[atchafayala],
+            "dulac": v[dulac],
+        }
+    )
     return height
 
 
@@ -566,7 +585,8 @@ def test() -> None:
 
 if __name__ == "__main__":
     # python src/models/emu6d.py
-    holdout_small()
+    holdout_new()
+    # holdout_small()
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.normalized_samples(100)), rtol=1e-3)
     # )
