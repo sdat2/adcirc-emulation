@@ -576,8 +576,8 @@ def test() -> None:
 
 if __name__ == "__main__":
     # python src/models/emu6d.py
-    holdout_new()
-    # holdout_small()
+    # holdout_new()
+    holdout_small()
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.normalized_samples(100)), rtol=1e-3)
     # )

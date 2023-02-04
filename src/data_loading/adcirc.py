@@ -3,6 +3,8 @@
 
 https://coast.nd.edu/reports_papers/SELA_2007_IDS_2_FinalDraft/App%20D%20PBL-C%20WIN_PRE%20File%20Format.pdf
 
+Currently using OWI text format.
+
 """
 from typing import List, Union, Optional
 import os
