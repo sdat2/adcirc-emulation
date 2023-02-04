@@ -86,7 +86,8 @@ def filter_by_labels(
     Returns:
         xr.Dataset: Filtered dataset.
 
-    TODO: Relies to much on the shape of IBTRACS.
+    TODO: Relies to much on the shape of IBTRACS object, which could
+    be changed in the future.
 
     Example of using it to filter for North Atlantic TCs::
         >>> import xarray as xr

@@ -135,7 +135,7 @@ def real_func(param: dict, output_direc: str) -> float:
     path = os.path.join(output_direc, "maxele.63.nc")
     maxele = Maxele(path, crs="EPSG:4326")
     index_set = 27
-    indices = indices_in_bbox(maxele.x, maxele.y)
+    indices = NO_BBOX.indices_inside(maxele.x, maxele.y)
     height = maxele.values[indices][index_set]
     print("height =  ", height, "m")
     wandb.log(dict(**param, height=height))
