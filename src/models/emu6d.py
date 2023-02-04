@@ -57,6 +57,7 @@ def get_param(updates: dict) -> dict:
     """
     # Default values are taken from a fit of the Holland 2008 model to Hurricane Katrina
     # At landfall.
+    # These defaults should be loaded from config/katrina.yaml instead.
     defaults = {
         # Trajectory
         "angle": 0.0,  # degrees from North
@@ -71,7 +72,7 @@ def get_param(updates: dict) -> dict:
     # no surprises allowed
     assert np.all([x in defaults.keys() for x in updates.keys()])
 
-    # is this necessary?
+    # Is this necessary? There will be another origination for each call.
     output = defaults.copy()
 
     for key in updates:
@@ -83,6 +84,8 @@ def get_param(updates: dict) -> dict:
 def holliday_vmax(updates: dict) -> dict:
     """
     Generate vmax from pressure using Holliday's formula.
+
+    Could be improved by finding vmax from the Holland 2008 model through pressure-gradient balance.
 
     Args:
         updates (dict): the dictionary of parameters, must contain "pc".
@@ -533,15 +536,16 @@ def load_holdout_set() -> None:
 
 def holdout_new() -> None:
     realholdout = SixDOFSearch(
-        seed=5, dryrun=False, path="6D_Holdout", test_data_path="6DFake"
+        seed=105, dryrun=False, path="6D_Holdout", test_data_path="6DFake"
     )
     realholdout.run_initial(samples=1000)
     realholdout.setup_active()
     realholdout.save_initial_data()
 
+
 def holdout_small() -> None:
     realholdout = SixDOFSearch(
-        seed=0, dryrun=False, path="6D_Holdout_small", test_data_path="6DFake"
+        seed=2, dryrun=False, path="6D_Holdout_small", test_data_path="6DFake"
     )
     realholdout.run_initial(samples=250)
     realholdout.setup_active()
@@ -562,7 +566,7 @@ def test() -> None:
 
 if __name__ == "__main__":
     # python src/models/emu6d.py
-    holdout_new()
+    holdout_small()
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.normalized_samples(100)), rtol=1e-3)
     # )
