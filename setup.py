@@ -6,7 +6,7 @@ from typing import List
 REQUIRED: List[str] = [
     "typeguard",
     "pylint",
-    "sithom>=0.0.3",
+    "sithom>=0.0.4",
     "https://github.com/sdat2/emukit/archive/sdat2.zip",
     "cdsapi",
     "xarray",
