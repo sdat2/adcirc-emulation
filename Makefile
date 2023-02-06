@@ -37,7 +37,7 @@ test:
 	coverage report -m
 
 ## Set up python interpreter environment and install basic dependencies
-create_environment:
+env:
 ifeq (True,$(HAS_CONDA))
 	@echo ">>> Detected conda, creating conda environment."
 	

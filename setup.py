@@ -7,7 +7,7 @@ REQUIRED: List[str] = [
     "typeguard",
     "pylint",
     "sithom>=0.0.4",
-    "https://github.com/sdat2/emukit/archive/sdat2.zip",
+    # "https://github.com/sdat2/emukit/archive/sdat2.zip",
     "cdsapi",
     "xarray",
     "netCDF4",
@@ -18,7 +18,11 @@ REQUIRED: List[str] = [
     "adcircpy",
     "pyschism",
     "pyDOE",
-    "emukit",
+    # "emukit",
+    "hydra-core",
+    "wandb",
+    "comet-ml",
+    "sklearn",
 ]
 
 

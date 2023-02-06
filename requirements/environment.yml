@@ -3,12 +3,14 @@ channels:
   - conda-forge
   - defaults
   - pytorch
+  - gpytorch
 dependencies:
   - python=3.8
   - cartopy
   - pytorch
   - torchvision
   - torchaudio
+  - gpytorch
   - pip
   - pip:
     - gpytorch

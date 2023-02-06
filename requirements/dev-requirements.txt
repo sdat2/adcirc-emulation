@@ -4,9 +4,9 @@
 # local package
 -e ../.
 # my local branch of noaa_coops
--e ../../noaa_coops/
+# -e ../../noaa_coops/
 # local branch of sithom utilities.
--e ../../sithom/
+# -e ../../sithom/
 
 
 # testing
