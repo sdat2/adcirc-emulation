@@ -23,6 +23,7 @@ REQUIRED: List[str] = [
     "wandb",
     "comet-ml",
     "sklearn",
+    "imageio",
 ]
 
 

@@ -553,9 +553,9 @@ def holdout_new() -> None:
     realholdout.save_initial_data()
 
 
-def holdout_small() -> None:
+def holdout_small(seed=2) -> None:
     realholdout = SixDOFSearch(
-        seed=2, dryrun=False, path="6D_Holdout_small", test_data_path="6DFake"
+        seed=seed, dryrun=False, path="6D_Holdout_small", test_data_path="6DFake"
     )
     realholdout.run_initial(samples=250)
     realholdout.setup_active()
@@ -574,10 +574,19 @@ def test() -> None:
     print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
 
 
+def holdout_tiny(seed=3) -> None:
+    realholdout = SixDOFSearch(
+        seed=seed, dryrun=False, path="6D_Holdout_tiny", test_data_path="6DFake"
+    )
+    realholdout.run_initial(samples=250)
+    realholdout.setup_active()
+    realholdout.save_initial_data()
+
+
 if __name__ == "__main__":
     # python src/models/emu6d.py
     # holdout_new()
-    holdout_small()
+    holdout_tiny(seed=3)
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.normalized_samples(100)), rtol=1e-3)
     # )

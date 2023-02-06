@@ -1,4 +1,4 @@
-.PHONY: clean lint format create_environment install_jupyter_tools
+.PHONY: clean lint format env jupyter_pro vscode_pro
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -55,11 +55,11 @@ else
 endif
 
 ## Install and set up handy jupyter notebook extensions
-install_jupyter_tools:
+jupyter_pro:
 	sh ./.setup_scripts/jupyter_tools.sh
 
 ## Set up sweet vscode settings
-vscode_beautiful:
+vscode_pro:
 	mkdir .vscode
 	cp ./.setup_scripts/vscode_settings.jsonc .vscode/settings.json
 
