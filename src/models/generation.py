@@ -504,11 +504,13 @@ class ImpactSymmetricTC:
         """
         Assumes 111km per degree.
 
+        # TODO: These centers need to be recorded in a netcdf file.
+
         Args:
             time (numpy.datetime64): time.
 
         Returns:
-            List[float, float]: lon, lat.
+            Point: lon, lat.
         """
         time = datetime.datetime.utcfromtimestamp(
             (time - np.datetime64("1970-01-01T00:00:00")) / np.timedelta64(1, "s")
@@ -575,17 +577,24 @@ class ImpactSymmetricTC:
 
         Args:
             forts (Tuple[str]): e.g. ("fort.221", "fort.222")
+            timestep_smearing (bool, optional): Smear time to account for
+            discretisation. Defaults to True.
         """
         da = read_owi_pressures(os.path.join(KAT_EX_PATH, forts[0]))
         average_timestep = (da.time.values[1:] - da.time.values[:-1]).mean()
         # smearing?
-        vds_list = []
-        pds_list = []
+        vds_list = []  # velocity dataset list
+        pds_list = []  # pressure dataset list
+        lon_list = []  # list of storm centers. lon, lat
+        lat_list = []
 
         for time in da.time.values:
             # work out time step for smearing
             # currently 3 hours -> subtract 1 hour + add 1 hour, then average?
             # This is where the time smearing happens.
+            point = self.center_from_time(time)
+            lon_list.append(point.lon)
+            lat_list.append(point.lat)
             # TODO: make this more general.
             if timestep_smearing:
                 vds1, pds1 = self.tc_time_slice(da, time - average_timestep / 3)
@@ -605,11 +614,17 @@ class ImpactSymmetricTC:
         # print(vds_list[0])
         vds = xr.concat(vds_list, dim="time")
         pda = xr.concat(pds_list, dim="time")["pressure"]
+        cda = xr.Dataset(
+            data_vars=dict(lon=(["time"], lon_list), lat=(["time"], lat_list)),
+            coords={"time": vds.time.values},
+        )
+        cda["lat"].attrs["units"] = "degrees_north"
+        cda["lon"].attrs["units"] = "degrees_east"
+        print(cda)
         if self.debug:
             pda.to_netcdf(os.path.join(self.output_direc, forts[0]) + ".nc")
-            print(vds)
             vds.to_netcdf(os.path.join(self.output_direc, forts[1]) + ".nc")
-            print(pda)
+        cda.to_netcdf(os.path.join(self.output_direc, "traj") + ".nc")
         write_owi_pressures(pda, os.path.join(self.output_direc, forts[0]))
         write_owi_windspeeds(vds, os.path.join(self.output_direc, forts[1]))
 
@@ -848,12 +863,12 @@ if __name__ == "__main__":
     # mult_generation(1)
     # [mult_generation(x / 4) for x in range(16) if x not in list(range(0, 16, 4))]
     # comp()
-    # run_katrina_h08()
+    run_katrina_h08()
     # cangles()
     # run_katrina_h08()  # speeds()
     # rmaxs()
     # xns()
-    points()
+    # points()
     # print(vmax_from_pressure_holliday(92800))
     # print(vmax_from_pressure_emanuel(92800))
     # print(vmax_from_pressure_choi(92800))
