@@ -576,9 +576,12 @@ def test() -> None:
 
 def holdout_tiny(seed=3) -> None:
     realholdout = SixDOFSearch(
-        seed=seed, dryrun=False, path="6D_Holdout_tiny", test_data_path="6DFake"
+        seed=seed,
+        dryrun=False,
+        path="6D_Holdout_tiny7",
+        test_data_path="6DFake",
     )
-    realholdout.run_initial(samples=250)
+    realholdout.run_initial(samples=80)
     realholdout.setup_active()
     realholdout.save_initial_data()
 
@@ -586,7 +589,7 @@ def holdout_tiny(seed=3) -> None:
 if __name__ == "__main__":
     # python src/models/emu6d.py
     # holdout_new()
-    holdout_tiny(seed=3)
+    holdout_tiny(seed=9)
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.normalized_samples(100)), rtol=1e-3)
     # )

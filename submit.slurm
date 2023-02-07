@@ -18,11 +18,11 @@ module load cray-hdf5-parallel
 module load cray-netcdf-hdf5parallel
 
 
-source /work/n01/n01/sithom/.bashrc
-source activate /work/n01/n01/sithom/new-orleans/env
-/home/n01/n01/sithom/miniconda3/condabin/conda activate /work/n01/n01/sithom/new-orleans/env
+source ~/.bashrc
+source activate ~/sithom/new-orleans/env
+~/miniconda3/condabin/conda activate /work/n01/n01/sithom/new-orleans/env
 
-echo which python
+which python
 
 # srun launches the parallel program based on the SBATCH options
 srun python /work/n01/n01/sithom/new-orleans/src/models/emu6d.py
