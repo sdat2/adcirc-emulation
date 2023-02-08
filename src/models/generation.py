@@ -7,7 +7,8 @@ import difflib
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
-import climada.hazard.trop_cyclone as tc
+
+# import climada.hazard.trop_cyclone as tc
 from src.constants import (
     DATA_PATH,
     FIGURE_PATH,
