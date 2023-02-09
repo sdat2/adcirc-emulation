@@ -13,7 +13,7 @@ WANDB_CACHE_DIR="/work/n01/n01/sithom/tmp"
 WANDB_CONFIG_DIR="/work/n01/n01/sithom/.config/wandb"
 os.environ['WANDB_CACHE_DIR'] = "/work/n01/n01/sithom/tmp"
 os.environ['WANDB_CONFIG_DIR'] = "/work/n01/n01/sithom/.config/wandb"
-os.environ["WANDB_MODE"] = "online" # "offline"
+os.environ["WANDB_MODE"] = "offline" # "offline"
 import wandb
 wandb.login(key="42ceaac64e4f3ae24181369f4c77d9ba0d1c64e5")
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
@@ -591,7 +591,7 @@ def holdout_tiny(seed=3) -> None:
     realholdout = SixDOFSearch(
         seed=seed,
         dryrun=False,
-        path="6D_Holdout_tiny15",
+        path="6D_Holdout_tiny22",
         test_data_path="6DFake",
     )
     realholdout.run_initial(samples=100)
@@ -602,7 +602,7 @@ def holdout_tiny(seed=3) -> None:
 if __name__ == "__main__":
     # python src/models/emu6d.py
     # holdout_new()
-    holdout_tiny(seed=16)
+    holdout_tiny(seed=24)
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.normalized_samples(100)), rtol=1e-3)
     # )
