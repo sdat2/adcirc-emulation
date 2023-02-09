@@ -9,7 +9,13 @@ import pandas as pd
 import xarray as xr
 from typeguard import typechecked
 from omegaconf import OmegaConf
+WANDB_CACHE_DIR="/work/n01/n01/sithom/tmp"
+WANDB_CONFIG_DIR="/work/n01/n01/sithom/.config/wandb"
+os.environ['WANDB_CACHE_DIR'] = "/work/n01/n01/sithom/tmp"
+os.environ['WANDB_CONFIG_DIR'] = "/work/n01/n01/sithom/.config/wandb"
+os.environ["WANDB_MODE"] = "online" # "offline"
 import wandb
+wandb.login(key="42ceaac64e4f3ae24181369f4c77d9ba0d1c64e5")
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import GPy
 from GPy.kern.src.kern import Kern
@@ -30,6 +36,9 @@ from emukit.bayesian_optimization.acquisitions import (
     ExpectedImprovement,
 )
 from emukit.core import ParameterSpace, ContinuousParameter
+MPLCONFIGDIR="/work/n01/n01/sithom/.config/matplotlib"
+os.environ['MPLCONFIGDIR'] = "/work/n01/n01/sithom/.config/matplotlib"
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import imageio as io
@@ -110,7 +119,11 @@ def real_func(param: dict, output_direc: str) -> float:
         float: The sea surface height at the point of interest.
     """
     wandb.init(
-        project="6d_individual_version2", entity="sdat2", reinit=True, config=param
+        project="6d_individual_version2",
+        settings=wandb.Settings(start_method="fork"),
+         entity="sdat2", 
+         reinit=True, 
+         config=param
     )
     point = Point(NEW_ORLEANS.lon + param["point_east"], NEW_ORLEANS.lat)
     if os.path.exists(output_direc):
@@ -578,10 +591,10 @@ def holdout_tiny(seed=3) -> None:
     realholdout = SixDOFSearch(
         seed=seed,
         dryrun=False,
-        path="6D_Holdout_tiny7",
+        path="6D_Holdout_tiny15",
         test_data_path="6DFake",
     )
-    realholdout.run_initial(samples=80)
+    realholdout.run_initial(samples=100)
     realholdout.setup_active()
     realholdout.save_initial_data()
 
@@ -589,7 +602,7 @@ def holdout_tiny(seed=3) -> None:
 if __name__ == "__main__":
     # python src/models/emu6d.py
     # holdout_new()
-    holdout_tiny(seed=9)
+    holdout_tiny(seed=16)
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.normalized_samples(100)), rtol=1e-3)
     # )
