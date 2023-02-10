@@ -4,17 +4,21 @@ Six dimensional emulation of the Holland 2008 model.
 import os
 from typing import Callable, Tuple, Union
 import shutil
+from datetime import datetime, timedelta
+import netCDF4 as nc
 import numpy as np
 import pandas as pd
 import xarray as xr
 from typeguard import typechecked
 from omegaconf import OmegaConf
-WANDB_CACHE_DIR="/work/n01/n01/sithom/tmp"
-WANDB_CONFIG_DIR="/work/n01/n01/sithom/.config/wandb"
-os.environ['WANDB_CACHE_DIR'] = "/work/n01/n01/sithom/tmp"
-os.environ['WANDB_CONFIG_DIR'] = "/work/n01/n01/sithom/.config/wandb"
-os.environ["WANDB_MODE"] = "offline" # "offline"
+
+WANDB_CACHE_DIR = "/work/n01/n01/sithom/tmp"
+WANDB_CONFIG_DIR = "/work/n01/n01/sithom/.config/wandb"
+os.environ["WANDB_CACHE_DIR"] = "/work/n01/n01/sithom/tmp"
+os.environ["WANDB_CONFIG_DIR"] = "/work/n01/n01/sithom/.config/wandb"
+os.environ["WANDB_MODE"] = "offline"  # "offline"
 import wandb
+
 wandb.login(key="42ceaac64e4f3ae24181369f4c77d9ba0d1c64e5")
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import GPy
@@ -36,8 +40,9 @@ from emukit.bayesian_optimization.acquisitions import (
     ExpectedImprovement,
 )
 from emukit.core import ParameterSpace, ContinuousParameter
-MPLCONFIGDIR="/work/n01/n01/sithom/.config/matplotlib"
-os.environ['MPLCONFIGDIR'] = "/work/n01/n01/sithom/.config/matplotlib"
+
+MPLCONFIGDIR = "/work/n01/n01/sithom/.config/matplotlib"
+os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -107,6 +112,90 @@ def holliday_vmax(updates: dict) -> dict:
     return updates
 
 
+def get_data(ex_path: str) -> xr.Dataset:
+    """
+    Get the data from the ADCIRC simulation.
+
+    Args:
+        ex_path (str): path to the ADCIRC simulation output folder.
+
+    Returns:
+        xr.Dataset: xarray dataset containing all of the data.
+    """
+    file_names = ["fort.73.nc", "fort.74.nc", "fort.63.nc", "fort.64.nc"]
+    variables = [("pressure",), ("windx", "windy"), ("zeta",), ("u-vel", "v-vel")]
+    ds_list = []
+    traj_ds = xr.open_dataset(os.path.join(ex_path, "traj.nc"))
+    for i in range(len(file_names)):
+        for variable in variables[i]:
+            ds_list.append(
+                xr.Dataset(
+                    data_vars={
+                        variable: (
+                            ["time", "node"],
+                            nc.Dataset(os.path.join(ex_path, file_names[i]))[variable][
+                                :
+                            ],
+                        ),
+                    }
+                )
+            )
+    merge_ds = xr.merge(ds_list)
+    seconds_array = nc.Dataset(os.path.join(ex_path, file_names[0]))["time"][:]
+    start_input = traj_ds["time"].values[0]
+    start_input_date = datetime.utcfromtimestamp(
+        (start_input - np.datetime64("1970-01-01T00:00:00")) / np.timedelta64(1, "s")
+    )
+    time_array = [
+        start_input_date + timedelta(minutes=seconds_array[i] / 60 - 105 * 80)
+        for i in range(len(seconds_array))
+    ]
+    merge_ds = merge_ds.assign_coords(time=time_array)
+    x_array = nc.Dataset(os.path.join(ex_path, file_names[0]))["x"][:]
+    y_array = nc.Dataset(os.path.join(ex_path, file_names[0]))["y"][:]
+    depth_array = nc.Dataset(os.path.join(ex_path, file_names[0]))["depth"][:]
+    element_array = nc.Dataset(os.path.join(ex_path, file_names[0]))["element"][:]
+    mesh_ds = xr.Dataset(
+        data_vars=dict(
+            depth=(["node"], depth_array),
+            triangle=(["element", "vertex"], element_array),
+            x=(["node"], x_array),
+            y=(["node"], y_array),
+        )
+    )
+    file_names = ["maxele.63.nc", "maxwvel.63.nc", "maxvel.63.nc", "minpr.63.nc"]
+    variables = [
+        ("zeta_max", "time_of_zeta_max"),
+        ("wind_max", "time_of_wind_max"),
+        ("vel_max", "time_of_vel_max"),
+        ("pressure_min", "time_of_pressure_min"),
+    ]
+    new_ds_list = []
+    for i in range(len(file_names)):
+        for variable in variables[i]:
+            new_ds_list.append(
+                xr.Dataset(
+                    data_vars={
+                        variable: (
+                            ["node"],
+                            nc.Dataset(os.path.join(ex_path, file_names[i]))[variable][
+                                :
+                            ],
+                        ),
+                    }
+                )
+            )
+    max_ds = xr.merge(new_ds_list)
+    return xr.merge(
+        [
+            traj_ds.rename({"time": "input_time", "lon": "clon", "lat": "clat"}),
+            merge_ds.rename({"time": "output_time"}),
+            mesh_ds.rename({"x": "lon", "y": "lat"}),
+            max_ds,
+        ]
+    )
+
+
 def real_func(param: dict, output_direc: str) -> float:
     """
     Feed the parameters into running the full tropical cyclone impact.
@@ -121,9 +210,9 @@ def real_func(param: dict, output_direc: str) -> float:
     wandb.init(
         project="6d_individual_version2",
         settings=wandb.Settings(start_method="fork"),
-         entity="sdat2", 
-         reinit=True, 
-         config=param
+        entity="sdat2",
+        reinit=True,
+        config=param,
     )
     point = Point(NEW_ORLEANS.lon + param["point_east"], NEW_ORLEANS.lat)
     if os.path.exists(output_direc):
