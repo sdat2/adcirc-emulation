@@ -116,6 +116,8 @@ def get_data(ex_path: str) -> xr.Dataset:
     """
     Get the data from the ADCIRC simulation.
 
+    # should we add in the parameters here?
+
     Args:
         ex_path (str): path to the ADCIRC simulation output folder.
 
@@ -251,6 +253,13 @@ def real_func(param: dict, output_direc: str) -> float:
             "dulac": v[dulac],
         }
     )
+    combined_ds = get_data(output_direc)
+    param_ds = xr.Dataset(data_vars=param)
+    combined_ds = xr.merge([combined_ds, param_ds])
+    combined_ds.to_netcdf(os.path.join(output_direc, "combined_ds.nc"))
+    artifact = wandb.Artifact('output_dataset', type='dataset')
+    artifact.add_file(os.path.join(output_direc, "combined_ds.nc"))
+    wandb.log_artifact(artifact)
     return height
 
 
@@ -680,10 +689,10 @@ def holdout_tiny(seed=3) -> None:
     realholdout = SixDOFSearch(
         seed=seed,
         dryrun=False,
-        path="6D_Holdout_tiny22",
+        path="6D_Holdout_tiny23",
         test_data_path="6DFake",
     )
-    realholdout.run_initial(samples=100)
+    realholdout.run_initial(samples=5)
     realholdout.setup_active()
     realholdout.save_initial_data()
 
@@ -691,7 +700,7 @@ def holdout_tiny(seed=3) -> None:
 if __name__ == "__main__":
     # python src/models/emu6d.py
     # holdout_new()
-    holdout_tiny(seed=24)
+    holdout_tiny(seed=25)
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.normalized_samples(100)), rtol=1e-3)
     # )
