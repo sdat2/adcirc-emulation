@@ -12,14 +12,14 @@ import xarray as xr
 from typeguard import typechecked
 from omegaconf import OmegaConf
 
-WANDB_CACHE_DIR = "/work/n01/n01/sithom/tmp"
-WANDB_CONFIG_DIR = "/work/n01/n01/sithom/.config/wandb"
-os.environ["WANDB_CACHE_DIR"] = "/work/n01/n01/sithom/tmp"
-os.environ["WANDB_CONFIG_DIR"] = "/work/n01/n01/sithom/.config/wandb"
-os.environ["WANDB_MODE"] = "offline"  # "offline"
+# WANDB_CACHE_DIR = "/work/n01/n01/sithom/tmp"
+# WANDB_CONFIG_DIR = "/work/n01/n01/sithom/.config/wandb"
+# os.environ["WANDB_CACHE_DIR"] = "/work/n01/n01/sithom/tmp"
+# os.environ["WANDB_CONFIG_DIR"] = "/work/n01/n01/sithom/.config/wandb"
+# os.environ["WANDB_MODE"] = "offline"  # "offline"
+# os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
+# wandb.login(key="42ceaac64e4f3ae24181369f4c77d9ba0d1c64e5")
 import wandb
-
-wandb.login(key="42ceaac64e4f3ae24181369f4c77d9ba0d1c64e5")
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import GPy
 from GPy.kern.src.kern import Kern
@@ -40,10 +40,6 @@ from emukit.bayesian_optimization.acquisitions import (
     ExpectedImprovement,
 )
 from emukit.core import ParameterSpace, ContinuousParameter
-
-MPLCONFIGDIR = "/work/n01/n01/sithom/.config/matplotlib"
-os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
-
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import imageio as io
@@ -211,7 +207,7 @@ def real_func(param: dict, output_direc: str) -> float:
     """
     wandb.init(
         project="6d_individual_version2",
-        settings=wandb.Settings(start_method="fork"),
+        # settings=wandb.Settings(start_method="fork"),
         entity="sdat2",
         reinit=True,
         config=param,
@@ -231,33 +227,25 @@ def real_func(param: dict, output_direc: str) -> float:
     ).run_impact()
     path = os.path.join(output_direc, "maxele.63.nc")
     maxele = Maxele(path, crs="EPSG:4326")
-    ansley = 27
-    new_orleans = 5
-    diamondhead = 17
-    mississippi = 77
-    atchafayala = 82
-    dulac = 86
-    akers = 2
+    places_d = dict(ansley = 27,
+                    new_orleans = 5,
+                    diamondhead = 17,
+                    mississippi = 77,
+                    atchafayala = 82,
+                    dulac = 86,
+                    akers = 2)
     indices = NO_BBOX.indices_inside(maxele.x, maxele.y)
     v = maxele.values[indices]
-    height = v[ansley]
+    height = v[places_d["ansley"]]
     print("height =  ", height, "m")
     wandb.log(
-        {
-            "ansley": v[ansley],
-            "akers": v[akers],
-            "new_orleans": v[new_orleans],
-            "diamondhead": v[diamondhead],
-            "mississippi": v[mississippi],
-            "atchafayala": v[atchafayala],
-            "dulac": v[dulac],
-        }
+        {key: v[places_d[key]] for key in places_d},
     )
     combined_ds = get_data(output_direc)
     param_ds = xr.Dataset(data_vars=param)
     combined_ds = xr.merge([combined_ds, param_ds])
     combined_ds.to_netcdf(os.path.join(output_direc, "combined_ds.nc"))
-    artifact = wandb.Artifact('output_dataset', type='dataset')
+    artifact = wandb.Artifact("output_dataset", type="dataset")
     artifact.add_file(os.path.join(output_direc, "combined_ds.nc"))
     wandb.log_artifact(artifact)
     return height
