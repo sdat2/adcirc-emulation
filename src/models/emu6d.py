@@ -227,13 +227,15 @@ def real_func(param: dict, output_direc: str) -> float:
     ).run_impact()
     path = os.path.join(output_direc, "maxele.63.nc")
     maxele = Maxele(path, crs="EPSG:4326")
-    places_d = dict(ansley = 27,
-                    new_orleans = 5,
-                    diamondhead = 17,
-                    mississippi = 77,
-                    atchafayala = 82,
-                    dulac = 86,
-                    akers = 2)
+    places_d = dict(
+        ansley=27,
+        new_orleans=5,
+        diamondhead=17,
+        mississippi=77,
+        atchafayala=82,
+        dulac=86,
+        akers=2,
+    )
     indices = NO_BBOX.indices_inside(maxele.x, maxele.y)
     v = maxele.values[indices]
     height = v[places_d["ansley"]]
@@ -688,7 +690,7 @@ def holdout_tiny(seed=3) -> None:
 if __name__ == "__main__":
     # python src/models/emu6d.py
     # holdout_new()
-    holdout_tiny(seed=25)
+    holdout_tiny(seed=26)
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.normalized_samples(100)), rtol=1e-3)
     # )
