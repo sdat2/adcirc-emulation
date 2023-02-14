@@ -2,7 +2,7 @@
 Six dimensional emulation of the Holland 2008 model.
 """
 import os
-from typing import Callable, Tuple, Union
+from typing import Callable, Tuple, Union, Optional
 import shutil
 from datetime import datetime, timedelta
 import netCDF4 as nc
@@ -10,10 +10,11 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from typeguard import typechecked
-from omegaconf import OmegaConf
-
+from omegaconf import OmegaConf, DictConfig
+import hydra
 # WANDB_CACHE_DIR = "/work/n01/n01/sithom/tmp"
 # WANDB_CONFIG_DIR = "/work/n01/n01/sithom/.config/wandb"
+# These lines are to get it to work on the slurm cluster
 os.environ["WANDB_CACHE_DIR"] = "/work/n01/n01/sithom/tmp"
 os.environ["WANDB_DATA_DIR"] = "/work/n01/n01/sithom/tmp"
 os.environ["WANDB_DIR"] = "/work/n01/n01/sithom/.config/wandb"
@@ -528,12 +529,12 @@ class SixDOFSearch:
         Y = self.init_y_data
         self.save_normalized_to_netcdf(X, Y)
 
-    def save_normalized_to_netcdf(self, X, Y) -> None:
+    def save_normalized_to_netcdf(self, X: np.ndarray, Y: np.ndarray) -> None:
         x_real = self.to_real(X)
         y_real = -Y
         self.save_real(x_real, y_real)
 
-    def save_real(self, x_real, y_real) -> None:
+    def save_real(self, x_real: np.ndarray, y_real: np.ndarray) -> None:
 
         # print(self.names)  # , x_real, y_real)
         points = list(range(x_real.shape[0]))
@@ -554,13 +555,13 @@ class SixDOFSearch:
         ds = ds.assign(maxele=("point", y_real[:, 0]))
         ds.to_netcdf(os.path.join(self.data_path, "data.nc"))
 
-    def load_real_data(self, data_path=None) -> xr.Dataset:
+    def load_real_data(self, data_path: Optional[str] = None) -> xr.Dataset:
         if data_path is None:
             data_path = self.data_path
         # add option to use this for loading test data.
         return xr.open_dataset(os.path.join(data_path, "data.nc"))
 
-    def load_real_df(self, data_path=None) -> pd.DataFrame:
+    def load_real_df(self, data_path: Optional[str] = None) -> pd.DataFrame:
         if data_path == None:
             data_path = self.data_path
         ds = self.load_real_data(data_path=data_path)
@@ -569,7 +570,7 @@ class SixDOFSearch:
             columns={i: i + " [" + self.units[i] + "]" for i in self.names}
         )
 
-    def load_normalized_data(self, data_path=None) -> Tuple[np.ndarray, np.ndarray]:
+    def load_normalized_data(self, data_path: Optional[str] =None) -> Tuple[np.ndarray, np.ndarray]:
         print("loading data from", data_path)
         if data_path == None:
             data_path = self.data_path
@@ -580,7 +581,7 @@ class SixDOFSearch:
         xr, yr = data[:-1], data[-1:]
         return self.to_normalized(xr.T), -yr.T
 
-    def load_test_data(self, test_data_path=None) -> None:
+    def load_test_data(self, test_data_path: Optional[str] =None) -> None:
         if test_data_path is None:
             test_data_path = self.test_data_path
         Xtest, Ytest = self.load_normalized_data(data_path=test_data_path)
@@ -631,7 +632,7 @@ class SixDOFSearch:
 
 
 def holdout_set() -> None:
-    tf = SixDOFSearch(dryrun=False, path="6D_Search_Holdout", seed=5)
+    tf = SixDOFSearch(dryrun=False, path = "6D_Search_Holdout", seed=5)
     print(tf.real_samples(100)[:10])
     print(tf.to_real(tf.normalized_samples(100))[:10])
     tf.run_initial(samples=200)
@@ -643,7 +644,7 @@ def holdout_set() -> None:
 
 
 def load_holdout_set() -> None:
-    tf = SixDOFSearch(dryrun=False, path="6D_Search_Holdout", seed=5)
+    tf = SixDOFSearch(dryrun=False, path = "6D_Search_Holdout", seed=5)
     tf.load_data()
 
 
@@ -656,7 +657,7 @@ def holdout_new() -> None:
     realholdout.save_initial_data()
 
 
-def holdout_small(seed=2) -> None:
+def holdout_small(seed: int = 2) -> None:
     realholdout = SixDOFSearch(
         seed=seed, dryrun=False, path="6D_Holdout_small", test_data_path="6DFake"
     )
@@ -677,7 +678,7 @@ def test() -> None:
     print(tf.gp_predict_real()(tf.real_samples(100)[:10]))
 
 
-def holdout_tiny(seed=3) -> None:
+def holdout_tiny(seed: int = 3) -> None:
     realholdout = SixDOFSearch(
         seed=seed,
         dryrun=False,
@@ -689,10 +690,18 @@ def holdout_tiny(seed=3) -> None:
     realholdout.save_initial_data()
 
 
+@hydra.main(config_path=CONFIG_PATH, config_name="lhs.yaml")
+def lhs(cfg: DictConfig) -> None:
+    realholdout = SixDOFSearch(
+        seed=cfg.seed,
+        dryrun=cfg.dryrun,
+        path=cfg.path,
+        test_data_path="6DFake",
+    )
+    realholdout.run_initial(samples=cfg.samples)
+    realholdout.setup_active()
+    realholdout.save_initial_data()
+
 if __name__ == "__main__":
-    # python src/models/emu6d.py
-    # holdout_new()
-    holdout_tiny(seed=30)
-    # assert np.all(
-    #    np.isclose(tf.real_samples(100), tf.to_real(tf.normalized_samples(100)), rtol=1e-3)
-    # )
+    # python src/models/emu6d.py samples=100 seed=31 dryrun=true
+    lhs()

@@ -1,0 +1,4 @@
+samples: 100
+seed: 31
+dryrun: false
+path: 6D_Holdout_${seed}_${dryrun}
