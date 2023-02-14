@@ -14,12 +14,14 @@ from omegaconf import OmegaConf
 
 # WANDB_CACHE_DIR = "/work/n01/n01/sithom/tmp"
 # WANDB_CONFIG_DIR = "/work/n01/n01/sithom/.config/wandb"
-# os.environ["WANDB_CACHE_DIR"] = "/work/n01/n01/sithom/tmp"
-# os.environ["WANDB_CONFIG_DIR"] = "/work/n01/n01/sithom/.config/wandb"
-# os.environ["WANDB_MODE"] = "offline"  # "offline"
-# os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
-# wandb.login(key="42ceaac64e4f3ae24181369f4c77d9ba0d1c64e5")
+os.environ["WANDB_CACHE_DIR"] = "/work/n01/n01/sithom/tmp"
+os.environ["WANDB_DATA_DIR"] = "/work/n01/n01/sithom/tmp"
+os.environ["WANDB_DIR"] = "/work/n01/n01/sithom/.config/wandb"
+os.environ["WANDB_CONFIG_DIR"] = "/work/n01/n01/sithom/.config/wandb"
+os.environ["WANDB_MODE"] = "offline"  # "offline"
+os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
 import wandb
+wandb.login(key="42ceaac64e4f3ae24181369f4c77d9ba0d1c64e5")
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import GPy
 from GPy.kern.src.kern import Kern
@@ -679,10 +681,10 @@ def holdout_tiny(seed=3) -> None:
     realholdout = SixDOFSearch(
         seed=seed,
         dryrun=False,
-        path="6D_Holdout_tiny23",
+        path="6D_Holdout_tiny27",
         test_data_path="6DFake",
     )
-    realholdout.run_initial(samples=5)
+    realholdout.run_initial(samples=80)
     realholdout.setup_active()
     realholdout.save_initial_data()
 
@@ -690,7 +692,7 @@ def holdout_tiny(seed=3) -> None:
 if __name__ == "__main__":
     # python src/models/emu6d.py
     # holdout_new()
-    holdout_tiny(seed=26)
+    holdout_tiny(seed=27)
     # assert np.all(
     #    np.isclose(tf.real_samples(100), tf.to_real(tf.normalized_samples(100)), rtol=1e-3)
     # )
