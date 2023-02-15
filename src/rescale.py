@@ -19,14 +19,23 @@ def rescale(input: np.ndarray, config_name: str = "sixd") -> np.ndarray:
         np.ndarray: rescaled array.
     """
     # this will only deal with 1 dimensional arrays at the moment
+    print("input", input)
     config = OmegaConf.load(os.path.join(CONFIG_PATH, config_name + ".yaml"))
     ones = np.ones((input.shape[0]))
     diffs = np.array(
         [config[i].max - config[i].min for i in config]
     )  # .reshape(input.shape[0], 1)
+    print("diffs", diffs)
     mins = np.array([config[i].min for i in config])  # .reshape(input.shape[0], 1)
-    print(diffs.shape, mins.shape, input.shape)
-    return (input - np.dot(ones, mins)) * np.dot(ones, 1 / diffs)
+    print("mins", mins)
+    print(diffs.shape, mins.shape, input.shape, ones.shape)
+    # return (input - np.dot(ones, mins)) * np.dot(ones, 1 / diffs)
+    output = []
+    for i in range(input.shape[0]):
+        print(input[i], mins[i], diffs[i])
+        output.append((input[i] - mins[i]) / diffs[i])
+    print("Output", output)
+    return (input - mins) / diffs
 
 
 def rescale_inverse(input: np.ndarray, config_name: str = "sixd") -> np.ndarray:
@@ -40,8 +49,9 @@ def rescale_inverse(input: np.ndarray, config_name: str = "sixd") -> np.ndarray:
         np.ndarray: rescaled array.
     """
     config = OmegaConf.load(os.path.join(CONFIG_PATH, config_name + ".yaml"))
-    ones = np.ones((input.shape[0], 1))
+    ones = np.ones((input.shape[0]))  # , 1
     diffs = np.array([config[i].max - config[i].min for i in config])
     mins = np.array([config[i].min for i in config])
-    print(diffs.shape, mins.shape, input.shape)
-    return np.dot(input, np.dot(ones, diffs)) + np.dot(ones, mins)
+    print(diffs.shape, mins.shape, input.shape, ones.shape)
+    return input * diffs + mins
+    # return np.dot(input, np.dot(ones, diffs)) + np.dot(ones, mins)
