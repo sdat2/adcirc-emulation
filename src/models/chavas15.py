@@ -51,6 +51,7 @@ def E04_outerwind_r0input_nondim_MM0(r0, fcor, Cdvary, C_d, w_cool, Nr):
     M0 = 0.5 * fcor * r0**2  # [m2/s] M at outer radius
 
     drfracr0 = 0.001
+    # very strange to be using bitwise or here
     if (r0 > 2500 * 1000) | (r0 < 200 * 1000):
         drfracr0 = drfracr0 / 10
         # extra precision for very large storm to avoid funny bumps near r0 (though rest of solution is stable!)
@@ -209,7 +210,16 @@ def ER11_radprof(Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11):
 
 
 def ER11E04_nondim_r0input(
-    Vmax, r0, fcor, Cdvary, C_d, w_cool, CkCdvary, CkCd, eye_adj, alpha_eye
+    Vmax,
+    r0,
+    fcor,
+    Cdvary,
+    C_d,
+    w_cool,
+    CkCdvary: float = 1,
+    CkCd: float = 1.9,
+    eye_adj: float = 1,
+    alpha_eye: float = 1,
 ):
 
     # Initialization
