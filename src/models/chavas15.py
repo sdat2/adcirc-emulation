@@ -13,8 +13,9 @@ Python code taken originally from:
 }
 ```
 
-Python code written by Chia-Ying Lee
+Python code originally written in python2 by Chia-Ying Lee.
 
+Python code converted to python3 by Simon Thomas.
 
 Reference publications:
 
