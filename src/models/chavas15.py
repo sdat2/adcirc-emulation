@@ -372,6 +372,7 @@ def ER11E04_nondim_r0input(
 def ER11E04_nondim_rmaxinput(
     Vmax, rmax, fcor, Cdvary, C_d, w_cool, CkCdvary, CkCd, eye_adj, alpha_eye
 ):
+    # key function.
     # Initialization
     fcor = np.abs(fcor)
     if CkCdvary == 1:
