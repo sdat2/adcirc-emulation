@@ -12,6 +12,7 @@ import xarray as xr
 from typeguard import typechecked
 from omegaconf import OmegaConf, DictConfig
 import hydra
+
 # WANDB_CACHE_DIR = "/work/n01/n01/sithom/tmp"
 # WANDB_CONFIG_DIR = "/work/n01/n01/sithom/.config/wandb"
 # These lines are to get it to work on the slurm cluster
@@ -22,6 +23,7 @@ os.environ["WANDB_CONFIG_DIR"] = "/work/n01/n01/sithom/.config/wandb"
 os.environ["WANDB_MODE"] = "offline"  # "offline"
 os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
 import wandb
+
 wandb.login(key="42ceaac64e4f3ae24181369f4c77d9ba0d1c64e5")
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import GPy
@@ -570,7 +572,9 @@ class SixDOFSearch:
             columns={i: i + " [" + self.units[i] + "]" for i in self.names}
         )
 
-    def load_normalized_data(self, data_path: Optional[str] =None) -> Tuple[np.ndarray, np.ndarray]:
+    def load_normalized_data(
+        self, data_path: Optional[str] = None
+    ) -> Tuple[np.ndarray, np.ndarray]:
         print("loading data from", data_path)
         if data_path == None:
             data_path = self.data_path
@@ -581,7 +585,7 @@ class SixDOFSearch:
         xr, yr = data[:-1], data[-1:]
         return self.to_normalized(xr.T), -yr.T
 
-    def load_test_data(self, test_data_path: Optional[str] =None) -> None:
+    def load_test_data(self, test_data_path: Optional[str] = None) -> None:
         if test_data_path is None:
             test_data_path = self.test_data_path
         Xtest, Ytest = self.load_normalized_data(data_path=test_data_path)
@@ -632,7 +636,7 @@ class SixDOFSearch:
 
 
 def holdout_set() -> None:
-    tf = SixDOFSearch(dryrun=False, path = "6D_Search_Holdout", seed=5)
+    tf = SixDOFSearch(dryrun=False, path="6D_Search_Holdout", seed=5)
     print(tf.real_samples(100)[:10])
     print(tf.to_real(tf.normalized_samples(100))[:10])
     tf.run_initial(samples=200)
@@ -644,7 +648,7 @@ def holdout_set() -> None:
 
 
 def load_holdout_set() -> None:
-    tf = SixDOFSearch(dryrun=False, path = "6D_Search_Holdout", seed=5)
+    tf = SixDOFSearch(dryrun=False, path="6D_Search_Holdout", seed=5)
     tf.load_data()
 
 
@@ -701,6 +705,7 @@ def lhs(cfg: DictConfig) -> None:
     realholdout.run_initial(samples=cfg.samples)
     realholdout.setup_active()
     realholdout.save_initial_data()
+
 
 if __name__ == "__main__":
     # python src/models/emu6d.py samples=100 seed=31 dryrun=true

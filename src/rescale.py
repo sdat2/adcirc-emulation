@@ -1,4 +1,15 @@
-"""Rescale the numbers to fall in 0.0 to 1.0 range."""
+"""Rescale the parameter inputs to fall in 0.0 to 1.0 range.
+
+This is used to rescale the inputs to the GP, and then rescale the outputs back to the original range.
+
+The parameters are defined in the config file, and the rescaling is done by subtracting the minimum value, and dividing by the range.
+
+Which config file can be specified, but the default is the sixd.yaml config file.
+
+# TODO: fix to allow some sort of parralization, and ability to identify which axes is which?
+
+TODO: add a test for inverse.
+"""
 import os
 import numpy as np
 from omegaconf import OmegaConf
@@ -17,6 +28,9 @@ def rescale(input: np.ndarray, config_name: str = "sixd") -> np.ndarray:
 
     Returns:
         np.ndarray: rescaled array.
+
+    #TODO: add a test that all outputs are between 0 and 1, otherwise raise an error
+
     """
     # this will only deal with 1 dimensional arrays at the moment
     print("input", input)
