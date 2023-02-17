@@ -56,14 +56,17 @@ def trim_tri(
     Trim triangular mesh to x and y points within an area.
 
     Args:
-        x (np.ndarray): _description_
-        y (np.ndarray): _description_
-        tri (np.ndarray): _description_
-        bbox (BoundingBox): _description_
+        x (np.ndarray): longitude [degrees East].
+        y (np.ndarray): latitude [degrees North].
+        tri (np.ndarray): triangular mesh.
+        bbox (BoundingBox): bounding box.
         z (Optional[np.ndarray], optional): z parameter. Defaults to None.
 
     Returns:
-        _type_: _description_
+        Union[
+            Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+            Tuple[np.ndarray, np.ndarray, np.ndarray],
+             ]: trimmed x, y, tri, and z.
     """
 
     @np.vectorize
@@ -88,6 +91,7 @@ def trim_tri(
             new_tri_list.append(el)
 
     tri_new = np.array(new_tri_list)
+    # should there be an off by one error here?
     tri_new = np.select(
         [tri_new == x for x in indices.tolist()], new_indices.tolist(), tri_new
     )
