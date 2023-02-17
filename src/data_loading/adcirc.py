@@ -498,6 +498,7 @@ def timeseries_height_ds(
     Open the fort.63.nc file in the path, read the contents, and get the dataset out.
     """
     f63 = Fort63(os.path.join(path, "fort.63.nc"))
+    # Trim triangles
     x, y, tri, z = trim_tri(f63.x, f63.y, f63.triangles, bbox, f63._ptr["zeta"][:])
     start = datetime.datetime(year=2005, month=8, day=19, hour=5)
     time_step = datetime.timedelta(hours=1, minutes=20)

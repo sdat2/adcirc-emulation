@@ -59,7 +59,7 @@ def trim_tri(
         x (np.ndarray): longitude [degrees East].
         y (np.ndarray): latitude [degrees North].
         tri (np.ndarray): triangular mesh.
-        bbox (BoundingBox): bounding box.
+        bbox (BoundingBox): bounding box to trim by.
         z (Optional[np.ndarray], optional): z parameter. Defaults to None.
 
     Returns:
