@@ -11,15 +11,17 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import wandb
 from sithom.plot import plot_defaults, lim
 from sithom.place import BoundingBox
-from src.constants import NO_BBOX, NEW_ORLEANS, FIGURE_PATH
+from sithom.time import timeit
+from src.constants import NO_BBOX, NEW_ORLEANS, FIGURE_PATH, DATA_PATH
 from src.preprocessing.sel import trim_tri
 
 
-FEATURE_LIST = ["angle", "speed", "point_east", "rmax", "pc", "vmax", "xn"]
+FEATURE_LIST = ["angle", "speed", "point_east", "rmax", "pc", "xn"]
 
 # get data from weights and biases
 
 
+@timeit
 def generate_max_parray_and_output(
     version=0, bbox: BoundingBox = NO_BBOX
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -47,18 +49,27 @@ def generate_max_parray_and_output(
     return parray.reshape(1, -1), output_array.reshape(1, -1), cds_a
 
 
+@timeit
 def make_all_plots():
-    bbox = NO_BBOX
+    bbox = NO_BBOX.pad(2)
+    bbox_plot = NO_BBOX
+    data_path = os.path.join(DATA_PATH, "max_sensitivities")
     figure_path = os.path.join(FIGURE_PATH, "max_sensitivities")
+    num = 286
+    regenerate = True
     os.makedirs(figure_path, exist_ok=True)
+    os.makedirs(data_path, exist_ok=True)
+    plot_defaults()
 
     def load_data_from_scratch():
         parray_list = []
         output_array_list = []
 
-        for i in range(286):
+        for i in range(num):
             print(i)
-            parray, output_array, cds_a = generate_max_parray_and_output(version=i)
+            parray, output_array, cds_a = generate_max_parray_and_output(
+                version=i, bbox=bbox
+            )
             parray_list.append(parray)
             output_array_list.append(output_array)
             print(parray.shape, output_array.shape)
@@ -71,7 +82,15 @@ def make_all_plots():
 
         return parray_mult, oa_mult, cds_a
 
-    parray_mult, oa_mult, cds_a = load_data_from_scratch()
+    if os.path.exists(os.path.join(data_path, "parray_mult.bin")) and not regenerate:
+        parray_mult = np.fromfile(os.path.join(data_path, "parray_mult.bin"))
+        oa_mult = np.fromfile(os.path.join(data_path, "oa_mult.bin"))
+        cds_a = xr.open_dataset(os.path.join(data_path, "cds_a.nc"))
+    else:
+        parray_mult, oa_mult, cds_a = load_data_from_scratch()
+        parray_mult.tofile(os.path.join(data_path, "parray_mult.bin"))
+        oa_mult.tofile(os.path.join(data_path, "oa_mult.bin"))
+        cds_a.to_netcdf(os.path.join(data_path, "cds_a.nc"))
 
     # Importance plots
 
@@ -96,7 +115,7 @@ def make_all_plots():
         cbar_levels = np.linspace(vmin, vmax, num=7)
 
         ax = plt.axes(projection=ccrs.PlateCarree())
-        ax.set_extent(bbox.cartopy(), crs=ccrs.PlateCarree())
+        ax.set_extent(bbox_plot.cartopy(), crs=ccrs.PlateCarree())
         # add a green-yellow backgroud here
         ax.set_facecolor("#d1ffbd")
         ax.add_feature(cartopy.feature.LAKES, alpha=0.5, color="lightblue")
@@ -137,8 +156,8 @@ def make_all_plots():
             [
                 x
                 for x in range(
-                    int((bbox.lat[0] // 1) + 1),
-                    int((bbox.lat[1] // 1) + 1),
+                    int((bbox_plot.lat[0] // 1) + 1),
+                    int((bbox_plot.lat[1] // 1) + 1),
                 )
             ],
             crs=ccrs.PlateCarree(),
@@ -147,8 +166,8 @@ def make_all_plots():
             [
                 x
                 for x in range(
-                    int((bbox.lon[0] // 1) + 1),
-                    int((bbox.lon[1] // 1) + 1),
+                    int((bbox_plot.lon[0] // 1) + 1),
+                    int((bbox_plot.lon[1] // 1) + 1),
                 )
             ],
             crs=ccrs.PlateCarree(),
@@ -172,7 +191,7 @@ def make_all_plots():
     cbar_levels = [vmin + 0.5 + i for i in range(r + 1)]
 
     ax = plt.axes(projection=ccrs.PlateCarree())
-    ax.set_extent(bbox.cartopy(), crs=ccrs.PlateCarree())
+    ax.set_extent(bbox_plot.cartopy(), crs=ccrs.PlateCarree())
     # add a green-yellow backgroud here
     # ax.set_facecolor("#d1ffbd")
     ax.add_feature(cartopy.feature.LAKES, alpha=0.5, color="lightblue")
@@ -206,8 +225,8 @@ def make_all_plots():
         [
             x
             for x in range(
-                int((bbox.lat[0] // 1) + 1),
-                int((bbox.lat[1] // 1) + 1),
+                int((bbox_plot.lat[0] // 1) + 1),
+                int((bbox_plot.lat[1] // 1) + 1),
             )
         ],
         crs=ccrs.PlateCarree(),
@@ -216,8 +235,8 @@ def make_all_plots():
         [
             x
             for x in range(
-                int((bbox.lon[0] // 1) + 1),
-                int((bbox.lon[1] // 1) + 1),
+                int((bbox_plot.lon[0] // 1) + 1),
+                int((bbox_plot.lon[1] // 1) + 1),
             )
         ],
         crs=ccrs.PlateCarree(),
@@ -252,7 +271,7 @@ def make_all_plots():
         cbar_levels = np.linspace(vmin, vmax, num=7)
 
         ax = plt.axes(projection=ccrs.PlateCarree())
-        ax.set_extent(bbox.cartopy(), crs=ccrs.PlateCarree())
+        ax.set_extent(bbox_plot.cartopy(), crs=ccrs.PlateCarree())
         # add a green-yellow backgroud here
         ax.set_facecolor("#d1ffbd")
         ax.add_feature(cartopy.feature.LAKES, alpha=0.5, color="lightblue")
@@ -293,8 +312,8 @@ def make_all_plots():
             [
                 x
                 for x in range(
-                    int((bbox.lat[0] // 1) + 1),
-                    int((bbox.lat[1] // 1) + 1),
+                    int((bbox_plot.lat[0] // 1) + 1),
+                    int((bbox_plot.lat[1] // 1) + 1),
                 )
             ],
             crs=ccrs.PlateCarree(),
@@ -303,8 +322,8 @@ def make_all_plots():
             [
                 x
                 for x in range(
-                    int((bbox.lon[0] // 1) + 1),
-                    int((bbox.lon[1] // 1) + 1),
+                    int((bbox_plot.lon[0] // 1) + 1),
+                    int((bbox_plot.lon[1] // 1) + 1),
                 )
             ],
             crs=ccrs.PlateCarree(),
@@ -319,4 +338,5 @@ def make_all_plots():
 
 
 if __name__ == "__main__":
+    # python src/models/max_models.py
     make_all_plots()
