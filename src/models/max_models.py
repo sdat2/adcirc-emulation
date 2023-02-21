@@ -82,23 +82,26 @@ def make_all_plots():
 
         return parray_mult, oa_mult, cds_a
 
-    if os.path.exists(os.path.join(data_path, "parray_mult.bin")) and not regenerate:
-        parray_mult = np.fromfile(os.path.join(data_path, "parray_mult.bin"))
-        oa_mult = np.fromfile(os.path.join(data_path, "oa_mult.bin"))
+    if os.path.exists(os.path.join(data_path, "parray_mult.npy")) and not regenerate:
+        parray_mult = np.load(os.path.join(data_path, "parray_mult.npy"))
+        oa_mult = np.load(os.path.join(data_path, "oa_mult.npy"))
         cds_a = xr.open_dataset(os.path.join(data_path, "cds_a.nc"))
     else:
         parray_mult, oa_mult, cds_a = load_data_from_scratch()
-        parray_mult.tofile(os.path.join(data_path, "parray_mult.bin"))
-        oa_mult.tofile(os.path.join(data_path, "oa_mult.bin"))
+        parray_mult.save(os.path.join(data_path, "parray_mult.npy"))
+        oa_mult.save(os.path.join(data_path, "oa_mult.npy"))
         cds_a.to_netcdf(os.path.join(data_path, "cds_a.nc"))
 
     # Importance plots
 
+    print("oa_mult.shape", oa_mult.shape)
+
     def return_importances(index: int = 27):
+        print(index)
         model = DecisionTreeRegressor()
         model.fit(parray_mult, oa_mult[:, index])
-        importance = model.feature_importances_
-        return importance
+        importances = model.feature_importances_
+        return importances
 
     importance_array = np.array(
         [return_importances(i).tolist() for i in range(oa_mult.shape[1])]
@@ -260,11 +263,11 @@ def make_all_plots():
     correlation_array = np.array(
         [return_correlation(i).tolist() for i in range(oa_mult.shape[1])]
     )
+    lon, lat, triangles = trim_tri(
+        cds_a.lon.values, cds_a.lat.values, cds_a.triangle.values - 1, bbox
+    )
 
     for i in range(len(FEATURE_LIST)):
-        lon, lat, triangles = trim_tri(
-            cds_a.lon.values, cds_a.lat.values, cds_a.triangle.values - 1, bbox
-        )
         vmin, vmax = lim(correlation_array[:, i], percentile=0, balance=True)
         vmin, vmax = np.min([-vmax, vmin]), np.max([-vmin, vmax])
         levels = np.linspace(vmin, vmax, num=400)
@@ -335,6 +338,68 @@ def make_all_plots():
             os.path.join(figure_path, "correlation_" + FEATURE_LIST[i] + ".png")
         )
         plt.clf()
+
+    # correlation plots all together
+    vmin, vmax = lim(correlation_array, percentile=0, balance=True)
+    vmin, vmax = np.min([-vmax, vmin]), np.max([-vmin, vmax])
+    levels = np.linspace(vmin, vmax, num=400)
+    cbar_levels = np.linspace(vmin, vmax, num=7)
+
+    fig, axs = plt.subplots(
+        2, 3, figsize=(10, 6), subplot_kw={"projection": ccrs.PlateCarree()}
+    )
+
+    for i in range(len(FEATURE_LIST)):
+        ax = axs.ravel()[i]
+        ax.set_extent(bbox_plot.cartopy(), crs=ccrs.PlateCarree())
+        # add a green-yellow backgroud here
+        ax.set_facecolor("#d1ffbd")
+        ax.add_feature(cartopy.feature.LAKES, alpha=0.5, color="lightblue")
+        ax.add_feature(cartopy.feature.RIVERS, alpha=0.5, color="lightblue")
+        im = ax.tricontourf(
+            lon,
+            lat,
+            triangles,
+            correlation_array[:, i],
+            vmin=vmin,
+            vmax=vmax,
+            levels=levels,
+            cmap="cmo.balance",
+        )
+        ax.set_title(FEATURE_LIST[i].capitalize())
+        ax.plot(
+            NEW_ORLEANS.lon, NEW_ORLEANS.lat, marker=".", markersize=4, color="purple"
+        )
+        ax.text(
+            NEW_ORLEANS.lon - 0.35,
+            NEW_ORLEANS.lat - 0.16,
+            "New Orleans",
+            fontsize=6,
+            color="purple",
+        )
+        ax.set_yticks(
+            [
+                x
+                for x in range(
+                    int((bbox_plot.lat[0] // 1) + 1), int((bbox_plot.lat[1] // 1) + 1)
+                )
+            ],
+            crs=ccrs.PlateCarree(),
+        )
+        ax.set_xticks(
+            [
+                x
+                for x in range(
+                    int((bbox_plot.lon[0] // 1) + 1), int((bbox_plot.lon[1] // 1) + 1)
+                )
+            ],
+            crs=ccrs.PlateCarree(),
+        )
+        ax.xaxis.set_major_formatter(LONGITUDE_FORMATTER)
+        ax.yaxis.set_major_formatter(LATITUDE_FORMATTER)
+
+    plt.savefig(os.path.join(figure_path, "correlation_all.png"))
+    plt.clf()
 
 
 if __name__ == "__main__":
