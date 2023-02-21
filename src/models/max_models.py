@@ -28,7 +28,6 @@ def generate_max_parray_and_output(
     # load artifact dataset
     # maybe we can add a loop here to get all the artifacts with different versions
     run = wandb.init()
-
     artifact = run.use_artifact(
         f"sdat2/6d_individual_version2/output_dataset:v{version}", type="dataset"
     )
@@ -39,7 +38,6 @@ def generate_max_parray_and_output(
     parray = cds_a[FEATURE_LIST].to_array().values
     # "vmax",
     # value order is: angle, speed, point_east, rmax, pc, vmax, xn
-
     ### output array
     oa = cds_a[["zeta_max"]]
     indices = bbox.indices_inside(cds_a["lon"].values, cds_a["lat"].values)
@@ -50,18 +48,20 @@ def generate_max_parray_and_output(
 
 
 @timeit
-def make_all_plots():
+def make_all_plots() -> None:
     bbox = NO_BBOX.pad(2)
     bbox_plot = NO_BBOX
+    bbox_plot.lat[0] = NO_BBOX.lat[0] - 1
+    bbox_plot.lat[1] = NO_BBOX.lat[1]
     data_path = os.path.join(DATA_PATH, "max_sensitivities")
     figure_path = os.path.join(FIGURE_PATH, "max_sensitivities")
     num = 286
-    regenerate = True
+    regenerate = False
     os.makedirs(figure_path, exist_ok=True)
     os.makedirs(data_path, exist_ok=True)
     plot_defaults()
 
-    def load_data_from_scratch():
+    def load_data_from_scratch() -> Tuple[np.ndarray, np.ndarray, xr.Dataset]:
         parray_list = []
         output_array_list = []
 
@@ -96,10 +96,10 @@ def make_all_plots():
 
     # Importance plots
 
-    print("oa_mult.shape", oa_mult.shape)
+    # print("oa_mult.shape", oa_mult.shape)
 
     def return_importances(index: int = 27):
-        print(index)
+        # print(index)
         model = DecisionTreeRegressor()
         model.fit(parray_mult, oa_mult[:, index])
         importances = model.feature_importances_
@@ -152,7 +152,9 @@ def make_all_plots():
         )
 
         ax = plt.gca()
-        cbar = plt.colorbar(label="Importance of " + FEATURE_LIST[i].capitalize())
+        cbar = plt.colorbar(
+            label="Importance of " + FEATURE_LIST[i].replace("_", " ").capitalize()
+        )
         cbar.set_ticks(cbar_levels)
         cbar.set_ticklabels(["{:.2f}".format(x) for x in cbar_levels.tolist()])
         plt.xlabel("")
@@ -182,6 +184,10 @@ def make_all_plots():
         ax.yaxis.set_major_formatter(LATITUDE_FORMATTER)
         plt.savefig(os.path.join(figure_path, "importance_" + FEATURE_LIST[i] + ".png"))
         plt.clf()
+
+    # plot all importances in one plot
+
+    # plot most important feature
 
     lon, lat, triangles = trim_tri(
         cds_a.lon.values, cds_a.lat.values, cds_a.triangle.values - 1, bbox
@@ -223,7 +229,9 @@ def make_all_plots():
     ax = plt.gca()
     cbar = plt.colorbar(label="Most important feature")
     cbar.set_ticks(cbar_levels)
-    cbar.set_ticklabels([FEATURE_LIST[int(x)].capitalize() for x in cbar_levels])
+    cbar.set_ticklabels(
+        [FEATURE_LIST[int(x)].replace("_", " ").capitalize() for x in cbar_levels]
+    )
     plt.xlabel("")
     plt.ylabel("")
     ax.set_yticks(
@@ -308,7 +316,9 @@ def make_all_plots():
         )
 
         ax = plt.gca()
-        cbar = plt.colorbar(label="Correlation " + FEATURE_LIST[i].capitalize())
+        cbar = plt.colorbar(
+            label="Correlation " + FEATURE_LIST[i].replace("_", " ").capitalize()
+        )
         cbar.set_ticks(cbar_levels)
         cbar.set_ticklabels(["{:.2f}".format(x) for x in cbar_levels.tolist()])
         plt.xlabel("")
@@ -348,11 +358,11 @@ def make_all_plots():
     cbar_levels = np.linspace(vmin, vmax, num=7)
 
     fig, axs = plt.subplots(
-        2, 3, figsize=(10, 6), subplot_kw={"projection": ccrs.PlateCarree()}
+        3, 2, figsize=(6, 6), subplot_kw={"projection": ccrs.PlateCarree()}
     )
 
     for i in range(len(FEATURE_LIST)):
-        ax = axs.ravel()[i]
+        ax = axs.transpose().ravel()[i]
         ax.set_extent(bbox_plot.cartopy(), crs=ccrs.PlateCarree())
         # add a green-yellow backgroud here
         ax.set_facecolor("#d1ffbd")
@@ -368,7 +378,7 @@ def make_all_plots():
             levels=levels,
             cmap="cmo.balance",
         )
-        ax.set_title(FEATURE_LIST[i].capitalize())
+        ax.set_title(FEATURE_LIST[i].replace("_", " ").capitalize())
         ax.plot(
             NEW_ORLEANS.lon, NEW_ORLEANS.lat, marker=".", markersize=4, color="purple"
         )
@@ -400,8 +410,95 @@ def make_all_plots():
         ax.xaxis.set_major_formatter(LONGITUDE_FORMATTER)
         ax.yaxis.set_major_formatter(LATITUDE_FORMATTER)
 
-    label_subplots(axs, override="outside", fontsize=12)
-    plt.savefig(os.path.join(figure_path, "correlation_all.png"))
+    label_subplots(axs.transpose(), override="outside", fontsize=12)
+    fig.subplots_adjust(right=0.8)
+    # cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+    cbar_ax = fig.add_axes([1.02, 0.15, 0.05, 0.7])
+
+    cbar = fig.colorbar(
+        im,
+        cax=cbar_ax,
+        label="Correlation with maximum sea surface height, $\eta_{\mathrm{max}}$, [dimensionless]",
+    )
+    cbar_levels = np.linspace(vmin, vmax, num=7)
+    cbar.set_ticks(cbar_levels)
+    cbar.set_ticklabels(["{:.2f}".format(x) for x in cbar_levels.tolist()])
+    plt.savefig(os.path.join(figure_path, "correlation_all.png"), bbox_inches="tight")
+    plt.clf()
+
+    # importance plots all together
+    vmin, vmax = lim(importance_array, percentile=0, balance=False)
+    # vmin, vmax = np.min([-vmax, vmin]), np.max([-vmin, vmax])
+    levels = np.linspace(vmin, vmax, num=400)
+    cbar_levels = np.linspace(vmin, vmax, num=7)
+
+    fig, axs = plt.subplots(
+        3, 2, figsize=(6, 6), subplot_kw={"projection": ccrs.PlateCarree()}
+    )
+
+    for i in range(len(FEATURE_LIST)):
+        ax = axs.transpose().ravel()[i]
+        ax.set_extent(bbox_plot.cartopy(), crs=ccrs.PlateCarree())
+        # add a green-yellow backgroud here
+        ax.set_facecolor("#d1ffbd")
+        ax.add_feature(cartopy.feature.LAKES, alpha=0.5, color="lightblue")
+        ax.add_feature(cartopy.feature.RIVERS, alpha=0.5, color="lightblue")
+        im = ax.tricontourf(
+            lon,
+            lat,
+            triangles,
+            importance_array[:, i],
+            vmin=vmin,
+            vmax=vmax,
+            levels=levels,
+            cmap="cmo.amp",
+        )
+        ax.set_title(FEATURE_LIST[i].replace("_", " ").capitalize())
+        ax.plot(
+            NEW_ORLEANS.lon, NEW_ORLEANS.lat, marker=".", markersize=4, color="purple"
+        )
+        ax.text(
+            NEW_ORLEANS.lon - 0.35,
+            NEW_ORLEANS.lat - 0.16,
+            "New Orleans",
+            fontsize=6,
+            color="purple",
+        )
+        ax.set_yticks(
+            [
+                x
+                for x in range(
+                    int((bbox_plot.lat[0] // 1) + 1), int((bbox_plot.lat[1] // 1) + 1)
+                )
+            ],
+            crs=ccrs.PlateCarree(),
+        )
+        ax.set_xticks(
+            [
+                x
+                for x in range(
+                    int((bbox_plot.lon[0] // 1) + 1), int((bbox_plot.lon[1] // 1) + 1)
+                )
+            ],
+            crs=ccrs.PlateCarree(),
+        )
+        ax.xaxis.set_major_formatter(LONGITUDE_FORMATTER)
+        ax.yaxis.set_major_formatter(LATITUDE_FORMATTER)
+
+    label_subplots(axs.transpose(), override="outside", fontsize=12)
+    fig.subplots_adjust(right=0.8)
+    # cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+    cbar_ax = fig.add_axes([1.02, 0.15, 0.05, 0.7])
+
+    cbar = fig.colorbar(
+        im,
+        cax=cbar_ax,
+        label="Importance of feature for predicting, $\eta_{\mathrm{max}}$, [dimensionless]",
+    )
+    cbar_levels = np.linspace(vmin, vmax, num=7)
+    cbar.set_ticks(cbar_levels)
+    cbar.set_ticklabels(["{:.2f}".format(x) for x in cbar_levels.tolist()])
+    plt.savefig(os.path.join(figure_path, "importance_all.png"), bbox_inches="tight")
     plt.clf()
 
 
