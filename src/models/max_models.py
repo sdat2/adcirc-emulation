@@ -9,7 +9,7 @@ import cartopy
 import cartopy.crs as ccrs
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import wandb
-from sithom.plot import plot_defaults, lim
+from sithom.plot import plot_defaults, lim, label_subplots
 from sithom.place import BoundingBox
 from sithom.time import timeit
 from src.constants import NO_BBOX, NEW_ORLEANS, FIGURE_PATH, DATA_PATH
@@ -24,7 +24,7 @@ FEATURE_LIST = ["angle", "speed", "point_east", "rmax", "pc", "xn"]
 @timeit
 def generate_max_parray_and_output(
     version=0, bbox: BoundingBox = NO_BBOX
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, xr.Dataset]:
     # load artifact dataset
     # maybe we can add a loop here to get all the artifacts with different versions
     run = wandb.init()
@@ -42,7 +42,7 @@ def generate_max_parray_and_output(
 
     ### output array
     oa = cds_a[["zeta_max"]]
-    (indices,) = bbox.indices_inside(cds_a["lon"].values, cds_a["lat"].values)
+    indices = bbox.indices_inside(cds_a["lon"].values, cds_a["lat"].values)
     oa = oa.isel(node=indices)
     output_array = oa.to_array().values.transpose()
 
@@ -88,8 +88,10 @@ def make_all_plots():
         cds_a = xr.open_dataset(os.path.join(data_path, "cds_a.nc"))
     else:
         parray_mult, oa_mult, cds_a = load_data_from_scratch()
-        parray_mult.save(os.path.join(data_path, "parray_mult.npy"))
-        oa_mult.save(os.path.join(data_path, "oa_mult.npy"))
+        # parray_mult.save(os.path.join(data_path, "parray_mult.npy"))
+        # oa_mult.save(os.path.join(data_path, "oa_mult.npy"))
+        np.save(os.path.join(data_path, "parray_mult.npy"), parray_mult)
+        np.save(os.path.join(data_path, "oa_mult.npy"), oa_mult)
         cds_a.to_netcdf(os.path.join(data_path, "cds_a.nc"))
 
     # Importance plots
@@ -398,6 +400,7 @@ def make_all_plots():
         ax.xaxis.set_major_formatter(LONGITUDE_FORMATTER)
         ax.yaxis.set_major_formatter(LATITUDE_FORMATTER)
 
+    label_subplots(axs, override="outside", fontsize=12)
     plt.savefig(os.path.join(figure_path, "correlation_all.png"))
     plt.clf()
 
