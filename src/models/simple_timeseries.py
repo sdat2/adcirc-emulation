@@ -15,13 +15,22 @@ from src.constants import CONFIG_PATH, DATA_PATH
 
 
 @timeit
-def load_8d_data():
+def load_8d_data() -> xr.Dataset:
     ds8 = xr.open_dataset(os.path.join(DATA_PATH, "ds8.nc"))
     return ds8
 
 
 @timeit
 def rescale_ds(ds8: xr.Dataset) -> xr.Dataset:
+    """
+    Rescale the dataset using config array for standard variables and mean and std for the rest.
+
+    Args:
+        ds8 (xr.Dataset): _description_
+
+    Returns:
+        xr.Dataset: _description_
+    """
     # takes around 7 seconds.
     # rescale
     cfg = OmegaConf.load(os.path.join(CONFIG_PATH, "sixd.yaml"))
@@ -85,6 +94,16 @@ def rescale_ds(ds8: xr.Dataset) -> xr.Dataset:
 def get_simple_split(
     ds8r: xr.Dataset, index=26
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Simple train test split using sklearn.
+
+    Args:
+        ds8r (xr.Dataset): rescaled dataset.
+        index (int, optional): which node. Defaults to 26.
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: x_train, x_test, y_train, y_test
+    """
     # ds8r
 
     ex8d = ds8r.isel(node=index, output=0)
@@ -111,7 +130,7 @@ def get_exp_split(
     ds8r: xr.Dataset, index=26, split_index=200
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
-    Get exp split.
+    Split by exp instead of randomly.
 
     Args:
         ds8r (xr.Dataset): rescaled dataset.
