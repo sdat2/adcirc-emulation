@@ -16,6 +16,12 @@ from src.constants import CONFIG_PATH, DATA_PATH
 
 @timeit
 def load_8d_data() -> xr.Dataset:
+    """
+    Load the 8d dataset.
+
+    Returns:
+        xr.Dataset: xarray dataset.
+    """
     ds8 = xr.open_dataset(os.path.join(DATA_PATH, "ds8.nc"))
     return ds8
 
