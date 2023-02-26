@@ -25,6 +25,8 @@ os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
 import wandb
 
 wandb.login(key="42ceaac64e4f3ae24181369f4c77d9ba0d1c64e5")
+from comet_ml import Experiment
+
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import GPy
 from GPy.kern.src.kern import Kern
@@ -302,6 +304,7 @@ class SixDOFSearch:
         dryrun: bool = False,
         path: str = "6D_search",
         test_data_path: str = "6D_test",  # where to get the test data.
+        experiment: Optional[Experiment]  = None
     ) -> None:
         """
         Initialize the search space for emulation.
@@ -364,9 +367,12 @@ class SixDOFSearch:
         self.active_y_data = np.array([[np.nan]])
         self.test_x_data = np.array([[np.nan for _ in range(len(self.names))]])
         self.test_y_data = np.array([[np.nan]])
+        
+        # Comet_ml experiment object
+        self.experiment = experiment
 
         # Load test data.
-        #  self.load_test_data()
+        self.load_test_data()
 
         # Data paths.
         self.x_path = os.path.join(self.data_path, "X.npy")
@@ -594,9 +600,9 @@ class SixDOFSearch:
         self.test_x_data = Xtest
         self.test_y_data = Ytest
 
-    def test_metrics(self) -> None:
+    def test_metrics(self, model) -> dict:
         # Test data need to be loaded first.
-        mean, var = self.model_gpy.predict(self.test_x_data)
+        mean, var = model.predict(self.test_x_data) # self.model_gpy.predict(self.test_x_data)
         rmse, mae, r2 = (
             mean_squared_error(self.test_y_data, mean, squared=False),
             mean_absolute_error(self.test_y_data, mean),
@@ -604,8 +610,18 @@ class SixDOFSearch:
         )
         print("rmse", rmse, "mae", mae, "r2", r2)
         # check if wandb is running.
-        if wandb.run is not None:
-            wandb.log({"rmse": rmse, "mae": mae, "r2": r2})
+        #if wandb.run is not None:
+        #     wandb.log(
+            
+        return {"rmse": rmse, "mae": mae, "r2": r2}
+
+    def comet_results(self, inum, anum, x_train, y_train):
+        # first train model
+        model = Gpy.models.GPRegression(x_train, y_train, kernel=Matern32(6,1))
+        # then find model quality
+        res = self.test_metrics(model)
+        self.experiment.log({**res, **{"inum": inum, "anum": anum}})
+
 
     def gp_predict(self) -> Callable:
         X = np.load(self.x_path)
@@ -753,12 +769,53 @@ def get_lhs_test() -> Tuple[np.ndarray, np.ndarray]:
     return x_vals, y_vals
 
 
-def diff_res() -> None:
+@hydra.main(config_path=CONFIG_PATH, config_name="active_tests.yaml")
+def diff_res(cfg: DictConfig) -> None:
+    """
+    X: init num
+    Y: active num
+    Z: rmse/score
+
+    Q: with constant total number of data points, what combination
+    will achieve the best score.
+    """
     # try different ammounts of initial samples compared to
     # the number of actively chosen samples.
 
+    experiment = Experiment(
+        api_key="57fHMWwvxUw6bvnjWLvRwSQFp",
+        project_name="6dactive",
+        workspace="sdat2",
+    )
+
+    sdf = SixDOFSearch(
+        seed=cfg.seed,
+        dryrun=cfg.dryrun,
+        path=cfg.path,
+        test_data_path="6DFake",
+    )
+    sdf.run_initial(samples=cfg.init_samples)
+    sdf.setup_active()
+    # sdf.save_initial_data()
+    sdf.run_active(samples=cfg.active_samples)
     # we need to change the ratio of things.
-    raise NotImplementedError("Not done yet!")
+    #raise NotImplementedError("Not done yet!")
+    """
+    python src/models/emu6d.py initial_samples=29 active_samples=1 seed=40 dryrun=false
+    python src/models/emu6d.py initial_samples=1 active_samples=29 seed=41 dryrun=false
+    python src/models/emu6d.py initial_samples=15 active_samples=15 seed=42 dryrun=false
+    python src/models/emu6d.py initial_samples=45 active_samples=15 seed=43 dryrun=false
+    python src/models/emu6d.py initial_samples=15 active_samples=45 seed=44 dryrun=false
+    python src/models/emu6d.py initial_samples=30 active_samples=30 seed=45 dryrun=false
+    python src/models/emu6d.py initial_samples=59 active_samples=1 seed=46 dryrun=false
+    python src/models/emu6d.py initial_samples=1 active_samples=59 seed=47 dryrun=false
+    python src/models/emu6d.py initial_samples=119 active_samples=1 seed=48 dryrun=false
+    python src/models/emu6d.py initial_samples=1 active_samples=119 seed=49 dryrun=false
+    python src/models/emu6d.py initial_samples=105 active_samples=15 seed=50 dryrun=false
+    python src/models/emu6d.py initial_samples=15 active_samples=105 seed=51 dryrun=false
+
+
+    """
 
 
 if __name__ == "__main__":

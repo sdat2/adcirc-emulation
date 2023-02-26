@@ -19,6 +19,8 @@
 - `climada`
 - `cartopy`
 - `eccodes=1.3.3`
+- `wandb`
+- `comet-ml`
 
 ### Optional
 
