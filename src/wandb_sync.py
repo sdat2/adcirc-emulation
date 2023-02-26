@@ -1,3 +1,7 @@
+"""
+wandb sync.
+"""
+
 from wandb.sync import get_run_from_path
 from wandb.cli.cli import sync
 

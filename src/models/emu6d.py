@@ -437,7 +437,10 @@ class SixDOFSearch:
                 output_list.append(-fake_func(param, output_direc))
             else:
                 # take the negative for minimization.
-                output_list.append(-real_func(param, output_direc))
+                res = - real_func(param, output_direc)
+                output_list.append(res)
+                # work out inum, anum, x_data, y_data
+                # self.comet_results()
             self.call_number += 1
 
         return np.array(output_list).reshape(len(output_list), 1)
@@ -615,9 +618,18 @@ class SixDOFSearch:
             
         return {"rmse": rmse, "mae": mae, "r2": r2}
 
-    def comet_results(self, inum, anum, x_train, y_train):
+    def comet_results(self, inum: int, anum: int, x_train: np.ndarray, y_train: np.ndarray) -> None:
+        """
+        Report current results to comet.
+
+        Args:
+            inum: number of initial points so far
+            anum: number of active points so far
+            x_train: x_train numpy array (num, 6)
+            y_train: y_train numpy array (num, 1)
+        """
         # first train model
-        model = Gpy.models.GPRegression(x_train, y_train, kernel=Matern32(6,1))
+        model = Gpy.models.GPRegression(x_train, y_train, kernel=Matern32(6,1)).optimize()
         # then find model quality
         res = self.test_metrics(model)
         self.experiment.log({**res, **{"inum": inum, "anum": anum}})
@@ -793,7 +805,9 @@ def diff_res(cfg: DictConfig) -> None:
         dryrun=cfg.dryrun,
         path=cfg.path,
         test_data_path="6DFake",
+        experiment=experiment,
     )
+
     sdf.run_initial(samples=cfg.init_samples)
     sdf.setup_active()
     # sdf.save_initial_data()
@@ -801,20 +815,18 @@ def diff_res(cfg: DictConfig) -> None:
     # we need to change the ratio of things.
     #raise NotImplementedError("Not done yet!")
     """
-    python src/models/emu6d.py initial_samples=29 active_samples=1 seed=40 dryrun=false
-    python src/models/emu6d.py initial_samples=1 active_samples=29 seed=41 dryrun=false
-    python src/models/emu6d.py initial_samples=15 active_samples=15 seed=42 dryrun=false
-    python src/models/emu6d.py initial_samples=45 active_samples=15 seed=43 dryrun=false
-    python src/models/emu6d.py initial_samples=15 active_samples=45 seed=44 dryrun=false
-    python src/models/emu6d.py initial_samples=30 active_samples=30 seed=45 dryrun=false
-    python src/models/emu6d.py initial_samples=59 active_samples=1 seed=46 dryrun=false
-    python src/models/emu6d.py initial_samples=1 active_samples=59 seed=47 dryrun=false
-    python src/models/emu6d.py initial_samples=119 active_samples=1 seed=48 dryrun=false
-    python src/models/emu6d.py initial_samples=1 active_samples=119 seed=49 dryrun=false
-    python src/models/emu6d.py initial_samples=105 active_samples=15 seed=50 dryrun=false
-    python src/models/emu6d.py initial_samples=15 active_samples=105 seed=51 dryrun=false
-
-
+    python src/models/emu6d.py init_samples=29 active_samples=1 seed=40 dryrun=false
+    python src/models/emu6d.py init_samples=1 active_samples=29 seed=41 dryrun=false
+    python src/models/emu6d.py init_samples=15 active_samples=15 seed=42 dryrun=false
+    python src/models/emu6d.py init_samples=45 active_samples=15 seed=43 dryrun=false
+    python src/models/emu6d.py init_samples=15 active_samples=45 seed=44 dryrun=false
+    python src/models/emu6d.py init_samples=30 active_samples=30 seed=45 dryrun=false
+    python src/models/emu6d.py init_samples=59 active_samples=1 seed=46 dryrun=false
+    python src/models/emu6d.py init_samples=1 active_samples=59 seed=47 dryrun=false
+    python src/models/emu6d.py init_samples=119 active_samples=1 seed=48 dryrun=false
+    python src/models/emu6d.py init_samples=1 active_samples=119 seed=49 dryrun=false
+    python src/models/emu6d.py init_samples=105 active_samples=15 seed=50 dryrun=false
+    python src/models/emu6d.py init_samples=15 active_samples=105 seed=51 dryrun=false
     """
 
 
