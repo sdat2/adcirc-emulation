@@ -707,6 +707,33 @@ def lhs(cfg: DictConfig) -> None:
     realholdout.save_initial_data()
 
 
+def combine_lhs():
+    """Combine the different latin hypercube searches to be 
+    one large test sets"""
+    
+    lhs_list = [x for x in os.listdir(DATA_PATH) if "6D_Holdout_tiny" in x]
+    ds_list = []
+    i = 0
+    for direc in lhs_list:
+        ds_file = os.path.join(DATA_PATH, direc, "data.nc")
+        if os.path.exists(ds_file):
+            ds = xr.open_dataset(ds_file).assign_coords(coords={"file": i})
+            ds = ds.expand_dims(dim="file")
+            ds_list.append(ds)
+            i += 1
+    print(xr.merge(ds_list))
+
+
+
+def diff_res() -> None:
+    # we need to change the ratio of things.
+    raise NotImplementedError("Not done yet!")
+
+# def 
+
+
 if __name__ == "__main__":
     # python src/models/emu6d.py samples=100 seed=31 dryrun=true
-    lhs()
+    # lhs()
+    combine_lhs()
+
