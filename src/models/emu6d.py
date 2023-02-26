@@ -437,13 +437,46 @@ class SixDOFSearch:
                 output_list.append(-fake_func(param, output_direc))
             else:
                 # take the negative for minimization.
-                res = - real_func(param, output_direc)
+                res = -real_func(param, output_direc)
                 output_list.append(res)
+                # output_list, self.init_x_data, self.init_y_data
+                # output_list, self.active_x_data, self.active_y_data 
                 # work out inum, anum, x_data, y_data
                 # self.comet_results()
+                self.feed_to_comet(input_x, output_list)
             self.call_number += 1
 
         return np.array(output_list).reshape(len(output_list), 1)
+
+    def feed_to_comet(input_x: np.ndarray, output_list: list) -> None:
+        """
+        Feed to comet_ml logger.
+
+        Args:
+            input_x (np.ndarray): input_x.
+            output_list (list): results.
+        """
+        len_o = len(output_list)
+        len_i = self.init_y_data.shape[0]
+        len_a = self.active_y_data.shape[0]
+
+        if len_i == 1 and np.isnan(self.init_y_data[0]):
+            # initial is empty
+            anum = 0
+            inum = len_o
+            x_train = input_x
+            y_train = np.array(output_list)
+        elif len_a == 1 and np.isnan(self.active_y_data[0]):
+            # active is empty
+            inum = len_i
+            anum = len_o
+            x_train = np.concat(self.init_x_data, input_x)
+            y_train = np.concat(self.init_y_data, np.array(output_list))
+        else:
+            # active is not empty, initial is not empty, what is going on
+            assert False
+
+        self.comet_results(inum, anum, x_train, y_train)
 
     def get_initial(self, samples: int = 500) -> None:
         # call func some number of times
