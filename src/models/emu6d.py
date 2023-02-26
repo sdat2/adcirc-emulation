@@ -589,6 +589,8 @@ class SixDOFSearch:
         if test_data_path is None:
             test_data_path = self.test_data_path
         Xtest, Ytest = self.load_normalized_data(data_path=test_data_path)
+        # changing to getting all data
+        Xtest, Ytest = get_lhs_test()
         self.test_x_data = Xtest
         self.test_y_data = Ytest
 
@@ -696,6 +698,12 @@ def holdout_tiny(seed: int = 3) -> None:
 
 @hydra.main(config_path=CONFIG_PATH, config_name="lhs.yaml")
 def lhs(cfg: DictConfig) -> None:
+    """
+    LHS to create test data.
+
+    Args:
+        cfg (DictConfig): Config from hydra.
+    """
     realholdout = SixDOFSearch(
         seed=cfg.seed,
         dryrun=cfg.dryrun,
@@ -707,10 +715,10 @@ def lhs(cfg: DictConfig) -> None:
     realholdout.save_initial_data()
 
 
-def combine_lhs():
+def combine_lhs() -> None:
     """Combine the different latin hypercube searches to be 
-    one large test sets"""
-    
+    one large test set."""
+
     lhs_list = [x for x in os.listdir(DATA_PATH) if "6D_Holdout_tiny" in x]
     ds_list = []
     i = 0
@@ -721,19 +729,41 @@ def combine_lhs():
             ds = ds.expand_dims(dim="file")
             ds_list.append(ds)
             i += 1
-    print(xr.merge(ds_list))
+    ds = xr.merge(ds_list) # .isel(point=slice(0, 80)) # , compat="minimal")
+    ds.to_netcdf(os.path.join(DATA_PATH, "test_data.nc"))
+    print(ds)
 
+
+@timeit
+def get_lhs_test() -> Tuple[np.ndarray, np.ndarray]:
+    """Get LHS test data, with scaling."""
+    ds = xr.open_dataset(os.path.join(DATA_PATH, "test_data.nc"))
+    cfg = OmegaConf.load(os.path.join(CONFIG_PATH, "sixd.yaml"))
+    print(ds, cfg)
+    x_vals = []
+    for x_var in cfg:
+        std = cfg[x_var].max - cfg[x_var].min
+        mean = cfg[x_var].min # (cfg[x_var].min + cfg[x_var].min)/2
+        x_val = (ds[x_var].values.ravel() - mean) / std
+        x_vals.append(x_val)
+    isnan = np.isnan(x_val)
+    x_vals = np.array(x_vals).transpose()[~isnan, :]
+    y_vals = -ds.maxele.values.ravel()[~isnan]
+    print(x_vals.shape, y_vals.shape)
+    return x_vals, y_vals
 
 
 def diff_res() -> None:
+    # try different ammounts of initial samples compared to
+    # the number of actively chosen samples.
+
     # we need to change the ratio of things.
     raise NotImplementedError("Not done yet!")
-
-# def 
 
 
 if __name__ == "__main__":
     # python src/models/emu6d.py samples=100 seed=31 dryrun=true
     # lhs()
-    combine_lhs()
+    #combine_lhs()
+    get_lhs_test()
 

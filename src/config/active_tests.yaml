@@ -1,0 +1,5 @@
+init_samples: 100
+active_samples: 100
+seed: 35
+dryrun: false
+path: 6D_atest_inum_${init_samples}_anum_${active_samples}
