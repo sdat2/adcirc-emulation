@@ -12,13 +12,24 @@ import hydra
 from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 from sithom.time import timeit
+from sithom.place import BoundingBox
 from src.constants import CONFIG_PATH, DATA_PATH, NO_BBOX
 
 # FEATURE_LIST = [#
 FEATURE_LIST = ["angle", "speed", "point_east", "rmax", "pc", "xn"]
 
 
-def make_8d_data(num=400) -> None:
+def make_8d_data(num=400, bbox: BoundingBox = NO_BBOX) -> None:
+    """
+    Make 8d data netcdf for reading by the script.
+
+    Downloads data from weights and biases, and then formats it
+    for machine learning.
+
+    Args:
+        num (int, optional): numb of versions to download. Defaults to 400.
+        bbox (BoundingBox, optional): bbox. Defaults to NO_BBOX.
+    """
     run = wandb.init()
 
     def generate_parray2d_and_output(
