@@ -55,8 +55,8 @@ def make_all_plots() -> None:
     bbox_plot.lat[1] = NO_BBOX.lat[1]
     data_path = os.path.join(DATA_PATH, "max_sensitivities")
     figure_path = os.path.join(FIGURE_PATH, "max_sensitivities")
-    num = 286
-    regenerate = False
+    num = 400
+    regenerate = True
     os.makedirs(figure_path, exist_ok=True)
     os.makedirs(data_path, exist_ok=True)
     plot_defaults()
