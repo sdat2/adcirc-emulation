@@ -127,10 +127,10 @@ def rescale_ds(ds8: xr.Dataset) -> xr.Dataset:
     Rescale the dataset using config array for standard variables and mean and std for the rest.
 
     Args:
-        ds8 (xr.Dataset): _description_
+        ds8 (xr.Dataset): unscaled dataset.
 
     Returns:
-        xr.Dataset: _description_
+        xr.Dataset: scaled dataset.
     """
     # takes around 7 seconds.
     # rescale

@@ -98,7 +98,7 @@ def make_all_plots() -> None:
 
     # print("oa_mult.shape", oa_mult.shape)
 
-    def return_importances(index: int = 27):
+    def return_importances(index: int = 27) -> np.ndarray:
         # print(index)
         model = DecisionTreeRegressor()
         model.fit(parray_mult, oa_mult[:, index])
@@ -260,7 +260,7 @@ def make_all_plots() -> None:
     plt.savefig(os.path.join(figure_path, "max_importance.png"))
     plt.clf()
 
-    def return_correlation(index: int = 27):
+    def return_correlation(index: int = 27) -> np.ndarray:
         return np.array(
             [
                 np.corrcoef(parray_mult[:, i], oa_mult[:, index])[0, 1]
