@@ -445,12 +445,12 @@ class SixDOFSearch:
                 # self.comet_results()
                 print("x_data.shape", x_data.shape)
                 print("len(output_list)", len(output_list))
-                self.feed_to_comet(x_data, output_list)
+                self.feed_to_comet(x_data[:len(output_list),:], output_list)
             self.call_number += 1
 
         return np.array(output_list).reshape(len(output_list), 1)
 
-    def feed_to_comet(input_x: np.ndarray, output_list: list) -> None:
+    def feed_to_comet(self, input_x: np.ndarray, output_list: list) -> None:
         """
         Feed to comet_ml logger.
 
@@ -669,11 +669,16 @@ class SixDOFSearch:
             y_train: y_train numpy array (num, 1)
         """
         # first train model
-        model = Gpy.models.GPRegression(x_train, y_train, kernel=Matern32(6,1)).optimize()
+        model = GPRegression(
+            x_train, 
+            y_train.reshape(len(y_train), 1),
+            Matern32(6,1),
+        )
+        model.optimize()
+        # model = Gpy.models.GPRegression(x_train, y_train, kernel=Matern32(6,1)).optimize()
         # then find model quality
         res = self.test_metrics(model)
-        self.experiment.log({**res, **{"inum": inum, "anum": anum}})
-
+        self.experiment.log_metrics({**res, **{"inum": inum, "anum": anum}})
 
     def gp_predict(self) -> Callable:
         X = np.load(self.x_path)
@@ -799,7 +804,7 @@ def combine_lhs() -> None:
             i += 1
     ds = xr.merge(ds_list) # .isel(point=slice(0, 80)) # , compat="minimal")
     ds.to_netcdf(os.path.join(DATA_PATH, "test_data.nc"))
-    print(ds)
+    # print(ds)
 
 
 @timeit
@@ -859,7 +864,8 @@ def diff_res(cfg: DictConfig) -> None:
     #raise NotImplementedError("Not done yet!")
     """
     python src/models/emu6d.py init_samples=29 active_samples=1 seed=40 dryrun=false
-    python src/models/emu6d.py init_samples=1 active_samples=29 seed=41 dryrun=false
+    python src/models/emu6d.py init_samples=1 active_samples=29 seed=61 dryrun=false
+    python src/models/emu6d.py init_samples=15 active_samples=15 seed=63 dryrun=false
     python src/models/emu6d.py init_samples=15 active_samples=15 seed=42 dryrun=false
     python src/models/emu6d.py init_samples=45 active_samples=15 seed=43 dryrun=false
     python src/models/emu6d.py init_samples=15 active_samples=45 seed=44 dryrun=false
