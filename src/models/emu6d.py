@@ -20,7 +20,7 @@ os.environ["WANDB_CACHE_DIR"] = "/work/n01/n01/sithom/tmp"
 os.environ["WANDB_DATA_DIR"] = "/work/n01/n01/sithom/tmp"
 os.environ["WANDB_DIR"] = "/work/n01/n01/sithom/.config/wandb"
 os.environ["WANDB_CONFIG_DIR"] = "/work/n01/n01/sithom/.config/wandb"
-os.environ["WANDB_MODE"] = "offline"  # "offline"
+# os.environ["WANDB_MODE"] = "offline"  # "offline"
 os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
 import wandb
 
@@ -443,7 +443,9 @@ class SixDOFSearch:
                 # output_list, self.active_x_data, self.active_y_data 
                 # work out inum, anum, x_data, y_data
                 # self.comet_results()
-                self.feed_to_comet(input_x, output_list)
+                print("x_data.shape", x_data.shape)
+                print("len(output_list)", len(output_list))
+                self.feed_to_comet(x_data, output_list)
             self.call_number += 1
 
         return np.array(output_list).reshape(len(output_list), 1)
@@ -459,6 +461,7 @@ class SixDOFSearch:
         len_o = len(output_list)
         len_i = self.init_y_data.shape[0]
         len_a = self.active_y_data.shape[0]
+        print("(o, i, a)", (len_o, len_i, len_a))
 
         if len_i == 1 and np.isnan(self.init_y_data[0]):
             # initial is empty
@@ -470,12 +473,16 @@ class SixDOFSearch:
             # active is empty
             inum = len_i
             anum = len_o
+            print("self.init_x_data.shape", self.init_x_data.shape)
+            print("self.init_y_data.shape", self.init_y_data.shape)
             x_train = np.concat(self.init_x_data, input_x)
             y_train = np.concat(self.init_y_data, np.array(output_list))
         else:
             # active is not empty, initial is not empty, what is going on
             assert False
 
+        print("x_train.shape", x_train.shape)
+        print("y_train.shape", y_train.shape)
         self.comet_results(inum, anum, x_train, y_train)
 
     def get_initial(self, samples: int = 500) -> None:
@@ -628,9 +635,9 @@ class SixDOFSearch:
         return self.to_normalized(xr.T), -yr.T
 
     def load_test_data(self, test_data_path: Optional[str] = None) -> None:
-        if test_data_path is None:
-            test_data_path = self.test_data_path
-        Xtest, Ytest = self.load_normalized_data(data_path=test_data_path)
+        #if test_data_path is None:
+        #    test_data_path = self.test_data_path
+        #Xtest, Ytest = self.load_normalized_data(data_path=test_data_path)
         # changing to getting all data
         Xtest, Ytest = get_lhs_test()
         self.test_x_data = Xtest
@@ -840,11 +847,14 @@ def diff_res(cfg: DictConfig) -> None:
         test_data_path="6DFake",
         experiment=experiment,
     )
-
+    print("run sdf")
     sdf.run_initial(samples=cfg.init_samples)
+    print("run sdf a")
     sdf.setup_active()
+    print("b")
     # sdf.save_initial_data()
     sdf.run_active(samples=cfg.active_samples)
+    print("end")
     # we need to change the ratio of things.
     #raise NotImplementedError("Not done yet!")
     """
@@ -867,5 +877,5 @@ if __name__ == "__main__":
     # python src/models/emu6d.py samples=100 seed=31 dryrun=true
     # lhs()
     #combine_lhs()
-    get_lhs_test()
+    diff_res()
 
