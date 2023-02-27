@@ -854,6 +854,15 @@ def diff_res(cfg: DictConfig) -> None:
     """
     # try different ammounts of initial samples compared to
     # the number of actively chosen samples.
+    """
+    import neptune
+    param_for_run = cfg.to_dict()
+    run = neptune.init_run(
+        project="sdat2/6dactive",
+        api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5NGFiNmZiMC04ZTFiLTQwMTQtOTliYi1kYjAwNGQzZDQ3ODYifQ==",
+    )  # your credentials
+    run["parameters"] = param_for_run
+    """
 
     experiment = Experiment(
         api_key="57fHMWwvxUw6bvnjWLvRwSQFp",
