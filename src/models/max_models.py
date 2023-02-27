@@ -55,8 +55,8 @@ def make_all_plots() -> None:
     bbox_plot.lat[1] = NO_BBOX.lat[1]
     data_path = os.path.join(DATA_PATH, "max_sensitivities")
     figure_path = os.path.join(FIGURE_PATH, "max_sensitivities")
-    num = 286
-    regenerate = False
+    num = 400
+    regenerate = True
     os.makedirs(figure_path, exist_ok=True)
     os.makedirs(data_path, exist_ok=True)
     plot_defaults()
@@ -98,7 +98,7 @@ def make_all_plots() -> None:
 
     # print("oa_mult.shape", oa_mult.shape)
 
-    def return_importances(index: int = 27):
+    def return_importances(index: int = 27) -> np.ndarray:
         # print(index)
         model = DecisionTreeRegressor()
         model.fit(parray_mult, oa_mult[:, index])
@@ -260,7 +260,7 @@ def make_all_plots() -> None:
     plt.savefig(os.path.join(figure_path, "max_importance.png"))
     plt.clf()
 
-    def return_correlation(index: int = 27):
+    def return_correlation(index: int = 27) -> np.ndarray:
         return np.array(
             [
                 np.corrcoef(parray_mult[:, i], oa_mult[:, index])[0, 1]

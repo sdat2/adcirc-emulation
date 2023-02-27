@@ -5,13 +5,108 @@ import os
 from typing import Tuple
 import numpy as np
 import xarray as xr
+import wandb
 import omegaconf
 from omegaconf import OmegaConf, DictConfig
 import hydra
 from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 from sithom.time import timeit
-from src.constants import CONFIG_PATH, DATA_PATH
+from sithom.place import BoundingBox
+from src.constants import CONFIG_PATH, DATA_PATH, NO_BBOX
+
+# FEATURE_LIST = [#
+FEATURE_LIST = ["angle", "speed", "point_east", "rmax", "pc", "xn"]
+
+
+def make_8d_data(num=400, bbox: BoundingBox = NO_BBOX) -> None:
+    """
+    Make 8d data netcdf for reading by the script.
+
+    Downloads data from weights and biases, and then formats it
+    for machine learning.
+
+    Args:
+        num (int, optional): numb of versions to download. Defaults to 400.
+        bbox (BoundingBox, optional): bbox. Defaults to NO_BBOX.
+    """
+    run = wandb.init()
+
+    def generate_parray2d_and_output(
+        version=0,
+    ) -> Tuple[np.ndarray, np.ndarray, xr.Dataset]:
+        """
+        Generate parray2d and output.
+
+        Args:
+            version (int, optional): version of artifact. Defaults to 0.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray, xr.Dataset]: parray2d, output, and dataset.
+        """
+        # tide feature needed for time varying version to work.
+        artifact = run.use_artifact(
+            f"sdat2/6d_individual_version2/output_dataset:v{version}", type="dataset"
+        )
+        artifact_dir = artifact.download()
+        cds_a = xr.open_dataset(os.path.join(artifact_dir, "combined_ds.nc"))
+
+        # turn 6 parameters into array
+        parray = cds_a[FEATURE_LIST].to_array().values
+
+        # get clat and clon (centers of cyclone over time)
+        clat = cds_a["clat"].values
+        clon = cds_a["clon"].values
+
+        # so we want to format the inputs for machine learning, so we need to get the input data into a 2D array
+        # parray needs to become as long as clat and clon (repeated entries for 56 timesteps)
+        # clat and clon need to appended to this array --> a total of 7 + 2 = 9 parameters * 56 timesteps = 504 entries
+        parray_2d = np.array([parray for _ in range(len(clat))])
+        # now we need to append clat and clon to this array
+        parray_2d = np.append(parray_2d, clat.reshape(-1, 1), axis=1)
+        parray_2d = np.append(parray_2d, clon.reshape(-1, 1), axis=1)
+        # parray_2d = np.append(parray_2d, clat, axis=1)
+        # value order is: angle, speed, point_east, rmax, pc, vmax, xn, clat, clon
+
+        ### output array
+        oa = cds_a[["zeta", "u-vel", "v-vel"]].interp(
+            {"output_time": cds_a["input_time"]}
+        )
+
+        (indices,) = NO_BBOX.indices_inside(cds_a["lon"].values, cds_a["lat"].values)
+        oa = oa.isel(node=indices)
+
+        output_array = oa.to_array().values.transpose()
+
+        return parray_2d, output_array, cds_a
+
+    parray_2d_list, output_array_list = [], []
+    for version in range(num):
+        parray_2d, output_array, cds_a = generate_parray2d_and_output(version=version)
+        parray_2d_list.append(parray_2d)
+        output_array_list.append(output_array)
+
+    output_array_4d = np.array(output_array_list)
+    parray_2d_3d = np.array(parray_2d_list)
+    indices = NO_BBOX.indices_inside(cds_a["lon"].values, cds_a["lat"].values)
+
+    ds8 = xr.Dataset(
+        data_vars={
+            "x": (["exp", "time", "param"], parray_2d_3d),
+            "y": (["exp", "node", "time", "output"], output_array_4d),
+        },
+        coords={
+            "exp": range(output_array_4d.shape[0]),
+            "node": range(1, output_array_4d.shape[1] + 1),
+            "time": cds_a["input_time"].values,
+            "param": FEATURE_LIST + ["clon", "clat"],
+            "output": ["zeta", "u-vel", "v-vel"],
+            "lat": (["node"], cds_a.isel(node=indices[0]).lat.values),
+            "lon": (["node"], cds_a.isel(node=indices[0]).lon.values),
+        },
+    )
+
+    ds8.to_netcdf(os.path.join(DATA_PATH, "ds8.nc"))
 
 
 @timeit
@@ -32,10 +127,10 @@ def rescale_ds(ds8: xr.Dataset) -> xr.Dataset:
     Rescale the dataset using config array for standard variables and mean and std for the rest.
 
     Args:
-        ds8 (xr.Dataset): _description_
+        ds8 (xr.Dataset): unscaled dataset.
 
     Returns:
-        xr.Dataset: _description_
+        xr.Dataset: scaled dataset.
     """
     # takes around 7 seconds.
     # rescale

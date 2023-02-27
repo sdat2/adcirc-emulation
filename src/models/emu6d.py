@@ -304,7 +304,7 @@ class SixDOFSearch:
         dryrun: bool = False,
         path: str = "6D_search",
         test_data_path: str = "6D_test",  # where to get the test data.
-        experiment: Optional[Experiment]  = None
+        experiment: Optional[Experiment] = None,
     ) -> None:
         """
         Initialize the search space for emulation.
@@ -367,7 +367,7 @@ class SixDOFSearch:
         self.active_y_data = np.array([[np.nan]])
         self.test_x_data = np.array([[np.nan for _ in range(len(self.names))]])
         self.test_y_data = np.array([[np.nan]])
-        
+
         # Comet_ml experiment object
         self.experiment = experiment
 
@@ -440,12 +440,12 @@ class SixDOFSearch:
                 res = -real_func(param, output_direc)
                 output_list.append(res)
                 # output_list, self.init_x_data, self.init_y_data
-                # output_list, self.active_x_data, self.active_y_data 
+                # output_list, self.active_x_data, self.active_y_data
                 # work out inum, anum, x_data, y_data
                 # self.comet_results()
                 print("x_data.shape", x_data.shape)
                 print("len(output_list)", len(output_list))
-                self.feed_to_comet(x_data[:len(output_list),:], output_list)
+                self.feed_to_comet(x_data[: len(output_list), :], output_list)
             self.call_number += 1
 
         return np.array(output_list).reshape(len(output_list), 1)
@@ -478,8 +478,16 @@ class SixDOFSearch:
             anum = self.call_number + 1 - len_i
             print("self.init_x_data.shape", self.init_x_data.shape)
             print("self.init_y_data.shape", self.init_y_data.shape)
-            x_train = np.append(self.init_x_data, input_x, axis=0)
-            y_train = np.append(self.init_y_data.ravel(), np.array(output_list), axis=0)
+            x_train = np.append(
+                self.loop.loop_state.X[len(self.init_x_data) :], input_x, axis=0
+            )
+            y_train = np.append(
+                self.loop.loop_state.Y[len(self.init_y_data) :].ravel(),
+                np.array(output_list),
+                axis=0,
+            )
+            # x_train = np.append(self.init_x_data, input_x, axis=0)
+            # y_train = np.append(self.init_y_data.ravel(), np.array(output_list), axis=0)
         else:
             # active is not empty, initial is not empty, what is going on
             assert False
@@ -638,9 +646,9 @@ class SixDOFSearch:
         return self.to_normalized(xr.T), -yr.T
 
     def load_test_data(self, test_data_path: Optional[str] = None) -> None:
-        #if test_data_path is None:
+        # if test_data_path is None:
         #    test_data_path = self.test_data_path
-        #Xtest, Ytest = self.load_normalized_data(data_path=test_data_path)
+        # Xtest, Ytest = self.load_normalized_data(data_path=test_data_path)
         # changing to getting all data
         Xtest, Ytest = get_lhs_test()
         self.test_x_data = Xtest
@@ -648,7 +656,9 @@ class SixDOFSearch:
 
     def test_metrics(self, model) -> dict:
         # Test data need to be loaded first.
-        mean, var = model.predict(self.test_x_data) # self.model_gpy.predict(self.test_x_data)
+        mean, var = model.predict(
+            self.test_x_data
+        )  # self.model_gpy.predict(self.test_x_data)
         rmse, mae, r2 = (
             mean_squared_error(self.test_y_data, mean, squared=False),
             mean_absolute_error(self.test_y_data, mean),
@@ -656,12 +666,14 @@ class SixDOFSearch:
         )
         print("rmse", rmse, "mae", mae, "r2", r2)
         # check if wandb is running.
-        #if wandb.run is not None:
+        # if wandb.run is not None:
         #     wandb.log(
-            
+
         return {"rmse": rmse, "mae": mae, "r2": r2}
 
-    def comet_results(self, inum: int, anum: int, x_train: np.ndarray, y_train: np.ndarray) -> None:
+    def comet_results(
+        self, inum: int, anum: int, x_train: np.ndarray, y_train: np.ndarray
+    ) -> None:
         """
         Report current results to comet.
 
@@ -673,9 +685,9 @@ class SixDOFSearch:
         """
         # first train model
         model = GPRegression(
-            x_train, 
+            x_train,
             y_train.reshape(len(y_train), 1),
-            Matern32(6,1),
+            Matern32(6, 1),
         )
         model.optimize()
         # model = Gpy.models.GPRegression(x_train, y_train, kernel=Matern32(6,1)).optimize()
@@ -792,7 +804,7 @@ def lhs(cfg: DictConfig) -> None:
 
 
 def combine_lhs() -> None:
-    """Combine the different latin hypercube searches to be 
+    """Combine the different latin hypercube searches to be
     one large test set."""
 
     lhs_list = [x for x in os.listdir(DATA_PATH) if "6D_Holdout_tiny" in x]
@@ -805,7 +817,7 @@ def combine_lhs() -> None:
             ds = ds.expand_dims(dim="file")
             ds_list.append(ds)
             i += 1
-    ds = xr.merge(ds_list) # .isel(point=slice(0, 80)) # , compat="minimal")
+    ds = xr.merge(ds_list)  # .isel(point=slice(0, 80)) # , compat="minimal")
     ds.to_netcdf(os.path.join(DATA_PATH, "test_data.nc"))
     # print(ds)
 
@@ -819,7 +831,7 @@ def get_lhs_test() -> Tuple[np.ndarray, np.ndarray]:
     x_vals = []
     for x_var in cfg:
         std = cfg[x_var].max - cfg[x_var].min
-        mean = cfg[x_var].min # (cfg[x_var].min + cfg[x_var].min)/2
+        mean = cfg[x_var].min  # (cfg[x_var].min + cfg[x_var].min)/2
         x_val = (ds[x_var].values.ravel() - mean) / std
         x_vals.append(x_val)
     isnan = np.isnan(x_val)
@@ -864,7 +876,7 @@ def diff_res(cfg: DictConfig) -> None:
     sdf.run_active(cfg.active_samples)
     print("end")
     # we need to change the ratio of things.
-    #raise NotImplementedError("Not done yet!")
+    # raise NotImplementedError("Not done yet!")
     """
     python src/models/emu6d.py init_samples=29 active_samples=1 seed=40 dryrun=false
     python src/models/emu6d.py init_samples=1 active_samples=29 seed=61 dryrun=false
@@ -886,6 +898,5 @@ def diff_res(cfg: DictConfig) -> None:
 if __name__ == "__main__":
     # python src/models/emu6d.py samples=100 seed=31 dryrun=true
     # lhs()
-    #combine_lhs()
+    # combine_lhs()
     diff_res()
-
