@@ -29,7 +29,7 @@ def loop_through_experiment():
     for exp in comet_api.get(workspace, project):
 
         # exp = comet_api.get(workspace, project, experiment)
-        for metric in ["mae", "rmse", "r2", "inum", "anum"]:
+        for metric in ["inum", "anum", "mae", "rmse", "r2"]:
             metrics = exp.get_metrics(metric)
             print(exp.id, metric, "len(metrics)", len(metrics))
             # print("metrics", metrics)
