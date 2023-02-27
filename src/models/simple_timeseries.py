@@ -35,6 +35,15 @@ def make_8d_data(num=400, bbox: BoundingBox = NO_BBOX) -> None:
     def generate_parray2d_and_output(
         version=0,
     ) -> Tuple[np.ndarray, np.ndarray, xr.Dataset]:
+        """
+        Generate parray2d and output.
+
+        Args:
+            version (int, optional): version of artifact. Defaults to 0.
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray, xr.Dataset]: parray2d, output, and dataset.
+        """
         # tide feature needed for time varying version to work.
         artifact = run.use_artifact(
             f"sdat2/6d_individual_version2/output_dataset:v{version}", type="dataset"
