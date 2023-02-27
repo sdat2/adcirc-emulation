@@ -462,6 +462,7 @@ class SixDOFSearch:
         len_i = self.init_y_data.shape[0]
         len_a = self.active_y_data.shape[0]
         print("(o, i, a)", (len_o, len_i, len_a))
+        print()
 
         if len_i == 1 and np.isnan(self.init_y_data[0]):
             # initial is empty
@@ -469,14 +470,14 @@ class SixDOFSearch:
             inum = len_o
             x_train = input_x
             y_train = np.array(output_list)
-        elif len_a == 1 and np.isnan(self.active_y_data[0]):
+        elif len_a == 0 or (len_a == 1 and np.isnan(self.active_y_data[0])):
             # active is empty
             inum = len_i
             anum = len_o
             print("self.init_x_data.shape", self.init_x_data.shape)
             print("self.init_y_data.shape", self.init_y_data.shape)
-            x_train = np.concat(self.init_x_data, input_x)
-            y_train = np.concat(self.init_y_data, np.array(output_list))
+            x_train = np.append(self.init_x_data, input_x, axis=0)
+            y_train = np.append(self.init_y_data.ravel(), np.array(output_list), axis=0)
         else:
             # active is not empty, initial is not empty, what is going on
             assert False
@@ -858,24 +859,25 @@ def diff_res(cfg: DictConfig) -> None:
     sdf.setup_active()
     print("b")
     # sdf.save_initial_data()
-    sdf.run_active(samples=cfg.active_samples)
+    sdf.run_active(cfg.active_samples)
     print("end")
     # we need to change the ratio of things.
     #raise NotImplementedError("Not done yet!")
     """
     python src/models/emu6d.py init_samples=29 active_samples=1 seed=40 dryrun=false
     python src/models/emu6d.py init_samples=1 active_samples=29 seed=61 dryrun=false
-    python src/models/emu6d.py init_samples=15 active_samples=15 seed=63 dryrun=false
-    python src/models/emu6d.py init_samples=15 active_samples=15 seed=42 dryrun=false
-    python src/models/emu6d.py init_samples=45 active_samples=15 seed=43 dryrun=false
-    python src/models/emu6d.py init_samples=15 active_samples=45 seed=44 dryrun=false
-    python src/models/emu6d.py init_samples=30 active_samples=30 seed=45 dryrun=false
+    python src/models/emu6d.py init_samples=15 active_samples=15 seed=62 dryrun=false
+    python src/models/emu6d.py init_samples=45 active_samples=15 seed=73 dryrun=false
+    python src/models/emu6d.py init_samples=15 active_samples=45 seed=94 dryrun=false
+    python src/models/emu6d.py init_samples=30 active_samples=30 seed=95 dryrun=false
     python src/models/emu6d.py init_samples=59 active_samples=1 seed=46 dryrun=false
-    python src/models/emu6d.py init_samples=1 active_samples=59 seed=47 dryrun=false
+    python src/models/emu6d.py init_samples=1 active_samples=59 seed=57 dryrun=false
     python src/models/emu6d.py init_samples=119 active_samples=1 seed=48 dryrun=false
     python src/models/emu6d.py init_samples=1 active_samples=119 seed=49 dryrun=false
     python src/models/emu6d.py init_samples=105 active_samples=15 seed=50 dryrun=false
-    python src/models/emu6d.py init_samples=15 active_samples=105 seed=51 dryrun=false
+    python src/models/emu6d.py init_samples=15 active_samples=105 seed=91 dryrun=false
+    python src/models/emu6d.py init_samples=105 active_samples=15 seed=50 dryrun=false
+    python src/models/emu6d.py init_samples=15 active_samples=105 seed=59 dryrun=false    
     """
 
 
