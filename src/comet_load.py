@@ -31,7 +31,7 @@ def loop_through_experiment():
     for metric in ["mae", "rmse", "r2", "inum", "anum"]:
         metrics = exp.get_metrics(metric)
         print("len(metrics)", len(metrics))
-        print("metrics", metrics)
+        # print("metrics", metrics)
         for i in range(len(metrics)):
             print("metrics[" + str(i) + "]", metrics[i]["metricValue"])
     # print("metrics[0]", metrics[0]["metricValue"])
