@@ -683,6 +683,7 @@ class SixDOFSearch:
             x_train: x_train numpy array (num, 6)
             y_train: y_train numpy array (num, 1)
         """
+        print("x, y", x_train.shape, y_train.shape)
         # first train model
         model = GPRegression(
             x_train,
@@ -887,7 +888,7 @@ def diff_res(cfg: DictConfig) -> None:
     python src/models/emu6d.py init_samples=59 active_samples=1 seed=46 dryrun=false
     python src/models/emu6d.py init_samples=1 active_samples=59 seed=57 dryrun=false
     python src/models/emu6d.py init_samples=119 active_samples=1 seed=48 dryrun=false
-    python src/models/emu6d.py init_samples=1 active_samples=119 seed=49 dryrun=false
+    python src/models/emu6d.py init_samples=1 active_samples=119 seed=135 dryrun=false
     python src/models/emu6d.py init_samples=105 active_samples=15 seed=50 dryrun=false
     python src/models/emu6d.py init_samples=15 active_samples=105 seed=91 dryrun=false
     python src/models/emu6d.py init_samples=105 active_samples=15 seed=115 dryrun=false
