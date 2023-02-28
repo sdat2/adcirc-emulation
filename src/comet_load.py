@@ -2,6 +2,7 @@
 Comet load.py
 """
 import os
+import numpy as np
 from typing import List
 import comet_ml
 from comet_ml import API
@@ -125,9 +126,13 @@ def plot_final_metrics(ds_list: List[xr.Dataset]) -> None:
         # axs[2].plot(ds.inum.values, ds.rmse)
         # max_i = max(max_i, ds.inum.max().values)
     print(len(inum_l), len(anum_l), len(r2_l), len(mae_l), len(rmse_l))
-    im = plt.scatter(inum_l, anum_l, c=r2_l, cmap="viridis")
-    plt.xlim(0, 110)
-    plt.ylim(0, 110)
+    im = plt.scatter(inum_l, anum_l, c=r2_l, cmap="viridis", vmin=0, vmax=1)
+    for j in [30, 60, 90, 120]:
+        x = np.linspace(0, j, num=100)
+        y = -x + j
+        plt.plot(x, y, "k--")
+    plt.xlim(0, 120)
+    plt.ylim(0, 120)
     cbar = plt.colorbar(im, label="r$^{2}$ [-]")
     plt.xlabel("Number of Intial Latin Hypercube Samples [-]")
     plt.ylabel("Number of Actively Chosen Points [-]")
