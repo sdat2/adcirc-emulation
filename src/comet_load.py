@@ -75,14 +75,14 @@ def plot_inum_metrics(ds_list: List[xr.Dataset]) -> None:
         axs[1].plot(ds.inum.values, ds.mae)
         axs[2].plot(ds.inum.values, ds.rmse)
         max_i = max(max_i, ds.inum.max().values)
-    label_subplots(axs, y_pos=0.5, x_pos=0.05, fontsize=12)
+    label_subplots(axs, y_pos=0.7, x_pos=0.05, fontsize=12)
     plt.xlim(min_i, max_i)
 
     plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "inum_metrics.png"))
     plt.clf()
 
     fig, axs = plt.subplots(3, 1, sharex=True)
-    axs[0].set_ylabel("1 - r$^{2}$ [-]")
+    axs[0].set_ylabel("(1 - r$^{2}$) [-]")
     axs[1].set_ylabel("MAE [m]")
     axs[2].set_ylabel("RMSE [m]")
     axs[2].set_xlabel("Number of Latin Hypercube Samples [-]")
@@ -97,14 +97,49 @@ def plot_inum_metrics(ds_list: List[xr.Dataset]) -> None:
         max_i = max(max_i, ds.inum.max().values)
 
     plt.xlim(min_i, max_i)
-    label_subplots(axs, y_pos=0.5, x_pos=0.05, fontsize=12)
+    label_subplots(axs, y_pos=0.7, x_pos=0.05, fontsize=12)
 
     plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "inum_metrics_log.png"))
     plt.clf()
 
 
-plot_inum_metrics(loop_through_experiment())
+def plot_final_metrics(ds_list: List[xr.Dataset]) -> None:
+    plot_defaults()
+    os.makedirs(os.path.join(FIGURE_PATH, "6dactive"), exist_ok=True)
+    fig, axs = plt.subplots(1, 1, sharex=True)  # aspect=1)
+    # axs[0].set_ylabel("r$^{2}$ [-]")
+    # axs[1].set_ylabel("MAE [m]")
+    # axs[2].set_ylabel("RMSE [m]")
+    # axs[2].set_xlabel("Number of Latin Hypercube Samples")
+    # min_i = 1
+    # max_i = 1
+    inum_l, anum_l, r2_l, mae_l, rmse_l = [], [], [], [], []
+    for ds in ds_list:
+        inum_l.append(ds.inum.values[-1])
+        anum_l.append(ds.anum.values[-1])
+        r2_l.append(ds.r2.values[-1])
+        mae_l.append(ds.mae.values[-1])
+        rmse_l.append(ds.rmse.values[-1])
+        # axs[0].plot(ds.r2)
+        # axs[1].plot(ds.inum.values[-1], ds.mae)
+        # axs[2].plot(ds.inum.values, ds.rmse)
+        # max_i = max(max_i, ds.inum.max().values)
+    print(len(inum_l), len(anum_l), len(r2_l), len(mae_l), len(rmse_l))
+    im = plt.scatter(inum_l, anum_l, c=r2_l, cmap="viridis")
+    plt.xlim(0, 110)
+    plt.ylim(0, 110)
+    cbar = plt.colorbar(im, label="r$^{2}$ [-]")
+    plt.xlabel("Number of Intial Latin Hypercube Samples [-]")
+    plt.ylabel("Number of Actively Chosen Points [-]")
+    # label_subplots(axs, y_pos=0.7, x_pos=0.05, fontsize=12)
+    # plt.xlim(min_i, max_i)
 
+    plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "inum_anum_metrics.png"))
+    plt.clf()
+
+
+# plot_inum_metrics(loop_through_experiment())
+plot_final_metrics(loop_through_experiment())
 # loop_through_project()
 # loop_through_experiment()
 # python src/comet_load.py
