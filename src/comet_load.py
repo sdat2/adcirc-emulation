@@ -8,7 +8,7 @@ from comet_ml import API
 import xarray as xr
 import matplotlib.pyplot as plt
 from src.constants import FIGURE_PATH
-from sithom.plot import plot_defaults
+from sithom.plot import plot_defaults, label_subplots
 
 comet_ml.config.save(api_key="57fHMWwvxUw6bvnjWLvRwSQFp")
 
@@ -62,18 +62,44 @@ def plot_inum_metrics(ds_list: List[xr.Dataset]) -> None:
     plot_defaults()
     os.makedirs(os.path.join(FIGURE_PATH, "6dactive"), exist_ok=True)
     fig, axs = plt.subplots(3, 1, sharex=True)
-    axs[0].set_ylabel("r2")
-    axs[1].set_ylabel("mae")
-    axs[2].set_ylabel("rmse")
+    axs[0].set_ylabel("r$^{2}$ [-]")
+    axs[1].set_ylabel("MAE [m]")
+    axs[2].set_ylabel("RMSE [m]")
     axs[2].set_xlabel("Number of Latin Hypercube Samples")
+    min_i = 1
+    max_i = 1
     for ds in ds_list:
         ds = ds.where(ds.anum == 0, drop=True)
         axs[0].plot(ds.inum.values, ds.r2.values)
         # axs[0].plot(ds.r2)
         axs[1].plot(ds.inum.values, ds.mae)
         axs[2].plot(ds.inum.values, ds.rmse)
+        max_i = max(max_i, ds.inum.max().values)
+    label_subplots(axs, y_pos=0.5, x_pos=0.05, fontsize=12)
+    plt.xlim(min_i, max_i)
 
     plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "inum_metrics.png"))
+    plt.clf()
+
+    fig, axs = plt.subplots(3, 1, sharex=True)
+    axs[0].set_ylabel("1 - r$^{2}$ [-]")
+    axs[1].set_ylabel("MAE [m]")
+    axs[2].set_ylabel("RMSE [m]")
+    axs[2].set_xlabel("Number of Latin Hypercube Samples [-]")
+    min_i = 1
+    max_i = 1
+    for ds in ds_list:
+        ds = ds.where(ds.anum == 0, drop=True)
+        axs[0].loglog(ds.inum.values, 1 - ds.r2.values)
+        # axs[0].plot(ds.r2)
+        axs[1].loglog(ds.inum.values, ds.mae)
+        axs[2].loglog(ds.inum.values, ds.rmse)
+        max_i = max(max_i, ds.inum.max().values)
+
+    plt.xlim(min_i, max_i)
+    label_subplots(axs, y_pos=0.5, x_pos=0.05, fontsize=12)
+
+    plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "inum_metrics_log.png"))
     plt.clf()
 
 
