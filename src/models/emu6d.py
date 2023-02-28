@@ -473,16 +473,14 @@ class SixDOFSearch:
         elif len_a == 0 or (len_a == 1 and np.isnan(self.active_y_data[0])):
             # active is empty
             inum = len_i
-            # this is wrong - 
+            # this is wrong -
             # anum = len_o
             anum = self.call_number + 1 - len_i
             print("self.init_x_data.shape", self.init_x_data.shape)
             print("self.init_y_data.shape", self.init_y_data.shape)
-            x_train = np.append(
-                self.loop.loop_state.X[len(self.init_x_data) :], input_x, axis=0
-            )
+            x_train = np.append(self.loop.loop_state.X, input_x, axis=0)
             y_train = np.append(
-                self.loop.loop_state.Y[len(self.init_y_data) :].ravel(),
+                self.loop.loop_state.Y.ravel(),
                 np.array(output_list),
                 axis=0,
             )
@@ -901,7 +899,7 @@ def diff_res(cfg: DictConfig) -> None:
     python src/models/emu6d.py init_samples=105 active_samples=15 seed=50 dryrun=false
     python src/models/emu6d.py init_samples=15 active_samples=105 seed=91 dryrun=false
     python src/models/emu6d.py init_samples=105 active_samples=15 seed=115 dryrun=false
-    python src/models/emu6d.py init_samples=15 active_samples=105 seed=59 dryrun=false    
+    python src/models/emu6d.py init_samples=15 active_samples=105 seed=159 dryrun=false
     """
 
 
