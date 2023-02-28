@@ -138,13 +138,37 @@ def plot_final_metrics(ds_list: List[xr.Dataset]) -> None:
     plt.ylabel("Number of Actively Chosen Points [-]")
     # label_subplots(axs, y_pos=0.7, x_pos=0.05, fontsize=12)
     # plt.xlim(min_i, max_i)
-
-    plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "inum_anum_metrics.png"))
+    plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "inum_anum_r2.png"))
+    plt.clf()
+    im = plt.scatter(inum_l, anum_l, c=rmse_l, cmap="viridis", vmin=0, vmax=1)
+    for j in [30, 60, 90, 120]:
+        x = np.linspace(0, j, num=100)
+        y = -x + j
+        plt.plot(x, y, "k--")
+    plt.xlim(0, 120)
+    plt.ylim(0, 120)
+    cbar = plt.colorbar(im, label="RMSE [m]")
+    plt.xlabel("Number of Intial Latin Hypercube Samples [-]")
+    plt.ylabel("Number of Actively Chosen Points [-]")
+    plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "inum_anum_rmse.png"))
+    plt.clf()
+    im = plt.scatter(inum_l, anum_l, c=mae_l, cmap="viridis", vmin=0, vmax=1)
+    for j in [30, 60, 90, 120]:
+        x = np.linspace(0, j, num=100)
+        y = -x + j
+        plt.plot(x, y, "k--")
+    plt.xlim(0, 120)
+    plt.ylim(0, 120)
+    cbar = plt.colorbar(im, label="MAE [m]")
+    plt.xlabel("Number of Intial Latin Hypercube Samples [-]")
+    plt.ylabel("Number of Actively Chosen Points [-]")
+    plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "inum_anum_mae.png"))
     plt.clf()
 
 
-# plot_inum_metrics(loop_through_experiment())
-plot_final_metrics(loop_through_experiment())
+ds_list = loop_through_experiment()
+plot_inum_metrics(ds_list)
+plot_final_metrics(ds_list)
 # loop_through_project()
 # loop_through_experiment()
 # python src/comet_load.py
