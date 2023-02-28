@@ -3,6 +3,8 @@ Comet load.py
 """
 import comet_ml
 from comet_ml import API
+import xarray as xr
+from src.constants import FIGURE_PATH
 
 comet_ml.config.save(api_key="57fHMWwvxUw6bvnjWLvRwSQFp")
 
@@ -29,13 +31,24 @@ def loop_through_experiment():
     for exp in comet_api.get(workspace, project):
 
         # exp = comet_api.get(workspace, project, experiment)
-        for metric in ["inum", "anum", "mae", "rmse", "r2"]:
+        metric_d = {}
+        for metric, typ in [
+            ("inum", int),
+            ("anum", int),
+            ("mae", float),
+            ("rmse", float),
+            ("r2", float),
+        ]:
             metrics = exp.get_metrics(metric)
+            metric_l = [typ(metrics[i]["metricValue"]) for i in range(len(metrics))]
+            metric_d[metric] = (["point"], metric_l)
             print(exp.id, metric, "len(metrics)", len(metrics))
             # print("metrics", metrics)
             # for i in range(len(metrics)):
             #    print("metrics[" + str(i) + "]", metrics[i]["metricValue"])
         # print("metrics[0]", metrics[0]["metricValue"])
+        ds = xr.Dataset(data_vars=metric_d)
+        print(ds)
 
 
 # loop_through_project()
