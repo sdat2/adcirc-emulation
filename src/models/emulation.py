@@ -651,7 +651,7 @@ class EmulationSmash:
         ax.set_ylabel("Position [$^{\circ}$E]")
         ax.set_xlabel("Bearing [$^{\circ}$]")
         ax = axs[1, 1]
-        ax.set_title("Prediction Std. Dev. [m]")
+        ax.set_title("Prediction $\sigma$ [m]")
         im = ax.contourf(a_mesh, b_mesh, std_mesh)
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
@@ -700,13 +700,15 @@ def matern52():
 
 
 def matern32():
-    EmulationSmash(
+    e = EmulationSmash(
         path="emulation_angle_pos_Mattern32",
         seed=50,
         init_num=100,
         active_num=30,
         kernel_class=Matern32,
     )
+    e.setup_emulation()
+    e.active_learning()
 
 
 def mat32():
@@ -749,4 +751,5 @@ if __name__ == "__main__":
     # example_animation()
     # example_plot()
     plot_defaults()
-    mat32expimprovement()
+    #  mat32expimprovement()
+    matern32()
