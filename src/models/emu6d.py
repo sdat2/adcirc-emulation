@@ -902,6 +902,11 @@ def diff_res(cfg: DictConfig) -> None:
     python src/models/emu6d.py init_samples=60 active_samples=60 seed=191 dryrun=false
     python src/models/emu6d.py init_samples=105 active_samples=15 seed=215 dryrun=false
     python src/models/emu6d.py init_samples=15 active_samples=105 seed=159 dryrun=false
+    python src/models/emu6d.py init_samples=119 active_samples=1 seed=259 dryrun=false
+    python src/models/emu6d.py init_samples=1 active_samples=119 seed=359 dryrun=false
+    python src/models/emu6d.py init_samples=30 active_samples=30 seed=358 dryrun=false
+    python src/models/emu6d.py init_samples=1 active_samples=59 seed=357 dryrun=false
+    python src/models/emu6d.py init_samples=59 active_samples=1 seed=356 dryrun=false
     """
 
 
