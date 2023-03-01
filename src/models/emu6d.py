@@ -889,7 +889,7 @@ def diff_res(cfg: DictConfig) -> None:
     python src/models/emu6d.py init_samples=29 active_samples=1 seed=40 dryrun=false
     python src/models/emu6d.py init_samples=1 active_samples=29 seed=61 dryrun=false
     python src/models/emu6d.py init_samples=15 active_samples=15 seed=62 dryrun=false
-    python src/models/emu6d.py init_samples=45 active_samples=15 seed=73 dryrun=false
+    python src/models/emu6d.py init_samples=45 active_samples=15 seed=173 dryrun=false
     python src/models/emu6d.py init_samples=15 active_samples=45 seed=94 dryrun=false
     python src/models/emu6d.py init_samples=30 active_samples=30 seed=95 dryrun=false
     python src/models/emu6d.py init_samples=59 active_samples=1 seed=46 dryrun=false
@@ -897,8 +897,10 @@ def diff_res(cfg: DictConfig) -> None:
     python src/models/emu6d.py init_samples=119 active_samples=1 seed=48 dryrun=false
     python src/models/emu6d.py init_samples=1 active_samples=119 seed=135 dryrun=false
     python src/models/emu6d.py init_samples=105 active_samples=15 seed=50 dryrun=false
-    python src/models/emu6d.py init_samples=15 active_samples=105 seed=91 dryrun=false
-    python src/models/emu6d.py init_samples=105 active_samples=15 seed=115 dryrun=false
+    python src/models/emu6d.py init_samples=90 active_samples=30 seed=391 dryrun=false
+    python src/models/emu6d.py init_samples=30 active_samples=90 seed=291 dryrun=false
+    python src/models/emu6d.py init_samples=60 active_samples=60 seed=191 dryrun=false
+    python src/models/emu6d.py init_samples=105 active_samples=15 seed=215 dryrun=false
     python src/models/emu6d.py init_samples=15 active_samples=105 seed=159 dryrun=false
     """
 

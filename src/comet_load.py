@@ -75,7 +75,11 @@ def plot_inum_metrics(ds_list: List[xr.Dataset]) -> None:
         # axs[0].plot(ds.r2)
         axs[1].plot(ds.inum.values, ds.mae)
         axs[2].plot(ds.inum.values, ds.rmse)
-        max_i = max(max_i, ds.inum.max().values)
+        try:
+            tmp_max = ds.inum.max().values
+        except:
+            tmp_max = 1
+        max_i = max(max_i, tmp_max)
     label_subplots(axs, y_pos=0.7, x_pos=0.05, fontsize=12)
     plt.xlim(min_i, max_i)
 
@@ -95,7 +99,11 @@ def plot_inum_metrics(ds_list: List[xr.Dataset]) -> None:
         # axs[0].plot(ds.r2)
         axs[1].loglog(ds.inum.values, ds.mae)
         axs[2].loglog(ds.inum.values, ds.rmse)
-        max_i = max(max_i, ds.inum.max().values)
+        try:
+            tmp_max = ds.inum.max().values
+        except:
+            tmp_max = 1
+        max_i = max(max_i, tmp_max)
 
     plt.xlim(min_i, max_i)
     label_subplots(axs, y_pos=0.7, x_pos=0.05, fontsize=12)
@@ -116,11 +124,14 @@ def plot_final_metrics(ds_list: List[xr.Dataset]) -> None:
     # max_i = 1
     inum_l, anum_l, r2_l, mae_l, rmse_l = [], [], [], [], []
     for ds in ds_list:
-        inum_l.append(ds.inum.values[-1])
-        anum_l.append(ds.anum.values[-1])
-        r2_l.append(ds.r2.values[-1])
-        mae_l.append(ds.mae.values[-1])
-        rmse_l.append(ds.rmse.values[-1])
+        try:
+            inum_l.append(ds.inum.values[-1])
+            anum_l.append(ds.anum.values[-1])
+            r2_l.append(ds.r2.values[-1])
+            mae_l.append(ds.mae.values[-1])
+            rmse_l.append(ds.rmse.values[-1])
+        except:
+            pass
         # axs[0].plot(ds.r2)
         # axs[1].plot(ds.inum.values[-1], ds.mae)
         # axs[2].plot(ds.inum.values, ds.rmse)
