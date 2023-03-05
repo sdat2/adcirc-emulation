@@ -912,6 +912,8 @@ def diff_res(cfg: DictConfig) -> None:
     python src/models/emu6d.py init_samples=75 active_samples=45 seed=343 dryrun=false
     python src/models/emu6d.py init_samples=300 active_samples=1 seed=401 dryrun=false
     python src/models/emu6d.py init_samples=15 active_samples=15 seed=402 dryrun=false
+    python src/models/emu6d.py init_samples=600 active_samples=1 seed=403 dryrun=false
+    python src/models/emu6d.py init_samples=900 active_samples=1 seed=404 dryrun=false
     """
 
 
