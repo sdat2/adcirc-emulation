@@ -762,6 +762,10 @@ def default_run(cfg: DictConfig):
     print("r0", type(r0), r0.shape, r0)
     print("rmerge", type(rmerge), rmerge.shape, rmerge)
     print("Vmerge", type(Vmerge), Vmerge.shape, Vmerge)
+    import matplotlib.pyplot as plt
+
+    plt.plot(rr / 1000, VV)
+    plt.show()
 
 
 if __name__ == "__main__":
