@@ -35,9 +35,13 @@ from typing import Tuple, List, Dict, Union
 import numpy as np
 import sys
 import copy
+import hydra
 from shapely.geometry import LineString
 from scipy.optimize import fsolve
 from scipy.interpolate import interp1d
+from omegaconf import DictConfig
+from sithom.plot import plot_defaults
+from src.constants import CONFIG_PATH, FIGURE_PATH
 
 #######################################################################
 # NOTES FOR USER:
@@ -404,10 +408,11 @@ def ER11E04_nondim_rmaxinput(
 
 
     Returns:
-        rrfracr0 (np.ndarray): Radial coordinate [r/r0]
-        MMfracM0 (np.ndarray): Mass coordinate [M/M0]
-        rmerger0 (float): Radius at which mass coordinate is 1 [r0]
-        Vmerge (float): Wind speed at rmerger0 [m/s]
+        rr (np.ndarray): Radial coordinate [m]
+        VV (np.ndarray): Wind speed [m/s]
+        r0 (float): Radius at which the wind speed is equal to the coriolis parameter [m]
+        rmerge (float): Radius of merging between solutions [m]
+        Vmerge (float): Wind speed at rmerge [m/s]
 
     [rrfracr0,MMfracM0,rmerger0,Vmerge] = ER11E04_nondim_rmaxinput(Vmax,rmax,fcor,Cdvary,C_d,w_cool,CkCdvary,CkCd,eye_adj,alpha_eye)
 
@@ -736,3 +741,31 @@ def ER11E04_nondim_rfitinput(
     #     [VV] = radprof_eyeadj(rr,VV,alpha_eye,r_eye_outer,V_eye_outer)
     #     sprintf('EYE ADJUSTMENT: eye alpha = #3.2f',alpha_eye)
     return rr, VV, rmax, r0, rmerge, Vmerge
+
+
+@hydra.main(config_path=CONFIG_PATH, config_name="chavas15.yaml")
+def default_run(cfg: DictConfig):
+    rr, VV, r0, rmerge, Vmerge = ER11E04_nondim_rmaxinput(
+        cfg.Vmax,
+        cfg.rmax,
+        cfg.fcor,
+        cfg.Cdvary,
+        cfg.C_d,
+        cfg.w_cool,
+        cfg.CkCdvary,
+        cfg.CkCd,
+        cfg.eye_adj,
+        cfg.alpha_eye,
+    )
+    print("rr", type(rr), rr.shape)
+    print("VV", type(VV), VV.shape)
+    print("r0", type(r0), r0.shape, r0)
+    print("rmerge", type(rmerge), rmerge.shape, rmerge)
+    print("Vmerge", type(Vmerge), Vmerge.shape, Vmerge)
+
+
+if __name__ == "__main__":
+    # python src/models/chavas15.py
+    # import matplotlib.pyplot as plt
+    # import numpy as np
+    default_run()
