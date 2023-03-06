@@ -41,6 +41,7 @@ from scipy.optimize import fsolve
 from scipy.interpolate import interp1d
 from omegaconf import DictConfig
 from sithom.plot import plot_defaults
+from sithom.time import timeit
 from src.constants import CONFIG_PATH, FIGURE_PATH
 
 #######################################################################
@@ -50,6 +51,7 @@ from src.constants import CONFIG_PATH, FIGURE_PATH
 #######################################################################
 
 
+@timeit
 def E04_outerwind_r0input_nondim_MM0(
     r0: float, fcor: float, Cdvary: float, C_d: float, w_cool: float, Nr: int
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -74,7 +76,8 @@ def E04_outerwind_r0input_nondim_MM0(
 
     drfracr0 = 0.001
     # I replaced a binary or `|` with an `or` as I thought it was more expressive.
-    if (r0 > 2500 * 1000) or (r0 < 200 * 1000):
+    # I have now gone back to the original code to try to fix a bug.
+    if (r0 > 2500 * 1000) | (r0 < 200 * 1000):
         drfracr0 = drfracr0 / 10
         # extra precision for very large storm to avoid funny bumps near r0 (though rest of solution is stable!)
         # or for tiny storm that requires E04 extend to very small radii to
@@ -144,6 +147,7 @@ def E04_outerwind_r0input_nondim_MM0(
     return rrfracr0, MMfracM0
 
 
+@timeit
 def ER11_radprof_raw(Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11):
     fcor = np.abs(fcor)
     if rmax_or_r0 == "rmax":
@@ -169,6 +173,7 @@ def ER11_radprof_raw(Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11):
     return V_ER11, r_out
 
 
+@timeit
 def ER11_radprof(Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11):
     dr = rr_ER11[1] - rr_ER11[0]
     # Call ER11_radprof_raw
@@ -231,6 +236,7 @@ def ER11_radprof(Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11):
     return V_ER11, r_out
 
 
+@timeit
 def ER11E04_nondim_r0input(
     Vmax,
     r0,
@@ -391,6 +397,7 @@ def ER11E04_nondim_r0input(
     return rr, VV, rmerge, Vmerge, rmax
 
 
+@timeit
 def ER11E04_nondim_rmaxinput(
     Vmax, rmax, fcor, Cdvary, C_d, w_cool, CkCdvary, CkCd, eye_adj, alpha_eye
 ) -> Tuple[np.ndarray, np.ndarray, float, float]:
@@ -565,6 +572,7 @@ def ER11E04_nondim_rmaxinput(
     return rr, VV, r0, rmerge, Vmerge
 
 
+@timeit
 def ER11E04_nondim_rfitinput(
     Vmax, rfit, Vfit, fcor, Cdvary, C_d, w_cool, CkCdvary, CkCd, eye_adj, alpha_eye
 ):
@@ -745,6 +753,7 @@ def ER11E04_nondim_rfitinput(
 
 @hydra.main(config_path=CONFIG_PATH, config_name="chavas15.yaml")
 def default_run(cfg: DictConfig):
+    print(cfg)
     rr, VV, r0, rmerge, Vmerge = ER11E04_nondim_rmaxinput(
         cfg.Vmax,
         cfg.rmax,
@@ -765,6 +774,12 @@ def default_run(cfg: DictConfig):
     import matplotlib.pyplot as plt
 
     plt.plot(rr / 1000, VV)
+    plt.scatter(cfg.rmax / 1000, cfg.Vmax, color="green", label="rmax")
+    plt.scatter(rmerge / 1000, Vmerge, color="orange", label="rmerge")
+    plt.scatter(r0 / 1000, 0, color="red", label="r0")
+    plt.xlabel("r (km)")
+    plt.ylabel("V (m/s)")
+    plt.legend()
     plt.show()
 
 
