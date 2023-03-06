@@ -75,16 +75,19 @@ def E04_outerwind_r0input_nondim_MM0(
     # Initialization
     fcor = abs(fcor)
     M0 = 0.5 * fcor * r0**2  # [m2/s] M at outer radius
+    print("M0", M0, type(M0))
 
     drfracr0 = 0.001
     # I replaced a binary or `|` with an `or` as I thought it was more expressive.
     # I have now gone back to the original code to try to fix a bug.
+    print("r0", r0, type(r0))
     if (r0 > 2500 * 1000) | (r0 < 200 * 1000):
         drfracr0 = drfracr0 / 10
         # extra precision for very large storm to avoid funny bumps near r0 (though rest of solution is stable!)
         # or for tiny storm that requires E04 extend to very small radii to
         # match with ER11
 
+    print("drfracr0", drfracr0, type(drfracr0))
     if Nr > 1 / drfracr0:
         Nr = 1 / drfracr0  # grid radii must be > 0
 
@@ -350,7 +353,8 @@ def ER11E04_nondim_r0input(
             #         [~,~,rrfracrm_ER11,MMfracMm_ER11] =
             #         ER11_radprof_nondim(Vmax,rmax,fcor,CkCd) #FAILS FOR LOW CK/CD NOT
             #         SURE WHY
-            drfracrm = 0.01
+            drfracrm = 0.01  # [-] step size
+            #  rmax is greater than 100 km, use extra precision
             if rmax > 100.0 * 1000:
                 drfracrm = drfracrm / 10.0  # extra precision for large storm
 
@@ -359,7 +363,7 @@ def ER11E04_nondim_r0input(
             )  # [] r/r0 vector
             rr_ER11 = rrfracrm_ER11 * rmax
             rmax_or_r0 = "rmax"
-            VV_ER11, dummy = ER11_radprof(Vmax, rmax, rmax_or_r0, fcor, CkCd, rr_ER11)
+            VV_ER11, _ = ER11_radprof(Vmax, rmax, rmax_or_r0, fcor, CkCd, rr_ER11)
 
             if not np.isnan(np.max(VV_ER11)):  # ER11_radprof converged
                 rrfracr0_ER11 = rr_ER11 / r0
@@ -378,6 +382,7 @@ def ER11E04_nondim_r0input(
                         X0, Y0 = intersection[0].coords[0]
                     # at least one intersection -- rmaxr0 too large
                     drmaxr0 = -np.abs(drmaxr0) / 2
+                    # why do we take the mean of the floats?
                     rmerger0 = np.mean(X0)
                     MmergeM0 = np.mean(Y0)
             # ER11_radprof did not converge -- convergence fails for low CkCd
@@ -387,12 +392,14 @@ def ER11E04_nondim_r0input(
                 drmaxr0 = -abs(drmaxr0) / 2
             # update value of rmaxr0
             rmaxr0 = rmaxr0_new  # this is the final one
+            # update value of rmaxr0 for next iteration
             rmaxr0_new = rmaxr0_new + drmaxr0
         # Check if solution converged
         if (not np.isnan(np.max(VV_ER11))) and ("rmerger0" in locals()):
-            soln_converged = 1
+            soln_converged = True
         else:
-            soln_converged = 0
+            # Solution did not converge -- increase CkCd and try again
+            soln_converged = False
             CkCd = CkCd + 0.1
             print("Adjusting CkCd to find convergence")
 
@@ -623,6 +630,7 @@ def ER11E04_nondim_rmaxinput(
             # Make sure V=0 at r=0
             VV[rr == 0] = 0
 
+            # Calculate dimensional wind speed and radii
             rmerge = rmerger0 * r0
             Vmerge = (M0 / r0) * ((MmergeM0 / rmerger0) - rmerger0)  # [ms-1]
 
@@ -855,8 +863,8 @@ def default_run(cfg: DictConfig):
     plt.scatter(cfg.rmax / 1000, cfg.Vmax, color="green", label="rmax")
     plt.scatter(rmerge / 1000, Vmerge, color="orange", label="rmerge")
     plt.scatter(r0 / 1000, 0, color="red", label="r0")
-    plt.xlabel("r (km)")
-    plt.ylabel("V (m/s)")
+    plt.xlabel("r [km]")
+    plt.ylabel("V [m/s]")
     plt.legend()
 
     os.makedirs(os.path.join(FIGURE_PATH, "chavas15_test"), exist_ok=True)
