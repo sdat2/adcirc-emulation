@@ -46,7 +46,23 @@ from scipy.interpolate import interp1d
 #######################################################################
 
 
-def E04_outerwind_r0input_nondim_MM0(r0: float, fcor: float, Cdvary, C_d, w_cool, Nr):
+def E04_outerwind_r0input_nondim_MM0(
+    r0: float, fcor: float, Cdvary: float, C_d: float, w_cool: float, Nr: int
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    E04_outerwind_r0input_nondim_MM0
+
+    Args:
+        r0 (float): outer radius of storm.
+        fcor (float): coriolis parameter.
+        Cdvary (float): _description_
+        C_d (float): _description_
+        w_cool (float): _description_
+        Nr (int): _description_
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: _description_
+    """
 
     # Initialization
     fcor = abs(fcor)
@@ -376,7 +392,18 @@ def ER11E04_nondim_rmaxinput(
 ) -> Tuple[np.ndarray, np.ndarray, float, float]:
     """ER11E04_nondim_rmaxinput
 
-    [rrfracr0,MMfracM0,rmerger0,Vmerge] = ER11E04_nondim_rmaxinput(Vmax,rmax,fcor,Cdvary,C_d,w_cool,CkCdvary,CkCd,eye_adj,alpha_eye)"""
+    Args:
+        Vmax (float): Maximum azimuthally averaged wind speed [m/s]
+        rmax (float): Radius at which Vmax occurs [m]
+        fcor (float): Coriolis parameter [s-1]
+        Cdvary (int): 1 if C_d varies with wind speed, 0 if constant
+        C_d (float): Drag coefficient
+        w_cool (float): Radiative subsidence rate. Cooling rate [K/s]
+
+    [rrfracr0,MMfracM0,rmerger0,Vmerge] = ER11E04_nondim_rmaxinput(Vmax,rmax,fcor,Cdvary,C_d,w_cool,CkCdvary,CkCd,eye_adj,alpha_eye)
+
+    This function calculates the ER11+ER04 radial profile of the wind speed
+    """
     # key function.
     # Initialization
     fcor = np.abs(fcor)
