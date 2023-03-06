@@ -32,6 +32,8 @@ Part II: Wind field variability. J. Atmos. Sci., 73(8):
 # TODO: work out if units are SI or not
 """
 from typing import Tuple, List, Dict, Union
+import os
+import matplotlib.pyplot as plt
 import numpy as np
 import sys
 import copy
@@ -148,7 +150,25 @@ def E04_outerwind_r0input_nondim_MM0(
 
 
 @timeit
-def ER11_radprof_raw(Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11):
+def ER11_radprof_raw(
+    Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11
+) -> Tuple[np.ndarray, float]:
+    """
+    Outflow radial profile from Emanuel and Rotunno (2011) (ER11).
+
+    This version does not sanitize the outputs.
+
+    Args:
+        Vmax (_type_): _description_
+        r_in (_type_): _description_
+        rmax_or_r0 (_type_): _description_
+        fcor (_type_): _description_
+        CkCd (_type_): _description_
+        rr_ER11 (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     fcor = np.abs(fcor)
     if rmax_or_r0 == "rmax":
         rmax = r_in
@@ -170,11 +190,44 @@ def ER11_radprof_raw(Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11):
         r_out = r0_profile.tolist()  # use value from profile itself
     else:
         print('rmax_or_r0 must be set to"rmax"')
+
+    print("r_out = ", r_out, type(r_out))
+    print("V_ER11 =", V_ER11)
+
     return V_ER11, r_out
 
 
 @timeit
-def ER11_radprof(Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11):
+def ER11_radprof(
+    Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11
+) -> Tuple[np.ndarray, float]:
+    """
+    Emanuel and Rotunno (2011) theoretical profile
+
+    Args:
+        Vmax (float): velocity at rmax
+        r_in (float): radius, either rmax or r0.
+        rmax_or_r0 (str): Whether r_in is rmax or r0.
+        fcor (float): Coriolis parameter.
+        CkCd (float): Ck/Cd ratio.
+        rr_ER11 (np.ndarray): radial grid.
+
+    Returns:
+        Tuple[np.ndarray, float]: V_ER11, r_out
+
+    ```
+        @article{emanuel2011self,
+            title={Self-stratification of tropical cyclone outflow. Part I: Implications for storm structure},
+            author={Emanuel, Kerry and Rotunno, Richard},
+            journal={Journal of the Atmospheric Sciences},
+            volume={68},
+            number={10},
+            pages={2236--2249},
+            year={2011},
+            publisher={American Meteorological Society}
+        }
+    ```
+    """
     dr = rr_ER11[1] - rr_ER11[0]
     # Call ER11_radprof_raw
     V_ER11, r_out = ER11_radprof_raw(Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11)
@@ -186,7 +239,7 @@ def ER11_radprof(Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11):
     # Calculate error in Vmax
     dVmax_temp = Vmax - np.max(V_ER11)
 
-    # Check is errors are too large and adjust accordingly
+    # Check if errors are too large and adjust accordingly
     r_in_save = copy.copy(r_in)
     Vmax_save = copy.copy(Vmax)
 
@@ -451,25 +504,31 @@ def ER11E04_nondim_rmaxinput(
     rrfracrm_ER11 = np.arange(
         rfracrm_min, rfracrm_max + drfracrm, drfracrm
     )  # [] r/r0 vector
+    # position vector in meters
     rr_ER11 = rrfracrm_ER11 * rmax
+    # whether we're using rmax or r0 to fit the outer profile
     rmax_or_r0 = "rmax"
-    soln_converged = 0
+    soln_converged = False
     count = 0
-    while soln_converged == 0:
+    while not soln_converged:
         count += 1
-        VV_ER11, dummy = ER11_radprof(Vmax, rmax, rmax_or_r0, fcor, CkCd, rr_ER11)
+        # find ER11 solution
+        VV_ER11, _ = ER11_radprof(Vmax, rmax, rmax_or_r0, fcor, CkCd, rr_ER11)
         # Check if solution converged
         if not np.isnan(np.max(VV_ER11)):
-            soln_converged = 1
+            soln_converged = True
         else:
-            soln_converged = 0
+            soln_converged = False
             CkCd = CkCd + 0.1
             if rmax == 0.0:
+                print("Warning: rmax=0, setting to 25 m")
+                # rmax cannot be 0
                 rmax = 25.0
             print("Adjusting CkCd to find convergence")
             if count >= 50:
+                # convergence not achieved after 50 different CkCd values
                 break
-    if soln_converged == 1:
+    if soln_converged:
         Mm = 0.5 * fcor * rmax**2 + rmax * Vmax
         MMfracMm_ER11 = (rr_ER11 * VV_ER11 + 0.5 * fcor * rr_ER11**2) / Mm
         # Step 2: Converge rmaxr0 geometrically until ER11 M/M0 has tangent point with E04 M/M0
@@ -496,7 +555,9 @@ def ER11E04_nondim_rmaxinput(
             MMfracM0_ER11 = MMfracMm_ER11 * (Mm / M0_E04)
             l1 = LineString(list(zip(rrfracr0_E04, MMfracM0_E04)))
             l2 = LineString(list(zip(rrfracr0_ER11, MMfracM0_ER11)))
+            # find intersection between the two lines l1 and l2
             intersection = l1.intersection(l2)
+
             if (
                 intersection.wkt == "GEOMETRYCOLLECTION EMPTY"
             ):  # no intersections r0 too large --> rmaxr0 too small
@@ -505,7 +566,12 @@ def ER11E04_nondim_rmaxinput(
                 if intersection.wkt.split(" ")[0] == "POINT":
                     X0, Y0 = intersection.coords[0]
                 elif intersection.wkt.split(" ")[0] == "MULTIPOINT":
-                    X0, Y0 = intersection[0].coords[0]
+                    # multiple intersections -- take the first one
+                    # this is deprecate
+                    # print(intersection)
+                    # print(intersection[0])
+                    # print(intersection.geoms[0])
+                    X0, Y0 = intersection.geoms[0].coords[0]
                 # at least one intersection -- rmaxr0 too large
                 drmaxr0 = -np.abs(drmaxr0) / 2
                 rmerger0 = np.mean(X0)
@@ -513,11 +579,12 @@ def ER11E04_nondim_rmaxinput(
             # update value of rmaxr0
             rmaxr0 = rmaxr0_new  # this is the final one
             rmaxr0_new = rmaxr0_new + drmaxr0
+
         if intersection.wkt != "GEOMETRYCOLLECTION EMPTY":
             # Calculate some things
             M0 = 0.5 * fcor * r0**2
             Mm = 0.5 * fcor * rmax**2 + rmax * Vmax
-            MmM0 = Mm / M0
+            MmM0 = Mm / M0  # not used.
 
             # Finally: Interpolate to a grid
             # Finally: Interpolate to a grid
@@ -566,11 +633,13 @@ def ER11E04_nondim_rmaxinput(
             # 	[VV] = radprof_eyeadj(rr,VV,alpha_eye,r_eye_outer,V_eye_outer)
             #        sprintf('EYE ADJUSTMENT: eye alpha = #3.2f',alpha_eye)
         else:
+            # no intersection found
             rr = rr_ER11
             VV = VV_ER11
             rmerge = float("nan")
             Vmerge = float("nan")
     else:
+        # no solution convergence within 50 iterations.
         rr = float("nan") * np.zeros(10)
         VV = float("nan") * np.zeros(10)
         r0 = float("nan")
@@ -780,8 +849,8 @@ def default_run(cfg: DictConfig):
     print("Vmerge", type(Vmerge), Vmerge.shape, Vmerge)
     print("rmax", type(cfg.rmax), cfg.rmax)
     print("Vmax", type(cfg.Vmax), cfg.Vmax)
-    import matplotlib.pyplot as plt
 
+    plot_defaults()
     plt.plot(rr / 1000, VV)
     plt.scatter(cfg.rmax / 1000, cfg.Vmax, color="green", label="rmax")
     plt.scatter(rmerge / 1000, Vmerge, color="orange", label="rmerge")
@@ -789,7 +858,6 @@ def default_run(cfg: DictConfig):
     plt.xlabel("r (km)")
     plt.ylabel("V (m/s)")
     plt.legend()
-    import os
 
     os.makedirs(os.path.join(FIGURE_PATH, "chavas15_test"), exist_ok=True)
     plt.savefig(os.path.join(FIGURE_PATH, "chavas15_test", "chavas15_rmax_test.png"))
