@@ -55,7 +55,7 @@ from src.constants import CONFIG_PATH, FIGURE_PATH
 
 @timeit
 def E04_outerwind_r0input_nondim_MM0(
-    r0: float, fcor: float, Cdvary: int, C_d: float, w_cool: float, Nr: int
+    r0: float, fcor: float, Cdvary: bool, C_d: float, w_cool: float, Nr: int
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     E04_outerwind_r0input_nondim_MM0
@@ -63,10 +63,10 @@ def E04_outerwind_r0input_nondim_MM0(
     Args:
         r0 (float): outer radius of storm.
         fcor (float): coriolis parameter.
-        Cdvary (int): _description_
+        Cdvary (bool): _description_
         C_d (float): _description_
         w_cool (float): _description_
-        Nr (int): _description_
+        Nr (int): Number of radial points.
 
     Returns:
         Tuple[np.ndarray, np.ndarray]: _description_
@@ -119,7 +119,7 @@ def E04_outerwind_r0input_nondim_MM0(
     for ii in range(0, int(Nr) - 2, 1):  # first two nodes already done above
 
         # Calculate C_d varying with V, if desired
-        if Cdvary == 1:
+        if Cdvary:
 
             # Calculate V at this r/r0 (for variable C_d only)
             V_temp = (M0 / r0) * ((MfracM0_temp / rfracr0_temp) - rfracr0_temp)
@@ -154,7 +154,12 @@ def E04_outerwind_r0input_nondim_MM0(
 
 @timeit
 def ER11_radprof_raw(
-    Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11
+    Vmax: float,
+    r_in: float,
+    rmax_or_r0: str,
+    fcor: float,
+    CkCd: float,
+    rr_ER11: np.ndarray,
 ) -> Tuple[np.ndarray, float]:
     """
     Outflow radial profile from Emanuel and Rotunno (2011) (ER11).
@@ -162,15 +167,15 @@ def ER11_radprof_raw(
     This version does not sanitize the outputs.
 
     Args:
-        Vmax (_type_): _description_
-        r_in (_type_): _description_
-        rmax_or_r0 (_type_): _description_
-        fcor (_type_): _description_
-        CkCd (_type_): _description_
-        rr_ER11 (_type_): _description_
+        Vmax (float): _description_
+        r_in (float): _description_
+        rmax_or_r0 (str): _description_
+        fcor (float): _description_
+        CkCd (float): _description_
+        rr_ER11 (np.ndarray): _description_
 
     Returns:
-        _type_: _description_
+        Tuple[np.ndarray, float]: V_ER11, r_out
     """
     fcor = np.abs(fcor)
     if rmax_or_r0 == "rmax":
@@ -181,7 +186,7 @@ def ER11_radprof_raw(
     V_ER11 = (1.0 / rr_ER11) * (Vmax * rmax + 0.5 * fcor * rmax**2) * (
         (2 * (rr_ER11 / rmax) ** 2) / (2 - CkCd + CkCd * (rr_ER11 / rmax) ** 2)
     ) ** (1 / (2 - CkCd)) - 0.5 * fcor * rr_ER11
-    # make V=0 at r=0
+    # make V=0 at r=0 to get rid of divide by zero error.
     V_ER11[rr_ER11 == 0] = 0
 
     if rmax_or_r0 == "rmax":
@@ -202,7 +207,12 @@ def ER11_radprof_raw(
 
 @timeit
 def ER11_radprof(
-    Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11
+    Vmax: float,
+    r_in: float,
+    rmax_or_r0: str,
+    fcor: float,
+    CkCd: float,
+    rr_ER11: np.ndarray,
 ) -> Tuple[np.ndarray, float]:
     """
     Emanuel and Rotunno (2011) theoretical profile
@@ -231,6 +241,7 @@ def ER11_radprof(
         }
     ```
     """
+    # calculate diff between grid points
     dr = rr_ER11[1] - rr_ER11[0]
     # Call ER11_radprof_raw
     V_ER11, r_out = ER11_radprof_raw(Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11)
@@ -294,13 +305,13 @@ def ER11_radprof(
 
 @timeit
 def ER11E04_nondim_r0input(
-    Vmax,
-    r0,
-    fcor,
-    Cdvary,
-    C_d,
-    w_cool,
-    CkCdvary: float = 1,
+    Vmax: float,
+    r0: float,
+    fcor: float,
+    Cdvary: bool,
+    C_d: float,
+    w_cool: float,
+    CkCdvary: bool = False,
     CkCd: float = 1.9,
     eye_adj: float = 1,
     alpha_eye: float = 1,
@@ -308,7 +319,7 @@ def ER11E04_nondim_r0input(
 
     # Initialization
     fcor = np.abs(fcor)
-    if CkCdvary == 1:
+    if CkCdvary:
         CkCd_coefquad = 5.5041e-04
         CkCd_coeflin = -0.0259
         CkCd_coefcnst = 0.7627
@@ -319,19 +330,21 @@ def ER11E04_nondim_r0input(
     CkCd = np.min((1.9, CkCd))
 
     # Step 1: Calculate E04 M/M0 vs. r/r0
-    Nr = 100000
+    # get the outer wind profile
+    Nr = 100_000
     rrfracr0_E04, MMfracM0_E04 = E04_outerwind_r0input_nondim_MM0(
         r0, fcor, Cdvary, C_d, w_cool, Nr
     )
 
     M0_E04 = 0.5 * fcor * r0**2
+    print(M0_E04, type(M0_E04))
 
     # Step 2: Converge rmaxr0 geometrically until ER11 M/M0 has tangent point
     # with E04 M/M0
 
     count = 0
-    soln_converged = 0
-    while soln_converged == 0:
+    soln_converged = False
+    while not soln_converged:
         count += 1
         print(count)
         # Break up interval into 3 points, take 2 between which intersection
@@ -407,12 +420,14 @@ def ER11E04_nondim_r0input(
     M0 = 0.5 * fcor * r0**2
     Mm = 0.5 * fcor * rmax**2 + rmax * Vmax
     MmM0 = Mm / M0
+    print("Mm/M0 = " + str(MmM0), type(MmM0))
 
     # Finally: Interpolate to a grid
     ii_ER11 = np.argwhere((rrfracr0_ER11 < rmerger0) & (MMfracM0_ER11 < MmergeM0))[:, 0]
     ii_E04 = np.argwhere((rrfracr0_E04 >= rmerger0) & (MMfracM0_E04 >= MmergeM0))[:, 0]
     MMfracM0_temp = np.hstack((MMfracM0_ER11[ii_ER11], MMfracM0_E04[ii_E04]))
     rrfracr0_temp = np.hstack((rrfracr0_ER11[ii_ER11], rrfracr0_E04[ii_E04]))
+
     del ii_ER11
     del ii_E04
 

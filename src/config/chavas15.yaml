@@ -1,10 +1,10 @@
-Vmax: 50        # Vmax [m/s]
-rmax: 25000     # radius of Vmax [m]
-fcor: 5e-5      # Coriolis parameter at storm center
-Cdvary: 0       # whether to vary
-C_d: 1.5e-3     # surface momentum.
-w_cool: 0.002   # 2 thousandths
-CkCdvary: 0     # whether to vary
-CkCd: 1         # ratio between ck and cd
-eye_adj: 0      # whether to adjust eye
-alpha_eye: 0.15 # v/vm reduced by a factor (r/rm) in eye
+Vmax: 50         # Vmax [m/s]
+rmax: 2.5e4      # radius of Vmax [m] defaults to 25 km
+fcor: 5.0e-5       # Coriolis parameter at storm center
+Cdvary: false    # whether to vary
+C_d: 1.5e-3      # surface momentum.
+w_cool: 2.0e-3   # 2 thousandths
+CkCdvary: false  # whether to vary
+CkCd: 1          # ratio between ck and cd
+eye_adj: 0       # whether to adjust eye
+alpha_eye: 0.15  # v/vm reduced by a factor (r/rm) in eye

@@ -338,7 +338,8 @@ class EmulationSmash:
     """2D emulation of the ADCIRC model for bearing and position.
     Currently we're emulating the index point 27 in the maxele.63.nc file
     which is a point to the North of New Orleans This is the point with the highest
-    storm surge in the 2005 Katrina event."""
+    storm surge in the 2005 Katrina event.
+    """
 
     def __init__(
         self,
