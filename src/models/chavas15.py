@@ -312,10 +312,27 @@ def ER11E04_nondim_r0input(
     C_d: float,
     w_cool: float,
     CkCdvary: bool = False,
-    CkCd: float = 1.9,
-    eye_adj: float = 1,
-    alpha_eye: float = 1,
-):
+    CkCd: float = 1,
+    eye_adj: float = False,
+    alpha_eye: float = 0.15,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+
+    Args:
+        Vmax (float): Maximum wind speed.
+        r0 (float): Radius where velocity is 0.
+        fcor (float): coriolis parameter.
+        Cdvary (bool): whether C_d varies.
+        C_d (float): Drag coefficient.
+        w_cool (float): Cooling rate.
+        CkCdvary (bool, optional): _description_. Defaults to False.
+        CkCd (float, optional): _description_. Defaults to 1.9.
+        eye_adj (float, optional): _description_. Defaults to 1.
+        alpha_eye (float, optional): _description_. Defaults to 1.
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray, float, float, float]: rr, VV, rmerge, Vmerge, rmax
+    """
 
     # Initialization
     fcor = np.abs(fcor)
@@ -521,23 +538,25 @@ def ER11E04_nondim_rmaxinput(
     drfracrm = 0.01
     if rmax > 100.0 * 1000:
         drfracrm = drfracrm / 10.0  # extra precision for large storm
+    # as a fraction of rmax
     rfracrm_min = 0.0  # [-] start at r=0
     rfracrm_max = 50.0  # [-] extend out to many rmaxs
     rrfracrm_ER11 = np.arange(
         rfracrm_min, rfracrm_max + drfracrm, drfracrm
     )  # [] r/r0 vector
     # position vector in meters
-    rr_ER11 = rrfracrm_ER11 * rmax
+    rr_ER11 = rrfracrm_ER11 * rmax  # [m]
     # whether we're using rmax or r0 to fit the outer profile
     rmax_or_r0 = "rmax"
     soln_converged = False
-    count = 0
+    count = 0  # index for while loop
     while not soln_converged:
         count += 1
-        # find ER11 solution
+        # find ER11 solution for this CkCd
         VV_ER11, _ = ER11_radprof(Vmax, rmax, rmax_or_r0, fcor, CkCd, rr_ER11)
         # Check if solution converged
         if not np.isnan(np.max(VV_ER11)):
+            # if solution converged, end loop
             soln_converged = True
         else:
             soln_converged = False
@@ -551,7 +570,9 @@ def ER11E04_nondim_rmaxinput(
                 # convergence not achieved after 50 different CkCd values
                 break
     if soln_converged:
+        # angular momentum?
         Mm = 0.5 * fcor * rmax**2 + rmax * Vmax
+        # angular momentum along vector?
         MMfracMm_ER11 = (rr_ER11 * VV_ER11 + 0.5 * fcor * rr_ER11**2) / Mm
         # Step 2: Converge rmaxr0 geometrically until ER11 M/M0 has tangent point with E04 M/M0
         # Break up interval into 3 points, take 2 between which intersection
@@ -562,7 +583,7 @@ def ER11E04_nondim_rmaxinput(
         rmaxr0 = rmaxr0_new  # initialize
         drmaxr0 = rmaxr0_max - rmaxr0  # initialize
         drmaxr0_thresh = 0.000001
-        iterN = 0
+        iterN = 0  # while loop counter
         while np.abs(drmaxr0) >= drmaxr0_thresh:
             iterN = iterN + 1
             # Calculate E04 M/M0 vs r/r0
@@ -583,6 +604,7 @@ def ER11E04_nondim_rmaxinput(
             if (
                 intersection.wkt == "GEOMETRYCOLLECTION EMPTY"
             ):  # no intersections r0 too large --> rmaxr0 too small
+                # stopping condition changed.
                 drmaxr0 = np.abs(drmaxr0) / 2
             else:  # at least one intersection -- r0 too small --> rmaxr0 too large
                 if intersection.wkt.split(" ")[0] == "POINT":
@@ -595,6 +617,7 @@ def ER11E04_nondim_rmaxinput(
                     # print(intersection.geoms[0])
                     X0, Y0 = intersection.geoms[0].coords[0]
                 # at least one intersection -- rmaxr0 too large
+                # stopping condition changed.
                 drmaxr0 = -np.abs(drmaxr0) / 2
                 rmerger0 = np.mean(X0)
                 MmergeM0 = np.mean(Y0)
@@ -673,8 +696,37 @@ def ER11E04_nondim_rmaxinput(
 
 @timeit
 def ER11E04_nondim_rfitinput(
-    Vmax, rfit, Vfit, fcor, Cdvary, C_d, w_cool, CkCdvary, CkCd, eye_adj, alpha_eye
-):
+    Vmax: float,
+    rfit: float,
+    Vfit: float,
+    fcor: float,
+    Cdvary: bool,
+    C_d: float,
+    w_cool: float,
+    CkCdvary: bool,
+    CkCd: float,
+    eye_adj: bool,
+    alpha_eye: float,
+) -> Tuple[np.ndarray, np.ndarray, float, float, float]:
+    """
+    ER11E04_nondim_rfitinput.
+
+    Args:
+        Vmax (float): _description_
+        rfit (float): _description_
+        Vfit (float): _description_
+        fcor (float): _description_
+        Cdvary (bool): _description_
+        C_d (float): _description_
+        w_cool (float): _description_
+        CkCdvary (bool): _description_
+        CkCd (float): _description_
+        eye_adj (bool): _description_
+        alpha_eye (float): _description_
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray, float, float, float]: rr, VV, rmax, r0, rmerge, Vmerge
+    """
     # Initialization
     fcor = np.abs(fcor)
     if CkCdvary == 1:
