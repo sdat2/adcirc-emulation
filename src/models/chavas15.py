@@ -31,6 +31,7 @@ Part II: Wind field variability. J. Atmos. Sci., 73(8):
 
 # TODO: work out if units are SI or not
 """
+from typing import Tuple, List, Dict, Union
 import numpy as np
 import sys
 import copy
@@ -45,15 +46,15 @@ from scipy.interpolate import interp1d
 #######################################################################
 
 
-def E04_outerwind_r0input_nondim_MM0(r0, fcor, Cdvary, C_d, w_cool, Nr):
+def E04_outerwind_r0input_nondim_MM0(r0: float, fcor: float, Cdvary, C_d, w_cool, Nr):
 
     # Initialization
     fcor = abs(fcor)
     M0 = 0.5 * fcor * r0**2  # [m2/s] M at outer radius
 
     drfracr0 = 0.001
-    # very strange to be using bitwise or here
-    if (r0 > 2500 * 1000) | (r0 < 200 * 1000):
+    # I replaced a binary or `|` with an `or` as I thought it was more expressive.
+    if (r0 > 2500 * 1000) or (r0 < 200 * 1000):
         drfracr0 = drfracr0 / 10
         # extra precision for very large storm to avoid funny bumps near r0 (though rest of solution is stable!)
         # or for tiny storm that requires E04 extend to very small radii to
@@ -372,7 +373,10 @@ def ER11E04_nondim_r0input(
 
 def ER11E04_nondim_rmaxinput(
     Vmax, rmax, fcor, Cdvary, C_d, w_cool, CkCdvary, CkCd, eye_adj, alpha_eye
-):
+) -> Tuple[np.ndarray, np.ndarray, float, float]:
+    """ER11E04_nondim_rmaxinput
+
+    [rrfracr0,MMfracM0,rmerger0,Vmerge] = ER11E04_nondim_rmaxinput(Vmax,rmax,fcor,Cdvary,C_d,w_cool,CkCdvary,CkCd,eye_adj,alpha_eye)"""
     # key function.
     # Initialization
     fcor = np.abs(fcor)
