@@ -55,7 +55,7 @@ from src.constants import CONFIG_PATH, FIGURE_PATH
 
 @timeit
 def E04_outerwind_r0input_nondim_MM0(
-    r0: float, fcor: float, Cdvary: float, C_d: float, w_cool: float, Nr: int
+    r0: float, fcor: float, Cdvary: int, C_d: float, w_cool: float, Nr: int
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     E04_outerwind_r0input_nondim_MM0
@@ -63,7 +63,7 @@ def E04_outerwind_r0input_nondim_MM0(
     Args:
         r0 (float): outer radius of storm.
         fcor (float): coriolis parameter.
-        Cdvary (float): _description_
+        Cdvary (int): _description_
         C_d (float): _description_
         w_cool (float): _description_
         Nr (int): _description_
@@ -837,6 +837,7 @@ def ER11E04_nondim_rfitinput(
 
 @hydra.main(config_path=CONFIG_PATH, config_name="chavas15.yaml")
 def default_run(cfg: DictConfig):
+    """Run the default experiment."""
     print(cfg)
     rr, VV, r0, rmerge, Vmerge = ER11E04_nondim_rmaxinput(
         cfg.Vmax,
@@ -850,6 +851,7 @@ def default_run(cfg: DictConfig):
         cfg.eye_adj,
         cfg.alpha_eye,
     )
+    print(cfg)
     print("rr", type(rr), rr.shape)
     print("VV", type(VV), VV.shape)
     print("r0", type(r0), r0.shape, r0)
