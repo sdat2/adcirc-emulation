@@ -92,7 +92,7 @@ def E04_outerwind_r0input_nondim_MM0(
         rfracr0_min, rfracr0_max + drfracr0, drfracr0
     )  # [] r/r0 vector
     # [] M/M0 vector initialized to 1 (M/M0 = 1 at r/r0=1)
-    MMfracM0 = np.float("NaN") * np.zeros(rrfracr0.size)
+    MMfracM0 = float("NaN") * np.zeros(rrfracr0.size)
     MMfracM0[-1] = 1
 
     # First step inwards from r0: d(M/M0)/d(r/r0) = 0 by definition
@@ -111,7 +111,7 @@ def E04_outerwind_r0input_nondim_MM0(
     ##################################################################
 
     # Integrate inwards from r0 to obtain profile of M/M0 vs. r/r0
-    for ii in range(0, np.int(Nr) - 2, 1):  # first two nodes already done above
+    for ii in range(0, int(Nr) - 2, 1):  # first two nodes already done above
 
         # Calculate C_d varying with V, if desired
         if Cdvary == 1:
@@ -203,8 +203,8 @@ def ER11_radprof(Vmax, r_in, rmax_or_r0, fcor, CkCd, rr_ER11):
             # sprintf('ER11 CALCULATION DID NOT CONVERGE TO INPUT (RMAX,VMAX) =
             # (#3.1f km,#3.1f m/s) Ck/Cd =
             # #2.2f!',r_in_save/1000,Vmax_save,CkCd)
-            V_ER11 = np.float("NaN") * np.zeros(rr_ER11.size)
-            r_out = np.float("NaN")
+            V_ER11 = float("NaN") * np.zeros(rr_ER11.size)
+            r_out = float("NaN")
             break
 
         # Adjust estimate of r_in according to error
@@ -428,15 +428,19 @@ def ER11E04_nondim_rmaxinput(
     # key function.
     # Initialization
     fcor = np.abs(fcor)
+    # by default, Ck/Cd is constant
+    # Overwrite CkCd if want varying (quadratic fit from Chavas et al. 2015)
     if CkCdvary == 1:
         CkCd_coefquad = 5.5041e-04
         CkCd_coeflin = -0.0259
         CkCd_coefcnst = 0.7627
         CkCd = CkCd_coefquad * Vmax**2 + CkCd_coeflin * Vmax + CkCd_coefcnst
+
     # 'Ck/Cd is capped at 1.9 and has been set to this value. If CkCdvary=1,
     # then Vmax is much greater than the range of data used to estimate
     # CkCd as a function of Vmax -- here be dragons!')
     CkCd = np.min((1.9, CkCd))
+
     # Step 1: Calculate ER11 M/Mm vs. r/rm
     # [~,~,rrfracrm_ER11,MMfracMm_ER11] = ER11_radprof_nondim(Vmax,rmax,fcor,CkCdvary,CkCd)
     drfracrm = 0.01
@@ -530,6 +534,7 @@ def ER11E04_nondim_rmaxinput(
             rfracrm_min = 0  # [-] r=0
             rfracrm_max = r0 / rmax  # [-] r=r0
             rrfracrm = np.arange(rfracrm_min, rfracrm_max, drfracrm)  # [] r/r0 vector
+            # reinterpolation on new grid.
             f = interp1d(rrfracr0_temp * (r0 / rmax), MMfracM0_temp * (M0 / Mm))
             MMfracMm = f(rrfracrm)
 
@@ -541,6 +546,8 @@ def ER11E04_nondim_rmaxinput(
             # rr = rrfracr0*r0     #[m]
             # rmerge = rmerger0*r0
             # Vmerge = (M0/r0)*((MmergeM0./rmerger0)-rmerger0)    #[ms-1]
+            # error found here, need to fix this somehow.
+            # RuntimeWarning: invalid value encountered in true_divide
             VV = (Mm / rmax) * (
                 MMfracMm / rrfracrm
             ) - 0.5 * fcor * rmax * rrfracrm  # [ms-1]
@@ -561,14 +568,14 @@ def ER11E04_nondim_rmaxinput(
         else:
             rr = rr_ER11
             VV = VV_ER11
-            rmerge = np.float("nan")
-            Vmerge = np.float("nan")
+            rmerge = float("nan")
+            Vmerge = float("nan")
     else:
-        rr = np.float("nan") * np.zeros(10)
-        VV = np.float("nan") * np.zeros(10)
-        r0 = np.float("nan")
-        rmerge = np.float("nan")
-        Vmerge = np.float("nan")
+        rr = float("nan") * np.zeros(10)
+        VV = float("nan") * np.zeros(10)
+        r0 = float("nan")
+        rmerge = float("nan")
+        Vmerge = float("nan")
     return rr, VV, r0, rmerge, Vmerge
 
 
@@ -771,6 +778,8 @@ def default_run(cfg: DictConfig):
     print("r0", type(r0), r0.shape, r0)
     print("rmerge", type(rmerge), rmerge.shape, rmerge)
     print("Vmerge", type(Vmerge), Vmerge.shape, Vmerge)
+    print("rmax", type(cfg.rmax), cfg.rmax)
+    print("Vmax", type(cfg.Vmax), cfg.Vmax)
     import matplotlib.pyplot as plt
 
     plt.plot(rr / 1000, VV)
@@ -780,7 +789,11 @@ def default_run(cfg: DictConfig):
     plt.xlabel("r (km)")
     plt.ylabel("V (m/s)")
     plt.legend()
-    plt.show()
+    import os
+
+    os.makedirs(os.path.join(FIGURE_PATH, "chavas15_test"), exist_ok=True)
+    plt.savefig(os.path.join(FIGURE_PATH, "chavas15_test", "chavas15_rmax_test.png"))
+    # plt.show()
 
 
 if __name__ == "__main__":
