@@ -392,6 +392,8 @@ def ER11E04_nondim_rmaxinput(
 ) -> Tuple[np.ndarray, np.ndarray, float, float]:
     """ER11E04_nondim_rmaxinput
 
+    Default values: Vmax=50, rmax=25*1000, fcor=5e-5, Cdvary=0, C_d=1.5e-3, w_cool=2/1000, CkCdvary=0, CkCd=1, eye_adj=0, alpha_eye=0.15
+
     Args:
         Vmax (float): Maximum azimuthally averaged wind speed [m/s]
         rmax (float): Radius at which Vmax occurs [m]
@@ -399,6 +401,13 @@ def ER11E04_nondim_rmaxinput(
         Cdvary (int): 1 if C_d varies with wind speed, 0 if constant
         C_d (float): Drag coefficient
         w_cool (float): Radiative subsidence rate. Cooling rate [K/s]
+
+
+    Returns:
+        rrfracr0 (np.ndarray): Radial coordinate [r/r0]
+        MMfracM0 (np.ndarray): Mass coordinate [M/M0]
+        rmerger0 (float): Radius at which mass coordinate is 1 [r0]
+        Vmerge (float): Wind speed at rmerger0 [m/s]
 
     [rrfracr0,MMfracM0,rmerger0,Vmerge] = ER11E04_nondim_rmaxinput(Vmax,rmax,fcor,Cdvary,C_d,w_cool,CkCdvary,CkCd,eye_adj,alpha_eye)
 

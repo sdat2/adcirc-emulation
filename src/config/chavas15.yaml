@@ -1,0 +1,10 @@
+Vmax: 50
+rmax: 25000
+fcor: 5e-5
+Cdvary: 0 
+C_d: 1.5e-3
+w_cool: 0.002
+CkCdvary: 0
+CkCd: 1 
+eye_adj: 0 
+alpha_eye: 0.15
