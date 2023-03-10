@@ -317,6 +317,7 @@ def ER11E04_nondim_r0input(
     alpha_eye: float = 0.15,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
+    ER11E04_nondim_r0input
 
     Args:
         Vmax (float): Maximum wind speed.
@@ -650,6 +651,7 @@ def ER11E04_nondim_rmaxinput(
             f = interp1d(rrfracr0_temp * (r0 / rmax), MMfracM0_temp * (M0 / Mm))
             MMfracMm = f(rrfracrm)
 
+            # Calculate wind speed and radii
             rrfracr0 = rrfracrm * rmax / r0  # save this as output
             MMfracM0 = MMfracMm * Mm / M0
 
