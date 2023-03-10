@@ -632,6 +632,8 @@ def ER11E04_nondim_rmaxinput(
             Mm = 0.5 * fcor * rmax**2 + rmax * Vmax
             MmM0 = Mm / M0  # not used.
 
+            print("MmM0", MmM0)
+
             # Finally: Interpolate to a grid
             # Finally: Interpolate to a grid
             ii_ER11 = np.argwhere(
@@ -640,10 +642,14 @@ def ER11E04_nondim_rmaxinput(
             ii_E04 = np.argwhere(
                 (rrfracr0_E04 >= rmerger0) & (MMfracM0_E04 >= MmergeM0)
             )[:, 0]
+
+            # hstack
             MMfracM0_temp = np.hstack((MMfracM0_ER11[ii_ER11], MMfracM0_E04[ii_E04]))
             rrfracr0_temp = np.hstack((rrfracr0_ER11[ii_ER11], rrfracr0_E04[ii_E04]))
             del ii_ER11
             del ii_E04
+
+
             rfracrm_min = 0  # [-] r=0
             rfracrm_max = r0 / rmax  # [-] r=r0
             rrfracrm = np.arange(rfracrm_min, rfracrm_max, drfracrm)  # [] r/r0 vector
@@ -654,6 +660,8 @@ def ER11E04_nondim_rmaxinput(
             # Calculate wind speed and radii
             rrfracr0 = rrfracrm * rmax / r0  # save this as output
             MMfracM0 = MMfracMm * Mm / M0
+
+            print("rrfracr0", rrfracr0, "\nMMfracM0", MMfracM0)
 
             # Calculate dimensional wind speed and radii
             # VV = (M0/r0)*((MMfracM0./rrfracr0)-rrfracr0)    #[ms-1]
