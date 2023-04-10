@@ -317,7 +317,7 @@ def example_animation(tmp_dir: str = "tmp/") -> None:
 
 
 @np.vectorize
-def smash_func(angle: float, position: float, output_direc: str) -> float:
+def adcirc_func(angle: float, position: float, output_direc: str) -> float:
     point = Point(NEW_ORLEANS.lon + position, NEW_ORLEANS.lat)
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
@@ -334,7 +334,7 @@ def smash_func(angle: float, position: float, output_direc: str) -> float:
     return maxele.values[indices][index_set]
 
 
-class EmulationSmash:
+class EmulationBearingPos:
     """2D emulation of the ADCIRC model for bearing and position.
     Currently we're emulating the index point 27 in the maxele.63.nc file
     which is a point to the North of New Orleans This is the point with the highest
@@ -354,7 +354,7 @@ class EmulationSmash:
         x2_range: List[int] = [-2, 3.2],
         path: str = "emu_angle_position",
     ) -> None:
-        """Initialize the EmulationSmash class.
+        """Initialize the EmulationBearingPos class.
 
         Args:
             seed (int, optional): The seed for the random number generator.
@@ -541,17 +541,17 @@ class EmulationSmash:
         else:
             assert False
 
-    def ob_smash_func(self, angle: np.array, position: float) -> float:
+    def ob_adcirc_func(self, angle: np.array, position: float) -> float:
         # print(angle, position)
         num = len(angle)
         output_direc = [
             os.path.join(self.data_path, str(self.call_number + i)) for i in range(num)
         ]
         self.call_number += num
-        return -smash_func(angle, position, output_direc)
+        return -adcirc_func(angle, position, output_direc)
 
     def func(self, data: np.ndarray) -> float:
-        output = self.ob_smash_func(*self.to_real_scale(*self.split(data)))
+        output = self.ob_adcirc_func(*self.to_real_scale(*self.split(data)))
         return output.reshape(len(output), 1)
 
     def learnt_function(self, x1, x2):
@@ -661,13 +661,13 @@ class EmulationSmash:
 
 
 def poi():
-    EmulationSmash(
+    EmulationBearingPos(
         acqusition_class=ProbabilityOfImprovement, path="emulation_angle_pos_poi"
     )
 
 
 def poi_long():
-    EmulationSmash(
+    EmulationBearingPos(
         acqusition_class=ProbabilityOfImprovement,
         path="emulation_angle_pos_poi_long",
         init_num=100,
@@ -676,13 +676,13 @@ def poi_long():
 
 
 def mves():
-    EmulationSmash(
+    EmulationBearingPos(
         acqusition_class=MaxValueEntropySearch, path="emulation_angle_pos_mves"
     )
 
 
 def inp_diff():
-    EmulationSmash(
+    EmulationBearingPos(
         path="emulation_angle_pos_big",
         seed=20,
         init_num=100,
@@ -691,7 +691,7 @@ def inp_diff():
 
 
 def matern52():
-    EmulationSmash(
+    EmulationBearingPos(
         path="emulation_angle_pos_Mattern52",
         seed=30,
         init_num=100,
@@ -701,7 +701,7 @@ def matern52():
 
 
 def matern32():
-    e = EmulationSmash(
+    e = EmulationBearingPos(
         path="emulation_angle_pos_Mattern32",
         seed=50,
         init_num=100,
@@ -713,7 +713,7 @@ def matern32():
 
 
 def mat32():
-    EmulationSmash(
+    EmulationBearingPos(
         path="emulation_angle_pos_matern32_ent",
         seed=100,
         init_num=100,
@@ -724,7 +724,7 @@ def mat32():
 
 
 def mat32var():
-    EmulationSmash(
+    EmulationBearingPos(
         path="emulation_angle_pos_matern32_variance",
         seed=100,
         init_num=200,
@@ -735,11 +735,24 @@ def mat32var():
 
 
 def mat32expimprovement():
-    e = EmulationSmash(
+    e = EmulationBearingPos(
         path="emulation_angle_pos_newei",
         seed=100,
         init_num=100,
         active_num=50,
+        kernel_class=Matern32,
+        acqusition_class=ExpectedImprovement,
+    )
+    e.setup_emulation()
+    e.active_learning()
+
+
+def test():
+    e = EmulationBearingPos(
+        path="emulation_angle_pos_t",
+        seed=1,
+        init_num=1,
+        active_num=1,
         kernel_class=Matern32,
         acqusition_class=ExpectedImprovement,
     )
@@ -753,4 +766,4 @@ if __name__ == "__main__":
     # example_plot()
     plot_defaults()
     #  mat32expimprovement()
-    matern32()
+    test()
