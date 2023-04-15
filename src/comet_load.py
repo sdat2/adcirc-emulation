@@ -176,10 +176,33 @@ def plot_final_metrics(ds_list: List[xr.Dataset]) -> None:
     plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "inum_anum_mae.png"))
     plt.clf()
 
+    # let's do a line plot instead.
+    tnum = np.array(inum_l) + np.array(anum_l)
+    frac = np.array(anum_l) / tnum
+    r2 = np.array(r2_l)
+    plt.plot(tnum, frac)
+    plt.xlabel("Total Number of Samples [-]")
+    plt.ylabel("Fraction of Actively Chosen Points [-]")
+    # plt.show()
+    plt.clf()
+    for j in [30, 60, 90, 120]:
+        frac_l = frac[tnum == j]
+        r2_l = r2[tnum == j]
+        idx = np.argsort(frac_l)
+        frac_l = frac_l[idx]
+        r2_l = r2_l[idx]
+        plt.plot(frac_l, r2_l, label=f"{j}")
+    plt.xlabel("Fraction of Actively Chosen Points [-]")
+    plt.ylabel("r$^{2}$ [-]")
+    plt.legend(title="Total Number of Samples [-]")
+    plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "frac_r2.png"))
 
-ds_list = loop_through_experiment()
-plot_inum_metrics(ds_list)
-plot_final_metrics(ds_list)
-# loop_through_project()
-# loop_through_experiment()
-# python src/comet_load.py
+
+if __name__ == "__main__":
+    # python src/comet_load.py
+    ds_list = loop_through_experiment()
+    plot_inum_metrics(ds_list)
+    plot_final_metrics(ds_list)
+    # loop_through_project()
+    # loop_through_experiment()
+    # python src/comet_load.py
