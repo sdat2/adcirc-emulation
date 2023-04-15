@@ -206,6 +206,7 @@ def plot_final_metrics(ds_list: List[xr.Dataset]) -> None:
     label_subplots(axs)
     plt.xlabel("Fraction of Actively Chosen Points [-]")
     axs[0].legend(title="Total Number of Samples [-]")
+    axs[0].set_xlim(0, 1)
     plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "frac_r2.png"))
 
 
