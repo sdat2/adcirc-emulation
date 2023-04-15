@@ -180,21 +180,32 @@ def plot_final_metrics(ds_list: List[xr.Dataset]) -> None:
     tnum = np.array(inum_l) + np.array(anum_l)
     frac = np.array(anum_l) / tnum
     r2 = np.array(r2_l)
+    rmse = np.array(rmse_l)
+    mae = np.array(mae_l)
     plt.plot(tnum, frac)
     plt.xlabel("Total Number of Samples [-]")
     plt.ylabel("Fraction of Actively Chosen Points [-]")
     # plt.show()
     plt.clf()
+    fig, axs = plt.subplots(3, 1, sharex=True)
+    axs[0].set_ylabel("r$^{2}$ [-]")
+    axs[1].set_ylabel("MAE [m]")
+    axs[2].set_ylabel("RMSE [m]")
+    axs[2].set_xlabel("Number of Latin Hypercube Samples [-]")
     for j in [30, 60, 90, 120]:
-        frac_l = frac[tnum == j]
-        r2_l = r2[tnum == j]
-        idx = np.argsort(frac_l)
-        frac_l = frac_l[idx]
-        r2_l = r2_l[idx]
-        plt.plot(frac_l, r2_l, label=f"{j}")
+        frac_t = frac[tnum == j]
+        r2_t = r2[tnum == j]
+        idx = np.argsort(frac_t)
+        frac_t = frac_t[idx]
+        r2_t = r2_t[idx]
+        rmse_t = rmse[tnum == j][idx]
+        mae_t = mae[tnum == j][idx]
+        axs[0].plot(frac_t, r2_t, label=f"{j}")
+        axs[1].plot(frac_t, mae_t)
+        axs[2].plot(frac_t, rmse_t)
     plt.xlabel("Fraction of Actively Chosen Points [-]")
     plt.ylabel("r$^{2}$ [-]")
-    plt.legend(title="Total Number of Samples [-]")
+    axs[0].legend(title="Total Number of Samples [-]")
     plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "frac_r2.png"))
 
 
