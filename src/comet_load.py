@@ -192,7 +192,7 @@ def plot_final_metrics(ds_list: List[xr.Dataset]) -> None:
     axs[1].set_ylabel("MAE [m]")
     axs[2].set_ylabel("RMSE [m]")
     axs[2].set_xlabel("Number of Latin Hypercube Samples [-]")
-    for j in [30, 60, 90, 120]:
+    for j in [30, 60, 120]:
         frac_t = frac[tnum == j]
         r2_t = r2[tnum == j]
         idx = np.argsort(frac_t)
