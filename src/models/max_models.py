@@ -25,6 +25,7 @@ LABEL_LIST = [
     "Central Pressure, $p_c$",
     "Decay Exponent, $x_n$",
 ]
+SYMBOL_LIST = ["$\chi$", "$v_t$", "$c$", "$r_{\mathrm{max}}$", "$p_c$", "$x_n$"]
 LABEL_DICT = {FEATURE_LIST[i]: LABEL_LIST[i] for i in range(len(FEATURE_LIST))}
 # get data from weights and biases
 
@@ -231,14 +232,14 @@ def make_all_plots(regenerate=True) -> None:
         fontsize=6,
         color="purple",
     )
-    plt.triplot(lon, lat, triangles, color="grey")
+    plt.triplot(lon, lat, triangles, color="black")
 
     plt.scatter(lon, lat, c=max_importance, cmap=cmap, vmin=vmin, vmax=vmax, s=15)
 
     ax = plt.gca()
     cbar = plt.colorbar(label="Most important feature")
     cbar.set_ticks(cbar_levels)
-    cbar.set_ticklabels([LABEL_LIST[int(x)] for x in cbar_levels])
+    cbar.set_ticklabels([SYMBOL_LIST[int(x)] for x in cbar_levels])
     plt.xlabel("")
     plt.ylabel("")
     ax.set_yticks(
