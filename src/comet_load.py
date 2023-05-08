@@ -9,7 +9,7 @@ from comet_ml import API
 import xarray as xr
 import matplotlib.pyplot as plt
 from src.constants import FIGURE_PATH
-from sithom.plot import plot_defaults, label_subplots
+from sithom.plot import plot_defaults, label_subplots, get_dim
 
 comet_ml.config.save(api_key="57fHMWwvxUw6bvnjWLvRwSQFp")
 
@@ -176,10 +176,45 @@ def plot_final_metrics(ds_list: List[xr.Dataset]) -> None:
     plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "inum_anum_mae.png"))
     plt.clf()
 
+    # let's do a line plot instead.
+    tnum = np.array(inum_l) + np.array(anum_l)
+    frac = np.array(anum_l) / tnum
+    r2 = np.array(r2_l)
+    rmse = np.array(rmse_l)
+    mae = np.array(mae_l)
+    plt.plot(tnum, frac)
+    plt.xlabel("Total Number of Samples [-]")
+    plt.ylabel("Fraction of Actively Chosen Points [-]")
+    # plt.show()
+    plt.clf()
+    fig, axs = plt.subplots(3, 1, sharex=True, figsize=get_dim(ratio=1.5))
+    axs[0].set_ylabel("r$^{2}$ [-]")
+    axs[1].set_ylabel("MAE [m]")
+    axs[2].set_ylabel("RMSE [m]")
+    axs[2].set_xlabel("Number of Latin Hypercube Samples [-]")
+    for j in [30, 60, 120]:
+        frac_t = frac[tnum == j]
+        r2_t = r2[tnum == j]
+        idx = np.argsort(frac_t)
+        frac_t = frac_t[idx]
+        r2_t = r2_t[idx]
+        rmse_t = rmse[tnum == j][idx]
+        mae_t = mae[tnum == j][idx]
+        axs[0].plot(frac_t, r2_t, label=f"{j}")
+        axs[1].plot(frac_t, mae_t)
+        axs[2].plot(frac_t, rmse_t)
+    label_subplots(axs)
+    plt.xlabel("Fraction of Actively Chosen Points [-]")
+    axs[0].legend(title="Total Number of Samples [-]")
+    axs[0].set_xlim(0, 1)
+    plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "frac_r2.png"))
 
-ds_list = loop_through_experiment()
-plot_inum_metrics(ds_list)
-plot_final_metrics(ds_list)
-# loop_through_project()
-# loop_through_experiment()
-# python src/comet_load.py
+
+if __name__ == "__main__":
+    # python src/comet_load.py
+    ds_list = loop_through_experiment()
+    plot_inum_metrics(ds_list)
+    plot_final_metrics(ds_list)
+    # loop_through_project()
+    # loop_through_experiment()
+    # python src/comet_load.py

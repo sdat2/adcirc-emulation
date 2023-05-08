@@ -17,7 +17,16 @@ from src.preprocessing.sel import trim_tri
 
 
 FEATURE_LIST = ["angle", "speed", "point_east", "rmax", "pc", "xn"]
-
+LABEL_LIST = [
+    "Bearing, $\chi$",
+    "Translation Speed, $v_t$",
+    "Longitude Displacement, $c$",
+    "Radius of Maximum Wind, $r_{\mathrm{max}}$",
+    "Central Pressure, $p_c$",
+    "Decay Exponent, $x_n$",
+]
+SYMBOL_LIST = ["$\chi$", "$v_t$", "$c$", "$r_{\mathrm{max}}$", "$p_c$", "$x_n$"]
+LABEL_DICT = {FEATURE_LIST[i]: LABEL_LIST[i] for i in range(len(FEATURE_LIST))}
 # get data from weights and biases
 
 
@@ -48,7 +57,7 @@ def generate_max_parray_and_output(
 
 
 @timeit
-def make_all_plots() -> None:
+def make_all_plots(regenerate=True) -> None:
     bbox = NO_BBOX.pad(2)
     bbox_plot = NO_BBOX
     bbox_plot.lat[0] = NO_BBOX.lat[0] - 1
@@ -56,7 +65,6 @@ def make_all_plots() -> None:
     data_path = os.path.join(DATA_PATH, "max_sensitivities")
     figure_path = os.path.join(FIGURE_PATH, "max_sensitivities")
     num = 400
-    regenerate = True
     os.makedirs(figure_path, exist_ok=True)
     os.makedirs(data_path, exist_ok=True)
     plot_defaults()
@@ -99,6 +107,7 @@ def make_all_plots() -> None:
     # print("oa_mult.shape", oa_mult.shape)
 
     def return_importances(index: int = 27) -> np.ndarray:
+        # TODO: Replace with GP version!!!
         # print(index)
         model = DecisionTreeRegressor()
         model.fit(parray_mult, oa_mult[:, index])
@@ -153,7 +162,8 @@ def make_all_plots() -> None:
 
         ax = plt.gca()
         cbar = plt.colorbar(
-            label="Importance of " + FEATURE_LIST[i].replace("_", " ").capitalize()
+            label="Importance of "
+            + LABEL_LIST[i]  # FEATURE_LIST[i].replace("_", " ").capitalize()
         )
         cbar.set_ticks(cbar_levels)
         cbar.set_ticklabels(["{:.2f}".format(x) for x in cbar_levels.tolist()])
@@ -198,7 +208,7 @@ def make_all_plots() -> None:
 
     r = len(FEATURE_LIST) - 1
     levels = [vmin + 0.5 + i for i in range(r)]  # np.linspace(vmin, vmax, num=r)
-    cmap = cm.get_cmap("Set3", r + 1)
+    cmap = cm.get_cmap("Set1", r + 1)
     cbar_levels = [vmin + 0.5 + i for i in range(r + 1)]
 
     ax = plt.axes(projection=ccrs.PlateCarree())
@@ -222,16 +232,14 @@ def make_all_plots() -> None:
         fontsize=6,
         color="purple",
     )
-    plt.triplot(lon, lat, triangles)
+    plt.triplot(lon, lat, triangles, color="black")
 
     plt.scatter(lon, lat, c=max_importance, cmap=cmap, vmin=vmin, vmax=vmax, s=15)
 
     ax = plt.gca()
     cbar = plt.colorbar(label="Most important feature")
     cbar.set_ticks(cbar_levels)
-    cbar.set_ticklabels(
-        [FEATURE_LIST[int(x)].replace("_", " ").capitalize() for x in cbar_levels]
-    )
+    cbar.set_ticklabels([SYMBOL_LIST[int(x)] for x in cbar_levels])
     plt.xlabel("")
     plt.ylabel("")
     ax.set_yticks(
@@ -378,7 +386,7 @@ def make_all_plots() -> None:
             levels=levels,
             cmap="cmo.balance",
         )
-        ax.set_title(FEATURE_LIST[i].replace("_", " ").capitalize())
+        ax.set_title(LABEL_LIST[i])
         ax.plot(
             NEW_ORLEANS.lon, NEW_ORLEANS.lat, marker=".", markersize=4, color="purple"
         )
@@ -453,7 +461,7 @@ def make_all_plots() -> None:
             levels=levels,
             cmap="cmo.amp",
         )
-        ax.set_title(FEATURE_LIST[i].replace("_", " ").capitalize())
+        ax.set_title(LABEL_LIST[i])
         ax.plot(
             NEW_ORLEANS.lon, NEW_ORLEANS.lat, marker=".", markersize=4, color="purple"
         )
@@ -504,4 +512,4 @@ def make_all_plots() -> None:
 
 if __name__ == "__main__":
     # python src/models/max_models.py
-    make_all_plots()
+    make_all_plots(regenerate=False)

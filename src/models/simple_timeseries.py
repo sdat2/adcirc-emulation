@@ -231,7 +231,9 @@ def get_exp_split(
     ds8r: xr.Dataset, index=26, split_index=200
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
-    Split by exp instead of randomly.
+    Split single index by exp instead of randomly.
+    This allows us to have random split out instead
+    of full thing.
 
     Args:
         ds8r (xr.Dataset): rescaled dataset.
@@ -255,6 +257,20 @@ def get_exp_split(
     return x_train, x_test, y_train, y_test
 
 
+def train_mlp(x_train: np.ndarray, y_test: np.ndarray) -> any:
+    """
+    Train a multi-layer perceptron with x_train, y_train.
+
+    Args:
+        x_train (np.ndarray): x training data.
+        y_test (np.ndarray): y training data.
+
+    Returns:
+        any: Trained multi layer perceptron.
+    """
+    raise NotImplementedError
+
+
 if "__main__" == __name__:
     # python src/models/simple_timeseries.py
     ds8r = rescale_ds(load_8d_data())
@@ -262,13 +278,16 @@ if "__main__" == __name__:
     for i in a:
         print(i.shape)
 
+    # go through all of the possible nodes.
     for i in range(len(ds8r.node.values)):
         a = get_exp_split(ds8r, index=i)
         for j in a:
             print(j.shape)
 
+    # Get Experiment Split..
     a = get_exp_split(ds8r)
     for i in a:
+        # x_train, x_test, y_train, y_test
         print(i.shape)
 
     print(len(ds8r.node.values))
