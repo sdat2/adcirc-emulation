@@ -713,8 +713,8 @@ class SixDOFSearch:
             self.experiment.log_metrics({**res, **{"inum": inum, "anum": anum}})
         elif self.returns == "max":
             index = np.argmin(y_train)
-            param = self.to_param(self.to_real(x_train[index]))
-            self.experiment.log_metrics({**param, "max": -y_train[index]})
+            param = self.to_param(self.to_real(x_train)[index])
+            self.experiment.log_metrics({**param, "max": -y_train[index], "step": self.call_number})
         else:
             assert False 
 
@@ -968,15 +968,14 @@ def find_max(cfg: DictConfig) -> None:
     sdf.run_active(cfg.active_samples)
     print("end")
     """
-    python src/models/emu6d.py place=ansley, seed=50
+    python src/models/emu6d.py place=ansley seed=50
     python src/models/emu6d.py place=new_orleans seed=60
-        ansley=27,
-        new_orleans=5,
-        diamondhead=17,
-        mississippi=77,
-        atchafayala=82,
-        dulac=86,
-        akers=2,
+    python src/models/emu6d.py place=diamondhead seed=70
+    python src/models/emu6d.py place=mississippi seed=80
+    #
+    python src/models/emu6d.py place=atchafayala seed=90
+    python src/models/emu6d.py place=dulac seed=100
+    python src/models/emu6d.py place=akers seed=110
 
     """
 

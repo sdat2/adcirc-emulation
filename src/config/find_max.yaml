@@ -3,4 +3,4 @@ active_samples: 20
 seed: 50
 dryrun: false
 place: ansley
-path: 6D_max_${place}_inum_${init_samples}_anum_${active_samples}_seed_{seed}
+path: 6D_max_${place}_inum_${init_samples}_anum_${active_samples}_seed_${seed}
