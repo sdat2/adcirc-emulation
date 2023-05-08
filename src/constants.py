@@ -27,7 +27,7 @@ LANDING_DS: str = os.path.join(DATA_PATH, "IBTrACS_gom_landings.nc")
 
 # Katrina example:
 KAT_EX_PATH = os.path.join(
-    ROOT, "adcirc-swan", "adcirc-testsuite", "adcirc", "adcirc_katrina-2d"
+    ROOT, "adcirc-swan", "testsuite", "adcirc", "adcirc_katrina-2d"
 )
 # print(ADCIRC_EXE, KAT_EX_PATH)
 

@@ -2,7 +2,7 @@
 Six dimensional emulation of the Holland 2008 model.
 """
 import os
-from typing import Callable, Tuple, Union, Optional
+from typing import Callable, Tuple, Union, Optional, Literal
 import shutil
 from datetime import datetime, timedelta
 import netCDF4 as nc
@@ -16,15 +16,15 @@ import hydra
 # WANDB_CACHE_DIR = "/work/n01/n01/sithom/tmp"
 # WANDB_CONFIG_DIR = "/work/n01/n01/sithom/.config/wandb"
 # These lines are to get it to work on the slurm cluster
-os.environ["WANDB_CACHE_DIR"] = "/work/n01/n01/sithom/tmp"
-os.environ["WANDB_DATA_DIR"] = "/work/n01/n01/sithom/tmp"
-os.environ["WANDB_DIR"] = "/work/n01/n01/sithom/.config/wandb"
-os.environ["WANDB_CONFIG_DIR"] = "/work/n01/n01/sithom/.config/wandb"
+#os.environ["WANDB_CACHE_DIR"] = "/work/n01/n01/sithom/tmp"
+#os.environ["WANDB_DATA_DIR"] = "/work/n01/n01/sithom/tmp"
+#os.environ["WANDB_DIR"] = "/work/n01/n01/sithom/.config/wandb"
+#os.environ["WANDB_CONFIG_DIR"] = "/work/n01/n01/sithom/.config/wandb"
 # os.environ["WANDB_MODE"] = "offline"  # "offline"
-os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
+#os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
 import wandb
 
-wandb.login(key="42ceaac64e4f3ae24181369f4c77d9ba0d1c64e5")
+#wandb.login(key="42ceaac64e4f3ae24181369f4c77d9ba0d1c64e5")
 from comet_ml import Experiment
 
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
@@ -60,6 +60,15 @@ from src.models.generation import ImpactSymmetricTC, Holland08
 from src.constants import DATA_PATH, FIGURE_PATH, NEW_ORLEANS, NO_BBOX, CONFIG_PATH
 from src.models.generation import vmax_from_pressure_holliday
 
+PLACES_D = dict(
+        ansley=27,
+        new_orleans=5,
+        diamondhead=17,
+        mississippi=77,
+        atchafayala=82,
+        dulac=86,
+        akers=2,
+    )
 
 @typechecked
 def get_param(updates: dict) -> dict:
@@ -201,24 +210,28 @@ def get_data(ex_path: str) -> xr.Dataset:
     )
 
 
-def real_func(param: dict, output_direc: str) -> float:
+def real_func(param: dict, output_direc: str, place: str = "ansley", init_wandb: bool=False, log_artifact: bool = False) -> float:
     """
     Feed the parameters into running the full tropical cyclone impact.
 
     Args:
-        param (dict): _description_
+        param (dict): input parameter dictionary.
         output_direc (str): Where to store data.
+        place (str): Which point from PLACES_D to focus on. Defaults to "ansley".
+        init_wandb (bool): whether to initialise weights and biases. Defaults to False.
+        log_artifact (bool): Whether to log the output/input data artifact. Defaults to False.
 
     Returns:
         float: The sea surface height at the point of interest.
     """
-    wandb.init(
-        project="6d_individual_version2",
-        # settings=wandb.Settings(start_method="fork"),
-        entity="sdat2",
-        reinit=True,
-        config=param,
-    )
+    if init_wandb:
+        wandb.init(
+            project="6d_individual_version2",
+            # settings=wandb.Settings(start_method="fork"),
+            entity="sdat2",
+            reinit=True,
+            config=param,
+        )
     point = Point(NEW_ORLEANS.lon + param["point_east"], NEW_ORLEANS.lat)
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
@@ -234,29 +247,24 @@ def real_func(param: dict, output_direc: str) -> float:
     ).run_impact()
     path = os.path.join(output_direc, "maxele.63.nc")
     maxele = Maxele(path, crs="EPSG:4326")
-    places_d = dict(
-        ansley=27,
-        new_orleans=5,
-        diamondhead=17,
-        mississippi=77,
-        atchafayala=82,
-        dulac=86,
-        akers=2,
-    )
+    # List of notable places selected from coastline manually.
+    # find indices within defined BBOX
     indices = NO_BBOX.indices_inside(maxele.x, maxele.y)
-    v = maxele.values[indices]
-    height = v[places_d["ansley"]]
+    v = maxele.values[indices] # Find heights of important places.
+    height = v[PLACES_D["ansley"]]
     print("height =  ", height, "m")
-    wandb.log(
-        {key: v[places_d[key]] for key in places_d},
-    )
-    combined_ds = get_data(output_direc)
-    param_ds = xr.Dataset(data_vars=param)
-    combined_ds = xr.merge([combined_ds, param_ds])
-    combined_ds.to_netcdf(os.path.join(output_direc, "combined_ds.nc"))
-    artifact = wandb.Artifact("output_dataset", type="dataset")
-    artifact.add_file(os.path.join(output_direc, "combined_ds.nc"))
-    wandb.log_artifact(artifact)
+    if init_wandb:
+        wandb.log(
+            {key: v[PLACES_D[key]] for key in PLACES_D},
+        )
+        if log_artifact:
+            combined_ds = get_data(output_direc)
+            param_ds = xr.Dataset(data_vars=param)
+            combined_ds = xr.merge([combined_ds, param_ds])
+            combined_ds.to_netcdf(os.path.join(output_direc, "combined_ds.nc"))
+            artifact = wandb.Artifact("output_dataset", type="dataset")
+            artifact.add_file(os.path.join(output_direc, "combined_ds.nc"))
+            wandb.log_artifact(artifact)
     return height
 
 
@@ -304,7 +312,9 @@ class SixDOFSearch:
         dryrun: bool = False,
         path: str = "6D_search",
         test_data_path: str = "6D_test",  # where to get the test data.
+        place: str = "ansley",
         experiment: Optional[Experiment] = None,
+        returns: Literal["max", "score"] = "score",
     ) -> None:
         """
         Initialize the search space for emulation.
@@ -316,6 +326,7 @@ class SixDOFSearch:
             test_data_path (str, optional): Where to get the test data. Defaults to "6D_test".
         """
         np.random.seed(seed)
+        self.returns = returns
         # default ranges is from the sixd.yaml file
         conf = OmegaConf.load(os.path.join(CONFIG_PATH, "sixd.yaml"))
         self.dryrun = dryrun
@@ -438,13 +449,16 @@ class SixDOFSearch:
             else:
                 # take the negative for minimization.
                 res = -real_func(param, output_direc)
+                # output list is negative
                 output_list.append(res)
                 # output_list, self.init_x_data, self.init_y_data
                 # output_list, self.active_x_data, self.active_y_data
                 # work out inum, anum, x_data, y_data
                 # self.comet_results()
-                print("x_data.shape", x_data.shape)
+                # print("x_data.shape", x_data.shape)
                 print("len(output_list)", len(output_list))
+                # x_data is normalized
+                # output list is 
                 self.feed_to_comet(x_data[: len(output_list), :], output_list)
             self.call_number += 1
 
@@ -657,17 +671,20 @@ class SixDOFSearch:
         mean, var = model.predict(
             self.test_x_data
         )  # self.model_gpy.predict(self.test_x_data)
-        rmse, mae, r2 = (
+        rmse, mae, r2, mll, lpd = (
             mean_squared_error(self.test_y_data, mean, squared=False),
             mean_absolute_error(self.test_y_data, mean),
             r2_score(self.test_y_data, mean),
+            model.log_likelihood(),
+            model.log_predictive_density(self.test_x_data, self.test_y_data),
         )
-        print("rmse", rmse, "mae", mae, "r2", r2)
+        
+        print("rmse", rmse, "mae", mae, "r2", r2, "mll", mll, "lpd", lpd)
         # check if wandb is running.
         # if wandb.run is not None:
         #     wandb.log(
 
-        return {"rmse": rmse, "mae": mae, "r2": r2}
+        return {"rmse": rmse, "mae": mae, "r2": r2, "mll": mll, "lpd": lpd}
 
     def comet_results(
         self, inum: int, anum: int, x_train: np.ndarray, y_train: np.ndarray
@@ -682,17 +699,24 @@ class SixDOFSearch:
             y_train: y_train numpy array (num, 1)
         """
         print("x, y", x_train.shape, y_train.shape)
-        # first train model
-        model = GPRegression(
-            x_train,
-            y_train.reshape(len(y_train), 1),
-            Matern32(6, 1),
-        )
-        model.optimize()
-        # model = Gpy.models.GPRegression(x_train, y_train, kernel=Matern32(6,1)).optimize()
-        # then find model quality
-        res = self.test_metrics(model)
-        self.experiment.log_metrics({**res, **{"inum": inum, "anum": anum}})
+        if self.returns == "score":
+            # first train model
+            model = GPRegression(
+                x_train,
+                y_train.reshape(len(y_train), 1),
+                Matern32(6, 1),
+            )
+            model.optimize()
+            # model = Gpy.models.GPRegression(x_train, y_train, kernel=Matern32(6,1)).optimize()
+            # then find model quality
+            res = self.test_metrics(model)
+            self.experiment.log_metrics({**res, **{"inum": inum, "anum": anum}})
+        elif self.returns == "max":
+            index = np.argmin(y_train)
+            param = self.to_param(self.to_real(x_train[index]))
+            self.experiment.log_metrics({**param, "max": -y_train[index]})
+        else:
+            assert False 
 
     def gp_predict(self) -> Callable:
         X = np.load(self.x_path)
@@ -823,7 +847,9 @@ def combine_lhs() -> None:
 
 @timeit
 def get_lhs_test() -> Tuple[np.ndarray, np.ndarray]:
-    """Get LHS test data, with scaling."""
+    """Get LHS test data, with scaling.
+    
+    WARNING: Currently this overrides the input option."""
     ds = xr.open_dataset(os.path.join(DATA_PATH, "test_data.nc"))
     cfg = OmegaConf.load(os.path.join(CONFIG_PATH, "sixd.yaml"))
     print(ds, cfg)
@@ -864,7 +890,7 @@ def diff_res(cfg: DictConfig) -> None:
 
     experiment = Experiment(
         api_key="57fHMWwvxUw6bvnjWLvRwSQFp",
-        project_name="6dactive",
+        project_name="6dactive-2",
         workspace="sdat2",
     )
 
@@ -886,16 +912,17 @@ def diff_res(cfg: DictConfig) -> None:
     # we need to change the ratio of things.
     # raise NotImplementedError("Not done yet!")
     """
-    python src/models/emu6d.py init_samples=29 active_samples=1 seed=40 dryrun=false
-    python src/models/emu6d.py init_samples=1 active_samples=29 seed=61 dryrun=false
-    python src/models/emu6d.py init_samples=15 active_samples=15 seed=62 dryrun=false
-    python src/models/emu6d.py init_samples=45 active_samples=15 seed=173 dryrun=false
-    python src/models/emu6d.py init_samples=15 active_samples=45 seed=94 dryrun=false
-    python src/models/emu6d.py init_samples=30 active_samples=30 seed=95 dryrun=false
-    python src/models/emu6d.py init_samples=59 active_samples=1 seed=46 dryrun=false
-    python src/models/emu6d.py init_samples=1 active_samples=59 seed=57 dryrun=false
-    python src/models/emu6d.py init_samples=119 active_samples=1 seed=48 dryrun=false
-    python src/models/emu6d.py init_samples=1 active_samples=119 seed=135 dryrun=false
+    python src/models/emu6d.py init_samples=29 active_samples=1 seed=1040 dryrun=false
+    python src/models/emu6d.py init_samples=1 active_samples=29 seed=1061 dryrun=false
+    python src/models/emu6d.py init_samples=15 active_samples=15 seed=1062 dryrun=false
+    python src/models/emu6d.py init_samples=45 active_samples=15 seed=1173 dryrun=false
+    python src/models/emu6d.py init_samples=15 active_samples=45 seed=1094 dryrun=false
+    python src/models/emu6d.py init_samples=30 active_samples=30 seed=1095 dryrun=false
+    python src/models/emu6d.py init_samples=59 active_samples=1 seed=1046 dryrun=false
+    #
+    python src/models/emu6d.py init_samples=1 active_samples=59 seed=1057 dryrun=false
+    python src/models/emu6d.py init_samples=119 active_samples=1 seed=1048 dryrun=false
+    python src/models/emu6d.py init_samples=1 active_samples=119 seed=1135 dryrun=false
     python src/models/emu6d.py init_samples=105 active_samples=15 seed=50 dryrun=false
     python src/models/emu6d.py init_samples=90 active_samples=30 seed=391 dryrun=false
     python src/models/emu6d.py init_samples=30 active_samples=90 seed=291 dryrun=false
@@ -914,6 +941,43 @@ def diff_res(cfg: DictConfig) -> None:
     python src/models/emu6d.py init_samples=15 active_samples=15 seed=402 dryrun=false
     python src/models/emu6d.py init_samples=600 active_samples=1 seed=403 dryrun=false
     python src/models/emu6d.py init_samples=900 active_samples=1 seed=404 dryrun=false
+    python src/models/emu6d.py init_samples=1 active_samples=119 seed=1100 dryrun=false
+    """
+
+@hydra.main(config_path=CONFIG_PATH, config_name="find_max.yaml")
+def find_max(cfg: DictConfig) -> None:
+    experiment = Experiment(
+        api_key="57fHMWwvxUw6bvnjWLvRwSQFp",
+        project_name="find-max-naive",
+        workspace="sdat2",
+    )
+    sdf = SixDOFSearch(
+        seed=cfg.seed,
+        dryrun=cfg.dryrun,
+        path=cfg.path,
+        experiment=experiment,
+        place=cfg.place,
+        returns="max",
+    )
+    print("run sdf")
+    sdf.run_initial(samples=cfg.init_samples)
+    print("run sdf a")
+    sdf.setup_active(acquisition_class=ExpectedImprovement)
+    print("b")
+    # sdf.save_initial_data()
+    sdf.run_active(cfg.active_samples)
+    print("end")
+    """
+    python src/models/emu6d.py place=ansley, seed=50
+    python src/models/emu6d.py place=new_orleans seed=60
+        ansley=27,
+        new_orleans=5,
+        diamondhead=17,
+        mississippi=77,
+        atchafayala=82,
+        dulac=86,
+        akers=2,
+
     """
 
 
@@ -921,4 +985,4 @@ if __name__ == "__main__":
     # python src/models/emu6d.py samples=100 seed=31 dryrun=true
     # lhs()
     # combine_lhs()
-    diff_res()
+    find_max()

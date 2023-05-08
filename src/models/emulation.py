@@ -1,6 +1,7 @@
 """First implementation of EMUKIT emulation of ADCIRC model."""
 from typing import List, Tuple
 import os
+os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
 import shutil
 import numpy as np
 import pandas as pd
@@ -447,6 +448,7 @@ class EmulationBearingPos:
             print(i)
             self.run_loop(1)
             self.plot()
+            self.save_data()
             plt.savefig(os.path.join(self.figure_path, f"{i}.png"))
             if in_notebook():
                 plt.show()
@@ -496,6 +498,8 @@ class EmulationBearingPos:
             ds.to_netcdf(file_name)
         else:
             print("File Already Exists!")
+            os.remove(file_name)
+            ds.to_netcdf(file_name)
 
     def run_loop(self, new_iterations: int) -> None:
         self.loop.run_loop(self.func, new_iterations)
@@ -593,7 +597,7 @@ class EmulationBearingPos:
             ),
             coords=dict(a=(["a"], a_indices), b=(["b"], b_indices)),
         ).to_netcdf(
-            os.path.join(self.data_path, "plotting_data" + self.call_number + ".nc")
+            os.path.join(self.data_path, "plotting_data" + str(self.call_number) + ".nc")
         )
         # ok, now we have the data, let's plot it
 
@@ -605,8 +609,11 @@ class EmulationBearingPos:
         label_subplots(axs, override="outside")
 
         ax = axs[0, 1]
-        ax.set_title("Acq. Func.")
-        im = ax.contourf(a_mesh, b_mesh, aq_mesh)
+        ax.set_title("Acqusition Function [m]")
+        vmin = np.min(aq_mesh)
+        vmax = np.max(aq_mesh)
+        levels = np.linspace(vmin, vmax, num=400)
+        im = ax.contourf(a_mesh, b_mesh, aq_mesh, vmin=vmin, vmax=vmax, levels=levels)
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(im, cax=cax, orientation="vertical")
@@ -618,6 +625,7 @@ class EmulationBearingPos:
         cmap = plt.get_cmap("viridis")
         vmin = np.min(init_y)
         vmax = np.max(init_y)
+        levels = np.linspace(vmin, vmax, num=400)
 
         im = ax.scatter(
             init_x[:, 0],
@@ -626,7 +634,7 @@ class EmulationBearingPos:
             vmin=vmin,
             vmax=vmax,
             marker="x",
-            label="original data points",
+            label="Original data points",
         )
         ax.scatter(
             active_x[:, 0],
@@ -635,7 +643,7 @@ class EmulationBearingPos:
             vmin=vmin,
             vmax=vmax,
             marker="+",
-            label="new data points",
+            label="New data points",
         )
         divider = make_axes_locatable(ax)
         ax.set_title("Samples [m]")
@@ -645,7 +653,10 @@ class EmulationBearingPos:
 
         ax = axs[1, 0]
         ax.set_title("Prediction Mean [m]")
-        im = ax.contourf(a_mesh, b_mesh, mean_mesh)  # , vmin=0, vmax=5.6)
+        vmin = np.min(mean_mesh)
+        vmax = np.max(mean_mesh)
+        levels = np.linspace(vmin, vmax, num=400)
+        im = ax.contourf(a_mesh, b_mesh, mean_mesh, vmin=vmin, vmax=vmax, levels=levels)  # , vmin=0, vmax=5.6)
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(im, cax=cax, orientation="vertical")
@@ -653,7 +664,10 @@ class EmulationBearingPos:
         ax.set_xlabel("Bearing [$^{\circ}$]")
         ax = axs[1, 1]
         ax.set_title("Prediction $\sigma$ [m]")
-        im = ax.contourf(a_mesh, b_mesh, std_mesh)
+        vmin = np.min(std_mesh)
+        vmax = np.max(std_mesh)
+        levels = np.linspace(vmin, vmax, num=400)
+        im = ax.contourf(a_mesh, b_mesh, std_mesh, vmin=vmin, vmax=vmax, levels=levels)
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(im, cax=cax, orientation="vertical")
@@ -677,7 +691,10 @@ def poi_long():
 
 def mves():
     EmulationBearingPos(
-        acqusition_class=MaxValueEntropySearch, path="emulation_angle_pos_mves"
+        acqusition_class=MaxValueEntropySearch, path="emulation_angle_pos_mves",
+        init_num=100,
+        active_num=50,
+        seed=101
     )
 
 
@@ -736,10 +753,10 @@ def mat32var():
 
 def mat32expimprovement():
     e = EmulationBearingPos(
-        path="emulation_angle_pos_newei",
-        seed=100,
+        path="emulation_angle_pos_newei7",
+        seed=107,
         init_num=100,
-        active_num=50,
+        active_num=30,
         kernel_class=Matern32,
         acqusition_class=ExpectedImprovement,
     )
@@ -749,8 +766,8 @@ def mat32expimprovement():
 
 def test():
     e = EmulationBearingPos(
-        path="emulation_angle_pos_t",
-        seed=1,
+        path="emulation_angle_pos_t3",
+        seed=2,
         init_num=1,
         active_num=1,
         kernel_class=Matern32,
@@ -758,6 +775,7 @@ def test():
     )
     e.setup_emulation()
     e.active_learning()
+    # e.save_initial_data()
 
 
 if __name__ == "__main__":
@@ -765,5 +783,6 @@ if __name__ == "__main__":
     # example_animation()
     # example_plot()
     plot_defaults()
-    #  mat32expimprovement()
-    test()
+    mat32expimprovement()
+    # mves()
+    # test()
