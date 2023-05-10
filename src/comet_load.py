@@ -309,6 +309,13 @@ def active_learning_reliability_plot() -> None:
         project="find-max-naive",
     )
     print(ds_list)
+
+    ds_list = loop_through_experiment(
+        [("INIT_SAMPLES", int), ("ACTIVE_SAMPLES", int)],
+        workspace="sdat2",
+        project="find-max-naive",
+    )
+    print(ds_list)
     ends_ds_list = []
     for i in range(len(ds_list)):
         # print(ds_list[0].isel(point=-1))
@@ -324,14 +331,37 @@ def active_learning_reliability_plot() -> None:
     ends_ds.to_netcdf(os.path.join(DATA_PATH, "ends_nm_ds.nc"))
 
 
+def ansley_plot() -> None:
+    plot_defaults()
+    api_out = comet_api.get_metrics_for_chart(
+        [exp.id for exp in comet_api.get("sdat2", "find-max-naive")],
+        # ["angle", "speed", "point_east", "rmax", "pc", "xn", "max", "step"],
+        ["max"],
+        ["init_samples", "active_samples", "seed"],
+    )
+    for i, exp in enumerate(api_out):
+        plt.plot(api_out[exp]["metrics"][0]["values"], label=f"a{i+1}")
+    api_out = comet_api.get_metrics_for_chart(
+        [exp.id for exp in comet_api.get("sdat2", "find-max-full-active")],
+        # ["angle", "speed", "point_east", "rmax", "pc", "xn", "max", "step"],
+        ["max"],
+        ["init_samples", "active_samples", "seed"],
+    )
+    for i, exp in enumerate(api_out):
+        plt.plot(api_out[exp]["metrics"][0]["values"], "--", label=f"b{i+1}")
+    plt.legend()
+    plt.xlabel("Number of Samples")
+    plt.ylabel("Maximum Surge Height [m]")
+    plt.savefig(os.path.join(FIGURE_PATH, "max_surge_ansley.png"))
+
+
 if __name__ == "__main__":
     # python src/comet_load.py
     # ds_list = loop_through_experiment(METRICS)
     # plot_inum_metrics(ds_list)
     # plot_final_metrics(ds_list)
     # rose_plot()
-    active_learning_reliability_plot()
-
+    ansley_plot()
     # loop_through_project()
     # loop_through_experiment()
     # python src/comet_load.py
