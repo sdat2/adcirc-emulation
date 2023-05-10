@@ -353,6 +353,7 @@ def ansley_plot() -> None:
     plt.xlabel("Number of Samples")
     plt.ylabel("Maximum Surge Height [m]")
     plt.savefig(os.path.join(FIGURE_PATH, "max_surge_ansley.png"))
+    plt.clf()
 
 
 def max_plots() -> None:
@@ -364,11 +365,12 @@ def max_plots() -> None:
         ["init_samples", "active_samples", "seed"],
     )
     for i, exp in enumerate(api_out):
-        plt.plot(api_out[exp]["metrics"][0]["values"], label=f"a{i+1}")
+        plt.plot(api_out[exp]["metrics"][0]["values"], label=f"{i+1}")
     plt.legend()
     plt.xlabel("Number of Samples")
     plt.ylabel("Maximum Surge Height [m]")
-    plt.savefig(os.path.join(FIGURE_PATH, "max_surge_.png"))
+    plt.savefig(os.path.join(FIGURE_PATH, "max_surge_group.png"))
+    plt.clf()
 
 
 # def ansley_plot()
@@ -381,6 +383,7 @@ if __name__ == "__main__":
     # plot_final_metrics(ds_list)
     # rose_plot()
     ansley_plot()
+    max_plots()
     # loop_through_project()
     # loop_through_experiment()
     # python src/comet_load.py
