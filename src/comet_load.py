@@ -48,16 +48,18 @@ def loop_through_experiment(
     ds_list = []
     for exp in comet_api.get(workspace, project):
         # exp = comet_api.get(workspace, project, experiment)
+        print(dir(exp))
         metric_d = {}
         for metric, typ in metrics:
             metrics_l = exp.get_metrics(metric)
-            metric_l = [typ(metrics_l[i]["metricValue"]) for i in range(len(metrics))]
+            metric_l = [typ(metrics_l[i]["metricValue"]) for i in range(len(metrics_l))]
             metric_d[metric] = (["point"], metric_l)
             print(exp.id, metric, "len(metrics)", len(metrics_l))
             # print("metrics", metrics)
             # for i in range(len(metrics)):
             #    print("metrics[" + str(i) + "]", metrics[i]["metricValue"])
         # print("metrics[0]", metrics[0]["metricValue"])
+        # print(metric_d)
         ds = xr.Dataset(data_vars=metric_d)
         ds_list.append(ds)
 
@@ -286,6 +288,9 @@ def rose_plot():
 
 
 def active_learning_reliability_plot() -> None:
+    # normalize the data
+    # plot settings on rose plot
+    # plot convergence.
     m = [
         # ("inum", int),
         # ("anum", int),
@@ -296,6 +301,7 @@ def active_learning_reliability_plot() -> None:
         ("pc", float),
         ("xn", float),
         ("max", float),
+        ("step", int),
     ]
     ds_list = loop_through_experiment(
         m,
