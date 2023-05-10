@@ -355,6 +355,22 @@ def ansley_plot() -> None:
     plt.savefig(os.path.join(FIGURE_PATH, "max_surge_ansley.png"))
 
 
+def max_plots() -> None:
+    plot_defaults()
+    api_out = comet_api.get_metrics_for_chart(
+        [exp.id for exp in comet_api.get("sdat2", "find-max-2")],
+        # ["angle", "speed", "point_east", "rmax", "pc", "xn", "max", "step"],
+        ["max"],
+        ["init_samples", "active_samples", "seed"],
+    )
+    for i, exp in enumerate(api_out):
+        plt.plot(api_out[exp]["metrics"][0]["values"], label=f"a{i+1}")
+    plt.legend()
+    plt.xlabel("Number of Samples")
+    plt.ylabel("Maximum Surge Height [m]")
+    plt.savefig(os.path.join(FIGURE_PATH, "max_surge_.png"))
+
+
 # def ansley_plot()
 
 
