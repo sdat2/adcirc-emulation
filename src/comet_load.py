@@ -250,7 +250,7 @@ def rose_plot():
     ax = plt.subplot(111, polar=True)
 
     # If you want the first axis to be on top:
-    ax.set_theta_offset(pi / 2)
+    ax.set_theta_offset(math.pi / 2)
     ax.set_theta_direction(-1)
 
     # Draw one axe per variable + add labels
@@ -285,15 +285,10 @@ def rose_plot():
     plt.show()
 
 
-if __name__ == "__main__":
-    # python src/comet_load.py
-    # ds_list = loop_through_experiment(METRICS)
-    # plot_inum_metrics(ds_list)
-    # plot_final_metrics(ds_list)
-
+def active_learning_reliability_plot() -> None:
     m = [
-        #("inum", int),
-        #("anum", int),
+        # ("inum", int),
+        # ("anum", int),
         ("angle", float),
         ("speed", float),
         ("point_east", float),
@@ -302,18 +297,34 @@ if __name__ == "__main__":
         ("xn", float),
         ("max", float),
     ]
-    for mi in m:
-        print(mi)
-        print(len(mi))
-
-    for a, b in m:
-        print(a, b)
-
     ds_list = loop_through_experiment(
         m,
         workspace="sdat2",
         project="find-max-naive",
     )
+    print(ds_list)
+    ends_ds_list = []
+    for i in range(len(ds_list)):
+        # print(ds_list[0].isel(point=-1))
+        ends_ds_list.append(
+            ds_list[i]
+            .isel(point=-1)
+            .expand_dims(dim={"experiment": 1}, axis=-1)
+            .assign_coords(experiment=("experiment", [i]))
+        )
+    print("ends_ds_list", ends_ds_list)
+    ends_ds = xr.merge(ends_ds_list)
+    print("ends_ds", ends_ds)
+
+
+if __name__ == "__main__":
+    # python src/comet_load.py
+    # ds_list = loop_through_experiment(METRICS)
+    # plot_inum_metrics(ds_list)
+    # plot_final_metrics(ds_list)
+    # rose_plot()
+    active_learning_reliability_plot()
+
     # loop_through_project()
     # loop_through_experiment()
     # python src/comet_load.py
