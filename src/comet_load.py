@@ -9,7 +9,7 @@ import comet_ml
 from comet_ml import API
 import xarray as xr
 import matplotlib.pyplot as plt
-from src.constants import FIGURE_PATH
+from src.constants import FIGURE_PATH, DATA_PATH
 from sithom.plot import plot_defaults, label_subplots, get_dim
 
 comet_ml.config.save(api_key="57fHMWwvxUw6bvnjWLvRwSQFp")
@@ -315,6 +315,7 @@ def active_learning_reliability_plot() -> None:
     print("ends_ds_list", ends_ds_list)
     ends_ds = xr.merge(ends_ds_list)
     print("ends_ds", ends_ds)
+    ends_ds.to_netcdf(os.path.join(DATA_PATH, "ends_nm_ds.nc"))
 
 
 if __name__ == "__main__":
