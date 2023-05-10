@@ -2,8 +2,9 @@
 Comet load.py
 """
 import os
+import math
 import numpy as np
-from typing import List
+from typing import List, Tuple, Callable
 import comet_ml
 from comet_ml import API
 import xarray as xr
@@ -17,7 +18,7 @@ comet_api = API()
 print(comet_api.get())
 
 
-def loop_through_project():
+def loop_through_project() -> None:
     workspace = "sdat2"  # /6dactive"
     project = "6dactive"
 
@@ -28,27 +29,31 @@ def loop_through_project():
         print(comet_api.get(workspace, project, exp.id))
 
 
-def loop_through_experiment() -> List[xr.Dataset]:
-    workspace = "sdat2"  # /6dactive"
-    project = "6dactive"
+METRICS = [
+    ("inum", int),
+    ("anum", int),
+    ("mae", float),
+    ("rmse", float),
+    ("r2", float),
+]
+
+
+def loop_through_experiment(
+    metrics: List[Tuple[str, Callable]],
+    workspace: str = "sdat2",
+    project: str = "6dactive",
+) -> List[xr.Dataset]:
     # experiment = "f5e7f5b6d8c34f9b9c3d7e5a6d2f2c3"
     # experiment = "261f1786b8ab496e90170d593deba88f"
     ds_list = []
     for exp in comet_api.get(workspace, project):
-
         # exp = comet_api.get(workspace, project, experiment)
         metric_d = {}
-        for metric, typ in [
-            ("inum", int),
-            ("anum", int),
-            ("mae", float),
-            ("rmse", float),
-            ("r2", float),
-        ]:
-            metrics = exp.get_metrics(metric)
-            metric_l = [typ(metrics[i]["metricValue"]) for i in range(len(metrics))]
+        for metric, typ in metrics:
+            metrics_l = exp.get_metrics(metric)
+            metric_l = [typ(metrics_l[i]["metricValue"]) for i in range(len(metrics))]
             metric_d[metric] = (["point"], metric_l)
-            print(exp.id, metric, "len(metrics)", len(metrics))
+            print(exp.id, metric, "len(metrics)", len(metrics_l))
             # print("metrics", metrics)
             # for i in range(len(metrics)):
             #    print("metrics[" + str(i) + "]", metrics[i]["metricValue"])
@@ -210,11 +215,14 @@ def plot_final_metrics(ds_list: List[xr.Dataset]) -> None:
     plt.savefig(os.path.join(FIGURE_PATH, "6dactive", "frac_r2.png"))
 
 
+def get_optima():
+    pass
+
+
 def rose_plot():
+    # https://www.python-graph-gallery.com/391-radar-chart-with-several-individuals
     # Libraries
-    import matplotlib.pyplot as plt
     import pandas as pd
-    from math import pi
 
     # Set data
     df = pd.DataFrame(
@@ -235,7 +243,7 @@ def rose_plot():
     N = len(categories)
 
     # What will be the angle of each axis in the plot? (we divide the plot / number of variable)
-    angles = [n / float(N) * 2 * pi for n in range(N)]
+    angles = [n / float(N) * 2 * math.pi for n in range(N)]
     angles += angles[:1]
 
     # Initialise the spider plot
@@ -279,9 +287,33 @@ def rose_plot():
 
 if __name__ == "__main__":
     # python src/comet_load.py
-    ds_list = loop_through_experiment()
-    plot_inum_metrics(ds_list)
-    plot_final_metrics(ds_list)
+    # ds_list = loop_through_experiment(METRICS)
+    # plot_inum_metrics(ds_list)
+    # plot_final_metrics(ds_list)
+
+    m = [
+        #("inum", int),
+        #("anum", int),
+        ("angle", float),
+        ("speed", float),
+        ("point_east", float),
+        ("rmax", float),
+        ("pc", float),
+        ("xn", float),
+        ("max", float),
+    ]
+    for mi in m:
+        print(mi)
+        print(len(mi))
+
+    for a, b in m:
+        print(a, b)
+
+    ds_list = loop_through_experiment(
+        m,
+        workspace="sdat2",
+        project="find-max-naive",
+    )
     # loop_through_project()
     # loop_through_experiment()
     # python src/comet_load.py
