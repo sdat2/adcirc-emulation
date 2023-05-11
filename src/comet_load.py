@@ -370,9 +370,6 @@ def get_evolution(experiment="find-max-2"):
     )
 
 
-import matplotlib.pyplot as plt
-
-
 def update_projection(ax, axi, projection="3d", fig=None):
     if fig is None:
         fig = plt.gcf()
@@ -382,18 +379,105 @@ def update_projection(ax, axi, projection="3d", fig=None):
 
 
 def max_plots() -> None:
+
+    line_styles = ["b-", "r-", "g-", "y--", "k--", "m--", "c--"]
     plot_defaults()
     fig, axs = plt.subplots(1, 2)  #  # subplot_kw=dict(projection="polar"))
     api_out = get_evolution("find-max-2")
     for i, exp in enumerate(api_out):
-        axs[0].plot(api_out[exp]["metrics"][0]["values"], label=f"{i+1}")
+        axs[0].plot(
+            [x + 1 for x in range(50)],
+            api_out[exp]["metrics"][0]["values"],
+            line_styles[i],
+            label=f"{i+1}",
+        )
     plt.legend()
+    axs[0].set_xlim(1, 50)
     axs[0].set_xlabel("Number of Samples")
     axs[0].set_ylabel("Maximum Surge Height [m]")
     update_projection(axs, axs.flat[1], "polar")
+    max_d = get_max("find-max-2")
+    print(max_d)
+    from omegaconf import OmegaConf
+    from src.constants import CONFIG_PATH
+
+    config = OmegaConf.load(os.path.join(CONFIG_PATH, "sixd.yaml"))
+    diffs = {i: config[i].max - config[i].min for i in config}
+    mins = {i: config[i].min for i in config}
+    print(diffs)
+    print(mins)
+    for i in diffs:
+        for j in range(len(max_d[i])):
+            max_d[i][j] = (max_d[i][j] - mins[i]) / diffs[i]
+
+    print(max_d)
+    slim_d = {}
+
+    for i in mins:
+        slim_d[i] = max_d[i]
+
+    print(slim_d)
+    del slim_d["speed"]
+    del slim_d["pc"]
+    del slim_d["rmax"]
+
+    # number of variable
+    categories = list([key for key in slim_d])
+    N = len(categories)
+
+    # What will be the angle of each axis in the plot? (we divide the plot / number of variable)
+    angles = [n / float(N) * 2 * math.pi for n in range(N)]
+    angles += angles[:1]
+
+    # Initialise the spider plot
+    ax = axs.flat[1]
+
+    # If you want the first axis to be on top:
+    ax.set_theta_offset(math.pi / 2)
+    ax.set_theta_direction(-1)
+
+    # Draw one axe per variable + add labels
+    plt.xticks(angles[:-1], categories)
+
+    # Draw ylabels
+    ax.set_rlabel_position(0)
+    plt.yticks([0, 0.5, 1], ["0", "0.5", "1"], color="grey", size=7)
+    plt.ylim(0, 1)
+
+    # ------- PART 2: Add plots
+
+    # Plot each individual = each line of the data
+    # I don't make a loop, because plotting more than 3 groups makes the chart unreadable
+
+    # Ind1
+    # values = df.loc[0].drop("group").values.flatten().tolist()
+    # values += values[:1]
+    places_d = dict(
+        ansley=27,
+        new_orleans=5,
+        diamondhead=17,
+        mississippi=77,
+        atchafayala=82,
+        dulac=86,
+        akers=2,
+    )
+    places_l = [key for key in places_d]
+    for i in range(len(slim_d["xn"])):
+        values = [slim_d[key][i] for key in slim_d]
+        values += values[:1]
+        ax.plot(angles, values, line_styles[i], linewidth=1, label=places_l[i])
+    # ax.plot(angles, values, linewidth=1, linestyle="solid", label="group A")
+    # ax.fill(angles, values, "b", alpha=0.1)
+
+    # Add legend
+    plt.legend(
+        loc="lower center", bbox_to_anchor=(0.5, -0.5), ncol=2
+    )  # loc="upper right", bbox_to_anchor=(0.1, 0.1))
+
     # ax.flat[i].set_title(pro_i)
     try:
-        axs[1].grid(True)
+        # axs[1].grid(True)
+        pass
     except:
         pass
     plt.savefig(os.path.join(FIGURE_PATH, "max_surge_group.png"))
