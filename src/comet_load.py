@@ -5,6 +5,7 @@ import os
 import math
 import numpy as np
 from typing import List, Tuple, Callable
+import collections
 import comet_ml
 from comet_ml import API
 import xarray as xr
@@ -333,20 +334,10 @@ def active_learning_reliability_plot() -> None:
 
 def ansley_plot() -> None:
     plot_defaults()
-    api_out = comet_api.get_metrics_for_chart(
-        [exp.id for exp in comet_api.get("sdat2", "find-max-naive")],
-        # ["angle", "speed", "point_east", "rmax", "pc", "xn", "max", "step"],
-        ["max"],
-        ["init_samples", "active_samples", "seed"],
-    )
+    api_out = get_evolution("find-max-naive")
     for i, exp in enumerate(api_out):
         plt.plot(api_out[exp]["metrics"][0]["values"], label=f"a{i+1}")
-    api_out = comet_api.get_metrics_for_chart(
-        [exp.id for exp in comet_api.get("sdat2", "find-max-full-active")],
-        # ["angle", "speed", "point_east", "rmax", "pc", "xn", "max", "step"],
-        ["max"],
-        ["init_samples", "active_samples", "seed"],
-    )
+    api_out = get_evolution("find-max-full-active")
     for i, exp in enumerate(api_out):
         plt.plot(api_out[exp]["metrics"][0]["values"], "--", label=f"b{i+1}")
     plt.legend()
@@ -356,21 +347,58 @@ def ansley_plot() -> None:
     plt.clf()
 
 
-def max_plots() -> None:
-    plot_defaults()
+def get_max(experiment="find-max-2") -> collections.defaultdict:
     api_out = comet_api.get_metrics_for_chart(
-        [exp.id for exp in comet_api.get("sdat2", "find-max-2")],
+        [exp.id for exp in comet_api.get("sdat2", experiment)],
+        ["angle", "speed", "point_east", "rmax", "pc", "xn", "max", "step"],
+        ["init_samples", "active_samples", "seed"],
+    )
+    out_d = collections.defaultdict(list)
+    for i, exp in enumerate(api_out):
+        for metric in api_out[exp]["metrics"]:
+            out_d[metric["metricName"]].append(metric["values"][-1])
+        out_d["id"].append(exp)
+    return out_d
+
+
+def get_evolution(experiment="find-max-2"):
+    return comet_api.get_metrics_for_chart(
+        [exp.id for exp in comet_api.get("sdat2", experiment)],
         # ["angle", "speed", "point_east", "rmax", "pc", "xn", "max", "step"],
         ["max"],
         ["init_samples", "active_samples", "seed"],
     )
+
+
+import matplotlib.pyplot as plt
+
+
+def update_projection(ax, axi, projection="3d", fig=None):
+    if fig is None:
+        fig = plt.gcf()
+    rows, cols, start, stop = axi.get_subplotspec().get_geometry()
+    ax.flat[start].remove()
+    ax.flat[start] = fig.add_subplot(rows, cols, start + 1, projection=projection)
+
+
+def max_plots() -> None:
+    plot_defaults()
+    fig, axs = plt.subplots(1, 2)  #  # subplot_kw=dict(projection="polar"))
+    api_out = get_evolution("find-max-2")
     for i, exp in enumerate(api_out):
-        plt.plot(api_out[exp]["metrics"][0]["values"], label=f"{i+1}")
+        axs[0].plot(api_out[exp]["metrics"][0]["values"], label=f"{i+1}")
     plt.legend()
-    plt.xlabel("Number of Samples")
-    plt.ylabel("Maximum Surge Height [m]")
+    axs[0].set_xlabel("Number of Samples")
+    axs[0].set_ylabel("Maximum Surge Height [m]")
+    update_projection(axs, axs.flat[1], "polar")
+    # ax.flat[i].set_title(pro_i)
+    try:
+        axs[1].grid(True)
+    except:
+        pass
     plt.savefig(os.path.join(FIGURE_PATH, "max_surge_group.png"))
     plt.clf()
+    print(get_max("find-max-2"))
 
 
 # def ansley_plot()
