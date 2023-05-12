@@ -470,9 +470,9 @@ def max_plots() -> None:
     # ax.fill(angles, values, "b", alpha=0.1)
 
     # Add legend
-    plt.legend(
-        loc="lower center", bbox_to_anchor=(0.5, -0.5), ncol=2
-    )  # loc="upper right", bbox_to_anchor=(0.1, 0.1))
+    # plt.legend(
+    #    loc="lower center", bbox_to_anchor=(0.5, -0.5), ncol=2
+    # )  # loc="upper right", bbox_to_anchor=(0.1, 0.1))
 
     # ax.flat[i].set_title(pro_i)
     try:
