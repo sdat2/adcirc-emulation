@@ -20,6 +20,7 @@ DATA_PATH: str = os.path.join(PROJECT_PATH, "data")
 REPORT_PATH: str = os.path.join(PROJECT_PATH, "report")
 FIGURE_PATH: str = os.path.join(REPORT_PATH, "no")
 ROOT: str = os.path.dirname(PROJECT_PATH)
+SECRET_PATH = os.path.join(ROOT, ".secret")
 ADCIRC_EXE: str = os.path.join(ROOT, "adcirc-swan", "adcirc", "work", "adcirc")
 # ADCIRC_EXE: str = "/Users/simon/adcirc-swan/adcircpy/exe/adcirc"
 

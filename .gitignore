@@ -7,6 +7,12 @@ __pycache__/
 
 # Local data storage.
 data/
+artifacts/
+*.nc
+*.gif
+
+# secret api keys
+.secret/
 
 # Distribution / packaging
 .Python
