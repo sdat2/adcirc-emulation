@@ -10,7 +10,8 @@ import comet_ml
 from comet_ml import API
 import xarray as xr
 import matplotlib.pyplot as plt
-from src.constants import FIGURE_PATH, DATA_PATH
+from omegaconf import OmegaConf
+from src.constants import FIGURE_PATH, DATA_PATH, CONFIG_PATH
 from sithom.plot import plot_defaults, label_subplots, get_dim
 
 comet_ml.config.save(api_key="57fHMWwvxUw6bvnjWLvRwSQFp")
@@ -335,14 +336,18 @@ def active_learning_reliability_plot() -> None:
 def ansley_plot() -> None:
     plot_defaults()
     api_out = get_evolution("find-max-naive")
+    fig, axs = plt.subplots(1, 2)  # #figsize=get_dim(ratio=2))
+    update_projection(axs, axs.flat[1], "polar")
+    xs = [x + 1 for x in range(50)]
     for i, exp in enumerate(api_out):
-        plt.plot(api_out[exp]["metrics"][0]["values"], label=f"a{i+1}")
+        axs[0].plot(xs, api_out[exp]["metrics"][0]["values"], label=f"a{i+1}")
     api_out = get_evolution("find-max-full-active")
     for i, exp in enumerate(api_out):
-        plt.plot(api_out[exp]["metrics"][0]["values"], "--", label=f"b{i+1}")
-    plt.legend()
-    plt.xlabel("Number of Samples")
-    plt.ylabel("Maximum Surge Height [m]")
+        axs[0].plot(xs, api_out[exp]["metrics"][0]["values"], "--", label=f"b{i+1}")
+    axs[0].legend()
+    axs[0].set_xlim(1, 50)
+    axs[0].set_xlabel("Number of Samples")
+    axs[0].set_ylabel("Maximum Surge Height [m]")
     plt.savefig(os.path.join(FIGURE_PATH, "max_surge_ansley.png"))
     plt.clf()
 
@@ -378,6 +383,29 @@ def update_projection(ax, axi, projection="3d", fig=None):
     ax.flat[start] = fig.add_subplot(rows, cols, start + 1, projection=projection)
 
 
+def normalize_max_d(max_d: dict) -> dict:
+    config = OmegaConf.load(os.path.join(CONFIG_PATH, "sixd.yaml"))
+    diffs = {i: config[i].max - config[i].min for i in config}
+    mins = {i: config[i].min for i in config}
+    print(diffs)
+    print(mins)
+    for i in diffs:
+        for j in range(len(max_d[i])):
+            max_d[i][j] = (max_d[i][j] - mins[i]) / diffs[i]
+
+    slim_d = {}
+
+    for i in mins:
+        slim_d[i] = max_d[i]
+
+    print(slim_d)
+    del slim_d["speed"]
+    del slim_d["pc"]
+    del slim_d["rmax"]
+
+    return slim_d
+
+
 def max_plots() -> None:
 
     line_styles = ["b-", "r-", "g-", "y--", "k--", "m--", "c--"]
@@ -396,30 +424,7 @@ def max_plots() -> None:
     axs[0].set_xlabel("Number of Samples")
     axs[0].set_ylabel("Maximum Surge Height [m]")
     update_projection(axs, axs.flat[1], "polar")
-    max_d = get_max("find-max-2")
-    print(max_d)
-    from omegaconf import OmegaConf
-    from src.constants import CONFIG_PATH
-
-    config = OmegaConf.load(os.path.join(CONFIG_PATH, "sixd.yaml"))
-    diffs = {i: config[i].max - config[i].min for i in config}
-    mins = {i: config[i].min for i in config}
-    print(diffs)
-    print(mins)
-    for i in diffs:
-        for j in range(len(max_d[i])):
-            max_d[i][j] = (max_d[i][j] - mins[i]) / diffs[i]
-
-    print(max_d)
-    slim_d = {}
-
-    for i in mins:
-        slim_d[i] = max_d[i]
-
-    print(slim_d)
-    del slim_d["speed"]
-    del slim_d["pc"]
-    del slim_d["rmax"]
+    slim_d = normalize_max_d(get_max("find-max-2"))
 
     # number of variable
     categories = list([key for key in slim_d])
