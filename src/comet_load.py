@@ -351,7 +351,7 @@ def ansley_plot() -> None:
         axs[0].plot(
             xs, api_out[exp]["metrics"][0]["values"], LINES_ACTIVE[i], label=f"b{i+1}"
         )
-    axs[0].legend()
+    # axs[0].legend()
     axs[0].set_xlim(1, 50)
     axs[0].set_xlabel("Number of Samples")
     axs[0].set_ylabel("Maximum Surge Height [m]")
