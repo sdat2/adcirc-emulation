@@ -12,21 +12,8 @@ import wandb
 from sithom.plot import plot_defaults, lim, label_subplots
 from sithom.place import BoundingBox
 from sithom.time import timeit
-from src.constants import NO_BBOX, NEW_ORLEANS, FIGURE_PATH, DATA_PATH
+from src.constants import NO_BBOX, NEW_ORLEANS, FIGURE_PATH, DATA_PATH, FEATURE_LIST, LABEL_LIST, SYMBOL_LIST, LABEL_DICT
 from src.preprocessing.sel import trim_tri
-
-
-FEATURE_LIST = ["angle", "speed", "point_east", "rmax", "pc", "xn"]
-LABEL_LIST = [
-    "Bearing, $\chi$",
-    "Translation Speed, $v_t$",
-    "Longitude Displacement, $c$",
-    "Radius of Maximum Wind, $r_{\mathrm{max}}$",
-    "Central Pressure, $p_c$",
-    "Decay Exponent, $x_n$",
-]
-SYMBOL_LIST = ["$\chi$", "$v_t$", "$c$", "$r_{\mathrm{max}}$", "$p_c$", "$x_n$"]
-LABEL_DICT = {FEATURE_LIST[i]: LABEL_LIST[i] for i in range(len(FEATURE_LIST))}
 # get data from weights and biases
 
 

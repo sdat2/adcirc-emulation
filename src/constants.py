@@ -85,3 +85,18 @@ ECMWF_WATER_VAR: List[str] = [
 
 # dateformat string.
 DATEFORMAT: str = "%Y-%m-%d"
+
+
+# plotting defaults
+FEATURE_LIST = ["angle", "speed", "point_east", "rmax", "pc", "xn"]
+LABEL_LIST = [
+    "Bearing, $\chi$",
+    "Translation Speed, $v_t$",
+    "Longitude Displacement, $c$",
+    "Radius of Maximum Wind, $r_{\mathrm{max}}$",
+    "Central Pressure, $p_c$",
+    "Decay Exponent, $x_n$",
+]
+SYMBOL_LIST = ["$\chi$", "$v_t$", "$c$", "$r_{\mathrm{max}}$", "$p_c$", "$x_n$"]
+LABEL_DICT = {FEATURE_LIST[i]: LABEL_LIST[i] for i in range(len(FEATURE_LIST))}
+SYMBOL_DICT = {FEATURE_LIST[i]: SYMBOL_LIST[i] for i in range(len(FEATURE_LIST))}

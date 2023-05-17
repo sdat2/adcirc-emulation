@@ -9,9 +9,10 @@ import collections
 import comet_ml
 from comet_ml import API
 import xarray as xr
+import matplotlib
 import matplotlib.pyplot as plt
 from omegaconf import OmegaConf
-from src.constants import FIGURE_PATH, DATA_PATH, CONFIG_PATH
+from src.constants import FIGURE_PATH, DATA_PATH, CONFIG_PATH, SYMBOL_DICT
 from sithom.plot import plot_defaults, label_subplots, get_dim
 
 comet_ml.config.save(api_key="57fHMWwvxUw6bvnjWLvRwSQFp")
@@ -334,20 +335,31 @@ def active_learning_reliability_plot() -> None:
 
 
 def ansley_plot() -> None:
+    LINES_MIX = ["b-", "r-", "g-", "m-", "c-", "k-"]
+    LINES_ACTIVE = ["y--", "k--", "m--", "c--", "y..", "k..", "m..", "c.."]
     plot_defaults()
     api_out = get_evolution("find-max-naive")
     fig, axs = plt.subplots(1, 2)  # #figsize=get_dim(ratio=2))
     update_projection(axs, axs.flat[1], "polar")
     xs = [x + 1 for x in range(50)]
     for i, exp in enumerate(api_out):
-        axs[0].plot(xs, api_out[exp]["metrics"][0]["values"], label=f"a{i+1}")
+        axs[0].plot(
+            xs, api_out[exp]["metrics"][0]["values"], LINES_MIX[i], label=f"a{i+1}"
+        )
     api_out = get_evolution("find-max-full-active")
     for i, exp in enumerate(api_out):
-        axs[0].plot(xs, api_out[exp]["metrics"][0]["values"], "--", label=f"b{i+1}")
+        axs[0].plot(
+            xs, api_out[exp]["metrics"][0]["values"], LINES_ACTIVE[i], label=f"b{i+1}"
+        )
     axs[0].legend()
     axs[0].set_xlim(1, 50)
     axs[0].set_xlabel("Number of Samples")
     axs[0].set_ylabel("Maximum Surge Height [m]")
+    slim_d = normalize_max_d(get_max("find-max-naive"))
+    plot_slim_d(slim_d, axs.flat[1], LINES_MIX)
+    slim_d = normalize_max_d(get_max("find-max-full-active"))
+    plot_slim_d(slim_d, axs.flat[1], LINES_ACTIVE)
+    label_subplots(axs)
     plt.savefig(os.path.join(FIGURE_PATH, "max_surge_ansley.png"))
     plt.clf()
 
@@ -399,9 +411,9 @@ def normalize_max_d(max_d: dict) -> dict:
         slim_d[i] = max_d[i]
 
     print(slim_d)
-    del slim_d["speed"]
-    del slim_d["pc"]
-    del slim_d["rmax"]
+    # del slim_d["speed"]
+    # del slim_d["pc"]
+    # del slim_d["rmax"]
 
     return slim_d
 
@@ -423,9 +435,31 @@ def max_plots() -> None:
     axs[0].set_xlim(1, 50)
     axs[0].set_xlabel("Number of Samples")
     axs[0].set_ylabel("Maximum Surge Height [m]")
-    update_projection(axs, axs.flat[1], "polar")
     slim_d = normalize_max_d(get_max("find-max-2"))
+    update_projection(axs, axs.flat[1], "polar")
+    plot_slim_d(slim_d, axs.flat[1], line_styles)
 
+    # ax.plot(angles, values, linewidth=1, linestyle="solid", label="group A")
+    # ax.fill(angles, values, "b", alpha=0.1)
+
+    # Add legend
+    # plt.legend(
+    #    loc="lower center", bbox_to_anchor=(0.5, -0.5), ncol=2
+    # )  # loc="upper right", bbox_to_anchor=(0.1, 0.1))
+
+    # ax.flat[i].set_title(pro_i)
+    try:
+        # axs[1].grid(True)
+        pass
+    except:
+        pass
+    label_subplots(axs)  # , y_pos=0.7, x_pos=0.05, fontsize=12)
+    plt.savefig(os.path.join(FIGURE_PATH, "max_surge_group.png"))
+    plt.clf()
+    print(get_max("find-max-2"))
+
+
+def plot_slim_d(slim_d: dict, ax: matplotlib.axes.Axes, line_styles: List[str]):
     # number of variable
     categories = list([key for key in slim_d])
     N = len(categories)
@@ -435,19 +469,18 @@ def max_plots() -> None:
     angles += angles[:1]
 
     # Initialise the spider plot
-    ax = axs.flat[1]
 
     # If you want the first axis to be on top:
     ax.set_theta_offset(math.pi / 2)
     ax.set_theta_direction(-1)
 
     # Draw one axe per variable + add labels
-    plt.xticks(angles[:-1], categories)
+    plt.xticks(angles[:-1], [SYMBOL_DICT[i] for i in categories])
 
     # Draw ylabels
     ax.set_rlabel_position(0)
     plt.yticks([0, 0.5, 1], ["0", "0.5", "1"], color="grey", size=7)
-    plt.ylim(0, 1)
+    plt.ylim(-0.2, 1)
 
     # ------- PART 2: Add plots
 
@@ -471,23 +504,6 @@ def max_plots() -> None:
         values = [slim_d[key][i] for key in slim_d]
         values += values[:1]
         ax.plot(angles, values, line_styles[i], linewidth=1, label=places_l[i])
-    # ax.plot(angles, values, linewidth=1, linestyle="solid", label="group A")
-    # ax.fill(angles, values, "b", alpha=0.1)
-
-    # Add legend
-    # plt.legend(
-    #    loc="lower center", bbox_to_anchor=(0.5, -0.5), ncol=2
-    # )  # loc="upper right", bbox_to_anchor=(0.1, 0.1))
-
-    # ax.flat[i].set_title(pro_i)
-    try:
-        # axs[1].grid(True)
-        pass
-    except:
-        pass
-    plt.savefig(os.path.join(FIGURE_PATH, "max_surge_group.png"))
-    plt.clf()
-    print(get_max("find-max-2"))
 
 
 # def ansley_plot()
