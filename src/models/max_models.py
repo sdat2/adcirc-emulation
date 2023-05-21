@@ -3,6 +3,7 @@ from typing import Tuple
 import numpy as np
 import xarray as xr
 from sklearn.tree import DecisionTreeRegressor
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import cartopy
@@ -12,8 +13,18 @@ import wandb
 from sithom.plot import plot_defaults, lim, label_subplots
 from sithom.place import BoundingBox
 from sithom.time import timeit
-from src.constants import NO_BBOX, NEW_ORLEANS, FIGURE_PATH, DATA_PATH, FEATURE_LIST, LABEL_LIST, SYMBOL_LIST, LABEL_DICT
+from src.constants import (
+    NO_BBOX,
+    NEW_ORLEANS,
+    FIGURE_PATH,
+    DATA_PATH,
+    FEATURE_LIST,
+    LABEL_LIST,
+    SYMBOL_LIST,
+    LABEL_DICT,
+)
 from src.preprocessing.sel import trim_tri
+
 # get data from weights and biases
 
 
@@ -374,16 +385,7 @@ def make_all_plots(regenerate=True) -> None:
             cmap="cmo.balance",
         )
         ax.set_title(LABEL_LIST[i])
-        ax.plot(
-            NEW_ORLEANS.lon, NEW_ORLEANS.lat, marker=".", markersize=4, color="purple"
-        )
-        ax.text(
-            NEW_ORLEANS.lon - 0.35,
-            NEW_ORLEANS.lat - 0.16,
-            "New Orleans",
-            fontsize=6,
-            color="purple",
-        )
+        new_orleans_ax(ax)
         ax.set_yticks(
             [
                 x
@@ -449,16 +451,7 @@ def make_all_plots(regenerate=True) -> None:
             cmap="cmo.amp",
         )
         ax.set_title(LABEL_LIST[i])
-        ax.plot(
-            NEW_ORLEANS.lon, NEW_ORLEANS.lat, marker=".", markersize=4, color="purple"
-        )
-        ax.text(
-            NEW_ORLEANS.lon - 0.35,
-            NEW_ORLEANS.lat - 0.16,
-            "New Orleans",
-            fontsize=6,
-            color="purple",
-        )
+        new_orleans_ax(ax)
         ax.set_yticks(
             [
                 x
@@ -495,6 +488,17 @@ def make_all_plots(regenerate=True) -> None:
     cbar.set_ticklabels(["{:.2f}".format(x) for x in cbar_levels.tolist()])
     plt.savefig(os.path.join(figure_path, "importance_all.png"), bbox_inches="tight")
     plt.clf()
+
+
+def new_orleans_ax(ax: matplotlib.axes.Axes) -> None:
+    ax.plot(NEW_ORLEANS.lon, NEW_ORLEANS.lat, marker=".", markersize=4, color="purple")
+    ax.text(
+        NEW_ORLEANS.lon - 0.35,
+        NEW_ORLEANS.lat - 0.16,
+        "New Orleans",
+        fontsize=6,
+        color="purple",
+    )
 
 
 if __name__ == "__main__":
