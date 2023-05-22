@@ -100,3 +100,13 @@ LABEL_LIST = [
 SYMBOL_LIST = ["$\chi$", "$v_t$", "$c$", "$r_{\mathrm{max}}$", "$p_c$", "$x_n$"]
 LABEL_DICT = {FEATURE_LIST[i]: LABEL_LIST[i] for i in range(len(FEATURE_LIST))}
 SYMBOL_DICT = {FEATURE_LIST[i]: SYMBOL_LIST[i] for i in range(len(FEATURE_LIST))}
+
+PLACES_D = dict(
+    ansley=27,
+    new_orleans=5,
+    diamondhead=17,
+    mississippi=77,
+    atchafayala=82,
+    dulac=86,
+    akers=2,
+)
