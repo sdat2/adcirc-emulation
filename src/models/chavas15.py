@@ -466,6 +466,9 @@ def ER11E04_nondim_r0input(
     rrfracr0 = rrfracrm * rmax / r0  # save this as output
     MMfracM0 = MMfracMm * Mm / M0
 
+    print("rrfracr0", rrfracr0, type(rrfracr0))
+    print("MMfracM0", MMfracM0, type(MMfracM0))
+
     # Calculate dimensional wind speed and radii
     # VV = (M0/r0)*((MMfracM0./rrfracr0)-rrfracr0)    #[ms-1]
     # rr = rrfracr0*r0     #[m]
@@ -492,7 +495,16 @@ def ER11E04_nondim_r0input(
 
 @timeit
 def ER11E04_nondim_rmaxinput(
-    Vmax, rmax, fcor, Cdvary, C_d, w_cool, CkCdvary, CkCd, eye_adj, alpha_eye
+    Vmax: float,
+    rmax: float,
+    fcor: float,
+    Cdvary: float,
+    C_d: float,
+    w_cool: float,
+    CkCdvary: float,
+    CkCd: float,
+    eye_adj: float,
+    alpha_eye: float,
 ) -> Tuple[np.ndarray, np.ndarray, float, float]:
     """ER11E04_nondim_rmaxinput
 
@@ -505,7 +517,10 @@ def ER11E04_nondim_rmaxinput(
         Cdvary (int): 1 if C_d varies with wind speed, 0 if constant
         C_d (float): Drag coefficient
         w_cool (float): Radiative subsidence rate. Cooling rate [K/s]
-
+        CkCdvary (int): 1 if Ck/Cd varies with wind speed, 0 if constant
+        CkCd (float): Ratio of Ck/Cd.
+        eye_adj (int): 1 if eye adjustment is desired, 0 if not.
+        alpha_eye (float): Eye adjustment parameter.
 
     Returns:
         rr (np.ndarray): Radial coordinate [m]
@@ -516,11 +531,12 @@ def ER11E04_nondim_rmaxinput(
 
     [rrfracr0,MMfracM0,rmerger0,Vmerge] = ER11E04_nondim_rmaxinput(Vmax,rmax,fcor,Cdvary,C_d,w_cool,CkCdvary,CkCd,eye_adj,alpha_eye)
 
-    This function calculates the ER11+ER04 radial profile of the wind speed
+    This function calculates the ER11+ER04 radial profile of the wind speed.
     """
     # key function.
     # Initialization
     fcor = np.abs(fcor)
+
     # by default, Ck/Cd is constant
     # Overwrite CkCd if want varying (quadratic fit from Chavas et al. 2015)
     if CkCdvary == 1:
@@ -561,7 +577,7 @@ def ER11E04_nondim_rmaxinput(
             soln_converged = True
         else:
             soln_converged = False
-            CkCd = CkCd + 0.1
+            CkCd = CkCd + 0.1  # An equal step through the CkCd values.
             if rmax == 0.0:
                 print("Warning: rmax=0, setting to 25 m")
                 # rmax cannot be 0
@@ -648,7 +664,6 @@ def ER11E04_nondim_rmaxinput(
             rrfracr0_temp = np.hstack((rrfracr0_ER11[ii_ER11], rrfracr0_E04[ii_E04]))
             del ii_ER11
             del ii_E04
-
 
             rfracrm_min = 0  # [-] r=0
             rfracrm_max = r0 / rmax  # [-] r=r0
@@ -890,11 +905,13 @@ def ER11E04_nondim_rfitinput(
     rrfracr0 = rrfracrm * rmax / r0  # save this as output
     MMfracM0 = MMfracMm * Mm / M0
 
+    print("rrfracr0", rrfracr0)
+    print("MMfracM0", MMfracM0)
     # Calculate dimensional wind speed and radii
-    # VV = (M0/r0)*((MMfracM0./rrfracr0)-rrfracr0)    #[ms-1]
-    # rr = rrfracr0*r0     #[m]
-    # rmerge = rmerger0*r0
-    # Vmerge = (M0/r0)*((MmergeM0./rmerger0)-rmerger0)    #[ms-1]
+    # VV = (M0/r0) * ((MMfracM0./rrfracr0)-rrfracr0)    #[ms-1]
+    # rr = rrfracr0 * r0     #[m]
+    # rmerge = rmerger0 * r0
+    # Vmerge = (M0/r0) * ((MmergeM0./rmerger0)-rmerger0)    #[ms-1]
     VV = (Mm / rmax) * (MMfracMm / rrfracrm) - 0.5 * fcor * rmax * rrfracrm  # [ms-1]
     rr = rrfracrm * rmax  # [m]
 
@@ -938,10 +955,12 @@ def default_run(cfg: DictConfig):
     print("Vmax", type(cfg.Vmax), cfg.Vmax)
 
     plot_defaults()
-    plt.plot(rr / 1000, VV)
-    plt.scatter(cfg.rmax / 1000, cfg.Vmax, color="green", label="rmax")
-    plt.scatter(rmerge / 1000, Vmerge, color="orange", label="rmerge")
-    plt.scatter(r0 / 1000, 0, color="red", label="r0")
+    # convert to km.
+    div = 1000
+    plt.plot(rr / div, VV)
+    plt.scatter(cfg.rmax / div, cfg.Vmax, color="green", label="rmax")
+    plt.scatter(rmerge / div, Vmerge, color="orange", label="rmerge")
+    plt.scatter(r0 / div, 0, color="red", label="r0")
     plt.xlabel("r [km]")
     plt.ylabel("V [m/s]")
     plt.legend()

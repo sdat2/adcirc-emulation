@@ -1,6 +1,7 @@
 """First implementation of EMUKIT emulation of ADCIRC model."""
 from typing import List, Tuple
 import os
+
 os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
 import shutil
 import numpy as np
@@ -597,7 +598,9 @@ class EmulationBearingPos:
             ),
             coords=dict(a=(["a"], a_indices), b=(["b"], b_indices)),
         ).to_netcdf(
-            os.path.join(self.data_path, "plotting_data" + str(self.call_number) + ".nc")
+            os.path.join(
+                self.data_path, "plotting_data" + str(self.call_number) + ".nc"
+            )
         )
         # ok, now we have the data, let's plot it
 
@@ -656,7 +659,9 @@ class EmulationBearingPos:
         vmin = np.min(mean_mesh)
         vmax = np.max(mean_mesh)
         levels = np.linspace(vmin, vmax, num=400)
-        im = ax.contourf(a_mesh, b_mesh, mean_mesh, vmin=vmin, vmax=vmax, levels=levels)  # , vmin=0, vmax=5.6)
+        im = ax.contourf(
+            a_mesh, b_mesh, mean_mesh, vmin=vmin, vmax=vmax, levels=levels
+        )  # , vmin=0, vmax=5.6)
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(im, cax=cax, orientation="vertical")
@@ -691,10 +696,11 @@ def poi_long():
 
 def mves():
     EmulationBearingPos(
-        acqusition_class=MaxValueEntropySearch, path="emulation_angle_pos_mves",
+        acqusition_class=MaxValueEntropySearch,
+        path="emulation_angle_pos_mves",
         init_num=100,
         active_num=50,
-        seed=101
+        seed=101,
     )
 
 

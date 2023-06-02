@@ -16,15 +16,15 @@ import hydra
 # WANDB_CACHE_DIR = "/work/n01/n01/sithom/tmp"
 # WANDB_CONFIG_DIR = "/work/n01/n01/sithom/.config/wandb"
 # These lines are to get it to work on the slurm cluster
-#os.environ["WANDB_CACHE_DIR"] = "/work/n01/n01/sithom/tmp"
-#os.environ["WANDB_DATA_DIR"] = "/work/n01/n01/sithom/tmp"
-#os.environ["WANDB_DIR"] = "/work/n01/n01/sithom/.config/wandb"
-#os.environ["WANDB_CONFIG_DIR"] = "/work/n01/n01/sithom/.config/wandb"
+# os.environ["WANDB_CACHE_DIR"] = "/work/n01/n01/sithom/tmp"
+# os.environ["WANDB_DATA_DIR"] = "/work/n01/n01/sithom/tmp"
+# os.environ["WANDB_DIR"] = "/work/n01/n01/sithom/.config/wandb"
+# os.environ["WANDB_CONFIG_DIR"] = "/work/n01/n01/sithom/.config/wandb"
 # os.environ["WANDB_MODE"] = "offline"  # "offline"
-#os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
+# os.environ["MPLCONFIGDIR"] = "/work/n01/n01/sithom/.config/matplotlib"
 import wandb
 
-#wandb.login(key="42ceaac64e4f3ae24181369f4c77d9ba0d1c64e5")
+# wandb.login(key="42ceaac64e4f3ae24181369f4c77d9ba0d1c64e5")
 from comet_ml import Experiment
 
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
@@ -61,14 +61,15 @@ from src.constants import DATA_PATH, FIGURE_PATH, NEW_ORLEANS, NO_BBOX, CONFIG_P
 from src.models.generation import vmax_from_pressure_holliday
 
 PLACES_D = dict(
-        ansley=27,
-        new_orleans=5,
-        diamondhead=17,
-        mississippi=77,
-        atchafayala=82,
-        dulac=86,
-        akers=2,
-    )
+    ansley=27,
+    new_orleans=5,
+    diamondhead=17,
+    mississippi=77,
+    atchafayala=82,
+    dulac=86,
+    akers=2,
+)
+
 
 @typechecked
 def get_param(updates: dict) -> dict:
@@ -210,7 +211,13 @@ def get_data(ex_path: str) -> xr.Dataset:
     )
 
 
-def real_func(param: dict, output_direc: str, place: str = "ansley", init_wandb: bool=False, log_artifact: bool = False) -> float:
+def real_func(
+    param: dict,
+    output_direc: str,
+    place: str = "ansley",
+    init_wandb: bool = False,
+    log_artifact: bool = False,
+) -> float:
     """
     Feed the parameters into running the full tropical cyclone impact.
 
@@ -250,7 +257,7 @@ def real_func(param: dict, output_direc: str, place: str = "ansley", init_wandb:
     # List of notable places selected from coastline manually.
     # find indices within defined BBOX
     indices = NO_BBOX.indices_inside(maxele.x, maxele.y)
-    v = maxele.values[indices] # Find heights of important places.
+    v = maxele.values[indices]  # Find heights of important places.
     height = v[PLACES_D["ansley"]]
     print("height =  ", height, "m")
     if init_wandb:
@@ -458,7 +465,7 @@ class SixDOFSearch:
                 # print("x_data.shape", x_data.shape)
                 print("len(output_list)", len(output_list))
                 # x_data is normalized
-                # output list is 
+                # output list is
                 self.feed_to_comet(x_data[: len(output_list), :], output_list)
             self.call_number += 1
 
@@ -678,7 +685,7 @@ class SixDOFSearch:
             model.log_likelihood(),
             model.log_predictive_density(self.test_x_data, self.test_y_data),
         )
-        
+
         print("rmse", rmse, "mae", mae, "r2", r2, "mll", mll, "lpd", lpd)
         # check if wandb is running.
         # if wandb.run is not None:
@@ -714,9 +721,11 @@ class SixDOFSearch:
         elif self.returns == "max":
             index = np.argmin(y_train)
             param = self.to_param(self.to_real(x_train)[index])
-            self.experiment.log_metrics({**param, "max": -y_train[index], "step": self.call_number})
+            self.experiment.log_metrics(
+                {**param, "max": -y_train[index], "step": self.call_number}
+            )
         else:
-            assert False 
+            assert False
 
     def gp_predict(self) -> Callable:
         X = np.load(self.x_path)
@@ -848,7 +857,7 @@ def combine_lhs() -> None:
 @timeit
 def get_lhs_test() -> Tuple[np.ndarray, np.ndarray]:
     """Get LHS test data, with scaling.
-    
+
     WARNING: Currently this overrides the input option."""
     ds = xr.open_dataset(os.path.join(DATA_PATH, "test_data.nc"))
     cfg = OmegaConf.load(os.path.join(CONFIG_PATH, "sixd.yaml"))
@@ -943,6 +952,7 @@ def diff_res(cfg: DictConfig) -> None:
     python src/models/emu6d.py init_samples=900 active_samples=1 seed=404 dryrun=false
     python src/models/emu6d.py init_samples=1 active_samples=119 seed=1100 dryrun=false
     """
+
 
 @hydra.main(config_path=CONFIG_PATH, config_name="find_max.yaml")
 def find_max(cfg: DictConfig) -> None:
