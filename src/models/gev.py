@@ -8,7 +8,7 @@ from typing import Tuple, List
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import genextreme as gev
-from src.constants import DATA_PATH
+from src.constants import DATA_PATH, FIGURE_PATH
 from sithom.time import timeit
 from sithom.plot import plot_defaults, label_subplots
 
@@ -52,7 +52,11 @@ def sample_effect_exp(num: int = 50) -> Tuple[np.array, np.array, np.array, np.a
 
 
 @timeit
-def plot_sample_exp(samp, shp, loc, scale):
+def plot_sample_exp(
+    samp: np.ndarray, shp: np.ndarray, loc: np.ndarray, scale: np.ndarray
+) -> None:
+    figure_path = os.path.join(FIGURE_PATH, "gev_exp")
+    os.makedirs(figure_path, exist_ok=True)
     plot_defaults()
     print("samp.shape", "shp.shape", "loc.shape", "scale.shape")
     print(samp.shape, shp.shape, loc.shape, scale.shape)
@@ -60,35 +64,42 @@ def plot_sample_exp(samp, shp, loc, scale):
     def setup() -> any:
         fig, axs = plt.subplots(3, 1, sharex=True, sharey=True)
         plt.xlim(10, 1000)
-        plt.ylim(-0.1, 3)
+        plt.ylim(-1, 1)
         axs[2].set_xlabel("Number of samples")
-        for ax in axs:
-            ax.set_ylabel("Parameter")
+        axs[0].set_ylabel("Shape")
+        axs[1].set_ylabel("Location")
+        axs[2].set_ylabel("Scale")
         label_subplots(axs)
         return axs
 
     axs = setup()
-    axs[0].semilogx(samp, np.sort(shp, axis=1), linewidth=0.3, alpha=0.5, color="red")
-    axs[1].semilogx(samp, np.sort(loc, axis=1), linewidth=0.3, alpha=0.5, color="blue")
-    axs[2].semilogx(
-        samp, np.sort(scale, axis=1), linewidth=0.3, alpha=0.5, color="green"
+    axs[0].semilogx(
+        samp, np.sort(shp, axis=1) - 1, linewidth=0.3, alpha=0.5, color="red"
     )
-    plt.show()
+    axs[1].semilogx(
+        samp, np.sort(loc, axis=1) - 1, linewidth=0.3, alpha=0.5, color="blue"
+    )
+    axs[2].semilogx(
+        samp, np.sort(scale, axis=1) - 1, linewidth=0.3, alpha=0.5, color="green"
+    )
+    plt.savefig(os.path.join(figure_path, "gev_exp_sort.png"))
+    plt.clf()
 
     axs = setup()
-    mn = np.mean(shp, axis=1)
+    mn = np.mean(shp, axis=1) - 1
     std = np.std(shp, axis=1)
     axs[0].semilogx(samp, mn, linewidth=1, alpha=0.5, color="red")
     axs[0].fill_between(samp, mn - std, mn + std, alpha=0.5, color="red")
-    mn = np.mean(loc, axis=1)
+    mn = np.mean(loc, axis=1) - 1
     std = np.std(loc, axis=1)
     axs[1].semilogx(samp, mn, linewidth=1, alpha=0.5, color="blue")
     axs[1].fill_between(samp, mn - std, mn + std, alpha=0.5, color="blue")
-    mn = np.mean(scale, axis=1)
+    mn = np.mean(scale, axis=1) - 1
     std = np.std(scale, axis=1)
     axs[2].semilogx(samp, mn, linewidth=1, alpha=0.5, color="green")
     axs[2].fill_between(samp, mn - std, mn + std, alpha=0.5, color="green")
-    plt.show()
+    plt.savefig(os.path.join(figure_path, "gev_exp_mnstd.png"))
+    plt.clf()
 
 
 def exp_and_plot(data_calculated=True) -> None:
