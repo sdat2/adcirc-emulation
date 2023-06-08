@@ -220,7 +220,7 @@ def example():
         block_size="365.2425D",
     )
     return_periods = get_return_periods(
-        ts=rvs,
+        ts=np.array(rvs),
         extremes=extremes,
         extremes_method="BM",
         extremes_type="high",
