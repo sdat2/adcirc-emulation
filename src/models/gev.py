@@ -52,7 +52,7 @@ def sample_effect_exp(num: int = 50) -> Tuple[np.array, np.array, np.array, np.a
     return np.array(samps), np.array(sh_ll), np.array(l_ll), np.array(sc_ll)
 
 
-def isf(x, shape, loc, scale):
+def gen_isf(x, shape, loc, scale):
     return gev.isf(x, shape, loc, scale)
 
 
@@ -213,6 +213,24 @@ def example():
     plt.xlabel("Return period (years)")
     plt.ylabel("Rainfall (mm)")
     plt.show()
+
+    extremes = get_extremes(
+        ts=rvs,
+        method="BM",
+        block_size="365.2425D",
+    )
+    return_periods = get_return_periods(
+        ts=rvs,
+        extremes=extremes,
+        extremes_method="BM",
+        extremes_type="high",
+        block_size="365.2425D",
+        return_period_size="365.2425D",
+        plotting_position="weibull",
+    )
+    plt.show()
+    # plt.plot(return_periods["return period"], return_periods["return level"])
+    return_periods.sort_values("return period", ascending=False).head()
 
 
 if __name__ == "__main__":
