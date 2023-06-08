@@ -188,39 +188,49 @@ def example():
     xx = np.linspace(l + 0.00001, l + 0.00001 + 35, num=10000)
     # probability density function
     yy = gev.pdf(xx, shape, loc, scale)
+    plt.plot(xx, yy, "r", label="PDF")
+    # cumulative distribution function
+    yy = gev.cdf(xx, shape, loc, scale)
+    plt.plot(xx, yy, "orange", label="CDF")
+    # inverse survival function
+    yy = gev.sf(xx, shape, loc, scale)
+    plt.plot(xx, yy, "g", label="SF")
     # plot histogram of input data
     hist, bins = np.histogram(rvs, bins=12, range=(-0.5, 23.5), density=True)
     plt.bar(bins[:-1], hist, width=2, align="edge")
     plt.xlabel("Rainfall (mm)")
     plt.ylabel("Probability")
+    plt.legend()
 
-    plt.plot(xx, yy, "r")
     plt.show()
-    yy = [gev.isf(x, shape, loc=loc, scale=scale) for x in xx]
     plt.semilogx(
-        yy,
+        1 / yy,
         xx,
+        label="GEV (Frechet) distribution",
     )
     print("yy", yy)
     print("xx", xx)
 
     # sorted random variables
-    xx = np.sort(rvs)
+    xx = np.sort(rvs)[::-1]
     # rank
-    yy = np.linspace(1, len(xx), num=len(xx))
-    plt.plot(1 / yy, xx)
+    yy = (len(xx) + 1) / np.linspace(1, len(xx), num=len(xx))
+    plt.plot(yy, xx, "x", label="Data points")
 
-    plt.xlabel("Return period (years)")
-    plt.ylabel("Rainfall (mm)")
+    plt.xlabel("1/p, Return period (years)")
+    plt.ylabel("Exceedance level, Rainfall (mm)")
     plt.show()
 
+
+def ok():
+    rvs = []
     extremes = get_extremes(
-        ts=rvs,
+        ts=np.asarray(rvs),
         method="BM",
         block_size="365.2425D",
     )
     return_periods = get_return_periods(
-        ts=np.array(rvs),
+        ts=np.asarray(rvs),
         extremes=extremes,
         extremes_method="BM",
         extremes_type="high",
