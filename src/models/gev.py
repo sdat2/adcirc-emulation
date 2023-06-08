@@ -8,9 +8,10 @@ from typing import Tuple, List
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import genextreme as gev
-from src.constants import DATA_PATH, FIGURE_PATH
+from pyextremes import get_extremes, get_return_periods
 from sithom.time import timeit
 from sithom.plot import plot_defaults, label_subplots
+from src.constants import DATA_PATH, FIGURE_PATH
 
 
 def fit_gev(rvs: float) -> Tuple[float, float, float]:
@@ -51,6 +52,10 @@ def sample_effect_exp(num: int = 50) -> Tuple[np.array, np.array, np.array, np.a
     return np.array(samps), np.array(sh_ll), np.array(l_ll), np.array(sc_ll)
 
 
+def isf(x, shape, loc, scale):
+    return gev.isf(x, shape, loc, scale)
+
+
 @timeit
 def plot_sample_exp(
     samp: np.ndarray, shp: np.ndarray, loc: np.ndarray, scale: np.ndarray
@@ -61,7 +66,7 @@ def plot_sample_exp(
     print("samp.shape", "shp.shape", "loc.shape", "scale.shape")
     print(samp.shape, shp.shape, loc.shape, scale.shape)
 
-    def setup() -> any:
+    def tri_setup() -> any:
         fig, axs = plt.subplots(3, 1, sharex=True, sharey=True)
         plt.xlim(10, 1000)
         plt.ylim(-1, 1)
@@ -72,7 +77,7 @@ def plot_sample_exp(
         label_subplots(axs)
         return axs
 
-    axs = setup()
+    axs = tri_setup()
     axs[0].semilogx(
         samp, np.sort(shp, axis=1) - 1, linewidth=0.3, alpha=0.5, color="red"
     )
@@ -85,7 +90,7 @@ def plot_sample_exp(
     plt.savefig(os.path.join(figure_path, "gev_exp_sort.png"))
     plt.clf()
 
-    axs = setup()
+    axs = tri_setup()
     mn = np.mean(shp, axis=1) - 1
     std = np.std(shp, axis=1)
     axs[0].semilogx(samp, mn, linewidth=1, alpha=0.5, color="red")
@@ -124,11 +129,6 @@ def exp_and_plot(data_calculated=True) -> None:
 
     # plot
     plot_sample_exp(samp, shp, loc, scale)
-
-
-if __name__ == "__main__":
-    # python src/models/gev.py
-    exp_and_plot()
 
 
 def example():
@@ -182,14 +182,40 @@ def example():
     print("xi", shape)
     print("mu", loc)
     print("sigma", scale)
-
+    # minima?
     l = loc + scale / shape
-
-    xx = np.linspace(l + 0.00001, l + 0.00001 + 35, num=71)
+    # domain for plotting (in mm)
+    xx = np.linspace(l + 0.00001, l + 0.00001 + 35, num=10000)
+    # probability density function
     yy = gev.pdf(xx, shape, loc, scale)
-
+    # plot histogram of input data
     hist, bins = np.histogram(rvs, bins=12, range=(-0.5, 23.5), density=True)
     plt.bar(bins[:-1], hist, width=2, align="edge")
+    plt.xlabel("Rainfall (mm)")
+    plt.ylabel("Probability")
 
-    plt.plot(xx, yy, "ro")
+    plt.plot(xx, yy, "r")
     plt.show()
+    yy = [gev.isf(x, shape, loc=loc, scale=scale) for x in xx]
+    plt.semilogx(
+        yy,
+        xx,
+    )
+    print("yy", yy)
+    print("xx", xx)
+
+    # sorted random variables
+    xx = np.sort(rvs)
+    # rank
+    yy = np.linspace(1, len(xx), num=len(xx))
+    plt.plot(1 / yy, xx)
+
+    plt.xlabel("Return period (years)")
+    plt.ylabel("Rainfall (mm)")
+    plt.show()
+
+
+if __name__ == "__main__":
+    # python src/models/gev.py
+    # exp_and_plot()
+    example()
