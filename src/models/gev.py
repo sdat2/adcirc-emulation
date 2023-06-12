@@ -60,6 +60,9 @@ def plot_sample_exp(
     shp: np.ndarray,
     loc: np.ndarray,
     scale: np.ndarray,
+    oshp: float = -1,
+    oloc: float = 1,
+    oscale: float = 1,
     figure_path: str = os.path.join(FIGURE_PATH, "gev_exp"),
 ) -> None:
     """Plot sample effect experiments on different graphs.
@@ -71,6 +74,9 @@ def plot_sample_exp(
         shp (np.ndarray): Shapes.
         loc (np.ndarray): Locations.
         scale (np.ndarray): Scales.
+        oshp (float, optional): Original shape. Defaults to -1.
+        oloc (float, optional): Original location. Defaults to 1.
+        oscale (float, optional): Original scale. Defaults to 1.
 
     Returns:
         None: None.
@@ -85,55 +91,40 @@ def plot_sample_exp(
         plt.xlim(10, 1000)
         plt.ylim(-1, 1)
         axs[2].set_xlabel("Number of samples")
-        axs[0].set_ylabel("Shape")
-        axs[1].set_ylabel("Location")
-        axs[2].set_ylabel("Scale")
+        axs[0].set_ylabel("$\Delta$ Shape")
+        axs[1].set_ylabel("$\Delta$ Location")
+        axs[2].set_ylabel("$\Delta$ Scale")
         label_subplots(axs)
         return axs
 
     axs = tri_setup()
     axs[0].semilogx(
-        samp, np.sort(shp, axis=1) - 1, linewidth=0.3, alpha=0.5, color="red"
+        samp, np.sort(shp, axis=1) - oshp, linewidth=0.3, alpha=0.5, color="red"
     )
     axs[1].semilogx(
-        samp, np.sort(loc, axis=1) - 1, linewidth=0.3, alpha=0.5, color="blue"
+        samp, np.sort(loc, axis=1) - oloc, linewidth=0.3, alpha=0.5, color="blue"
     )
     axs[2].semilogx(
-        samp, np.sort(scale, axis=1) - 1, linewidth=0.3, alpha=0.5, color="green"
+        samp, np.sort(scale, axis=1) - oscale, linewidth=0.3, alpha=0.5, color="green"
     )
     plt.savefig(os.path.join(figure_path, "gev_exp_sort.png"))
     plt.clf()
 
     axs = tri_setup()
-    mn = np.mean(shp, axis=1) - 1
+    mn = np.mean(shp, axis=1) - oshp
     std = np.std(shp, axis=1)
     axs[0].semilogx(samp, mn, linewidth=1, alpha=0.5, color="red")
     axs[0].fill_between(samp, mn - std, mn + std, alpha=0.5, color="red")
-    mn = np.mean(loc, axis=1) - 1
+    mn = np.mean(loc, axis=1) - oloc
     std = np.std(loc, axis=1)
     axs[1].semilogx(samp, mn, linewidth=1, alpha=0.5, color="blue")
     axs[1].fill_between(samp, mn - std, mn + std, alpha=0.5, color="blue")
-    mn = np.mean(scale, axis=1) - 1
+    mn = np.mean(scale, axis=1) - oscale
     std = np.std(scale, axis=1)
     axs[2].semilogx(samp, mn, linewidth=1, alpha=0.5, color="green")
     axs[2].fill_between(samp, mn - std, mn + std, alpha=0.5, color="green")
     plt.savefig(os.path.join(figure_path, "gev_exp_mnstd.png"))
     plt.clf()
-
-    def aep_setup() -> any:
-        fig, axs = plt.subplots(3, 1, sharex=True, sharey=False)
-        plt.xlim(10, 1000)
-        axs[0].set_ylim(0, 300)
-        axs[1].set_ylim(0, 10_000)
-        axs[2].set_ylim(0, 1_000_000)
-        axs[2].set_xlabel("Number of samples")
-        axs[0].set_ylabel("100 years")
-        axs[1].set_ylabel("1,000 year")
-        axs[2].set_ylabel("100,000 year")
-        label_subplots(axs)
-        return axs
-
-    axs = aep_setup()
 
     def heights(exceedance_probability: 0.01):
         heights = np.zeros(np.shape(shp))
@@ -150,9 +141,28 @@ def plot_sample_exp(
     heights_1_000 = heights(1 / 1_000)
     heights_100_000 = heights(1 / 100_000)
 
-    axs[0].semilogx(samp, heights(1 / 100), linewidth=1, alpha=0.5, color="red")
-    axs[1].semilogx(samp, heights(1 / 1_000), linewidth=1, alpha=0.5, color="blue")
-    axs[2].semilogx(samp, heights(1 / 100_000), linewidth=1, alpha=0.5, color="green")
+    def aep_setup() -> any:
+        fig, axs = plt.subplots(3, 1, sharex=True, sharey=False)
+        plt.xlim(10, 1000)
+        axs[0].set_ylim(0, heights_100[10, 97])
+        axs[1].set_ylim(0, heights_1_000[10, 97])
+        axs[2].set_ylim(0, heights_100_000[10, 97])
+        axs[2].set_xlabel("Number of samples")
+        axs[0].set_ylabel("100 years")
+        axs[1].set_ylabel("1,000 year")
+        axs[2].set_ylabel("100,000 year")
+        label_subplots(axs)
+        return axs
+
+    axs = aep_setup()
+
+    oheight_100 = gen_isf(1 / 100, oshp, oloc, oscale)
+    oheight_1_000 = gen_isf(1 / 1_000, oshp, oloc, oscale)
+    oheight_100_000 = gen_isf(1 / 100_000, oshp, oloc, oscale)
+
+    axs[0].semilogx(samp, heights_100, linewidth=1, alpha=0.5, color="red")
+    axs[1].semilogx(samp, heights_1_000, linewidth=1, alpha=0.5, color="blue")
+    axs[2].semilogx(samp, heights_100_000, linewidth=1, alpha=0.5, color="green")
 
     plt.savefig(os.path.join(figure_path, "gev_exp_heights.png"))
     plt.clf()
@@ -163,6 +173,13 @@ def plot_sample_exp(
     std = np.std(heights_100, axis=1)
     axs[0].semilogx(samp, mn, linewidth=1, alpha=0.5, color="red")
     axs[0].semilogx(samp, heights_100[:, 49], "--", linewidth=1, alpha=0.5, color="red")
+    axs[0].plot(
+        samp,
+        np.ones(np.shape(samp)) * oheight_100,
+        linewidth=1,
+        alpha=0.5,
+        color="black",
+    )
     axs[0].fill_between(samp, mn - std, mn + std, alpha=0.5, color="red")
     mn = np.mean(heights_1_000, axis=1)
     std = np.std(heights_1_000, axis=1)
@@ -170,12 +187,26 @@ def plot_sample_exp(
     axs[1].semilogx(
         samp, heights_1_000[:, 49], "--", linewidth=1, alpha=0.5, color="blue"
     )
+    axs[1].plot(
+        samp,
+        np.ones(np.shape(samp)) * oheight_1_000,
+        linewidth=1,
+        alpha=0.5,
+        color="black",
+    )
     axs[1].fill_between(samp, mn - std, mn + std, alpha=0.5, color="blue")
     mn = np.mean(heights_100_000, axis=1)
     std = np.std(heights_100_000, axis=1)
     axs[2].semilogx(samp, mn, linewidth=1, alpha=0.5, color="green")
     axs[2].semilogx(
         samp, heights_100_000[:, 49], "--", linewidth=1, alpha=0.5, color="green"
+    )
+    axs[2].plot(
+        samp,
+        np.ones(np.shape(samp)) * oheight_100_000,
+        linewidth=1,
+        alpha=0.5,
+        color="black",
     )
     axs[2].fill_between(samp, mn - std, mn + std, alpha=0.5, color="green")
     plt.savefig(os.path.join(figure_path, "gev_exp_heights_mnstd.png"))
@@ -197,6 +228,7 @@ def exp_and_plot(
     path = f"gev_exp_{str(shape)}_{str(location)}_{str(scale)}"
     data_dir = os.path.join(DATA_PATH, path)
     figure_dir = os.path.join(FIGURE_PATH, path)
+
     for dir in [data_dir, figure_dir]:
         if not os.path.exists(dir):
             os.makedirs(dir, exist_ok=True)
@@ -334,5 +366,9 @@ def ok():
 
 if __name__ == "__main__":
     # python src/models/gev.py
-    exp_and_plot(data_calculated=False, shape=-1, location=1, scale=1)
+    # exp_and_plot(data_calculated=True, shape=-1, location=1, scale=1)
+    exp_and_plot(data_calculated=False, shape=-0.5, location=1, scale=1)
+    exp_and_plot(data_calculated=False, shape=-0.25, location=1, scale=1)
+    exp_and_plot(data_calculated=False, shape=-0, location=1, scale=1)
+    exp_and_plot(data_calculated=False, shape=0.25, location=1, scale=1)
     # example()
