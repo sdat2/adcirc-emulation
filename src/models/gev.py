@@ -397,10 +397,13 @@ def ok():
 if __name__ == "__main__":
     # python src/models/gev.py
     exp_and_plot(data_calculated=True, shape=-1, location=1, scale=1)
+    exp_and_plot(data_calculated=False, shape=-0.5, location=1, scale=1)
     exp_and_plot(data_calculated=True, shape=-0.5, location=1, scale=1)
     exp_and_plot(data_calculated=True, shape=-0.25, location=1, scale=1)
     exp_and_plot(data_calculated=True, shape=-0, location=1, scale=1)
     exp_and_plot(data_calculated=True, shape=0.25, location=1, scale=1)
     exp_and_plot(data_calculated=False, shape=0.5, location=1, scale=1)
     exp_and_plot(data_calculated=False, shape=0.75, location=1, scale=1)
+    exp_and_plot(data_calculated=False, shape=1, location=1, scale=1)
+
     # example()
