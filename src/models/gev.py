@@ -118,11 +118,13 @@ def plot_sample_exp(
 
     axs = aep_setup()
 
-    def heights(x: 0.01):
+    def heights(exceedance_probability: 0.01):
         heights = np.zeros(np.shape(shp))
         for i in range(np.shape(shp)[0]):
             for j in range(np.shape(shp)[1]):
-                heights[i, j] = gev.isf(x, shp[i, j], loc[i, j], scale[i, j])
+                heights[i, j] = gev.isf(
+                    exceedance_probability, shp[i, j], loc[i, j], scale[i, j]
+                )
         # return gen_isf(x, shp, loc, scale)
         return heights
 
