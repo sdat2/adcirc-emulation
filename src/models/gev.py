@@ -161,8 +161,29 @@ def plot_sample_exp(
     oheight_100_000 = gen_isf(1 / 100_000, oshp, oloc, oscale)
 
     axs[0].semilogx(samp, heights_100, linewidth=1, alpha=0.5, color="red")
+    axs[0].plot(
+        samp,
+        np.ones(np.shape(samp)) * oheight_100,
+        linewidth=1,
+        alpha=0.5,
+        color="black",
+    )
     axs[1].semilogx(samp, heights_1_000, linewidth=1, alpha=0.5, color="blue")
+    axs[1].plot(
+        samp,
+        np.ones(np.shape(samp)) * oheight_1_000,
+        linewidth=1,
+        alpha=0.5,
+        color="black",
+    )
     axs[2].semilogx(samp, heights_100_000, linewidth=1, alpha=0.5, color="green")
+    axs[2].plot(
+        samp,
+        np.ones(np.shape(samp)) * oheight_100_000,
+        linewidth=1,
+        alpha=0.5,
+        color="black",
+    )
 
     plt.savefig(os.path.join(figure_path, "gev_exp_heights.png"))
     plt.clf()
@@ -234,22 +255,31 @@ def exp_and_plot(
             os.makedirs(dir, exist_ok=True)
 
     if not data_calculated:
-        samp, shp, loc, scale = sample_effect_exp(shape=shape, loc=location, size=scale)
+        samp, shp, loc, size = sample_effect_exp(shape=shape, loc=location, size=scale)
         # save numpy arrays
         np.save(os.path.join(data_dir, "gev_samp.npy"), samp)
         np.save(os.path.join(data_dir, "gev_shp.npy"), shp)
         np.save(os.path.join(data_dir, "gev_loc.npy"), loc)
-        np.save(os.path.join(data_dir, "gev_scale.npy"), scale)
+        np.save(os.path.join(data_dir, "gev_scale.npy"), size)
 
     else:
         # load data
         samp = np.load(os.path.join(data_dir, "gev_samp.npy"))
         shp = np.load(os.path.join(data_dir, "gev_shp.npy"))
         loc = np.load(os.path.join(data_dir, "gev_loc.npy"))
-        scale = np.load(os.path.join(data_dir, "gev_scale.npy"))
+        size = np.load(os.path.join(data_dir, "gev_scale.npy"))
 
     # plot
-    plot_sample_exp(samp, shp, loc, scale, figure_path=figure_dir)
+    plot_sample_exp(
+        samp,
+        shp,
+        loc,
+        size,
+        oshp=shape,
+        oloc=location,
+        oscale=scale,
+        figure_path=figure_dir,
+    )
 
 
 def example():
@@ -367,8 +397,8 @@ def ok():
 if __name__ == "__main__":
     # python src/models/gev.py
     # exp_and_plot(data_calculated=True, shape=-1, location=1, scale=1)
-    exp_and_plot(data_calculated=False, shape=-0.5, location=1, scale=1)
-    exp_and_plot(data_calculated=False, shape=-0.25, location=1, scale=1)
-    exp_and_plot(data_calculated=False, shape=-0, location=1, scale=1)
-    exp_and_plot(data_calculated=False, shape=0.25, location=1, scale=1)
+    exp_and_plot(data_calculated=True, shape=-0.5, location=1, scale=1)
+    exp_and_plot(data_calculated=True, shape=-0.25, location=1, scale=1)
+    exp_and_plot(data_calculated=True, shape=-0, location=1, scale=1)
+    exp_and_plot(data_calculated=True, shape=0.25, location=1, scale=1)
     # example()
