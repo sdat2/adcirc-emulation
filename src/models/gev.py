@@ -30,18 +30,6 @@ def generate_samples(shape: float, loc: float, scale: float, size: int) -> np.ar
 def sample_effect_exp(
     num: int = 50, shape: int = -1, loc: int = 1, size: int = 1
 ) -> Tuple[np.array, np.array, np.array, np.array]:
-    """
-    Sample effect exp.
-
-    Args:
-        num (int, optional): Number of samples. Defaults to 50.
-        shape (int, optional): Shape, $\xi$. Defaults to 1.
-        loc (int, optional): Location, $\mu$. Defaults to 1.
-        size (int, optional): Size, $\sigma$. Defaults to 1.
-
-    Returns:
-        Tuple[np.array, np.array, np.array, np.array]: Samples, shapes, locations, scales.
-    """
     # O(num * samples * UB/2)
     samps = np.linspace(10, 1000, num=num, dtype=int)
     sh_ll, l_ll, sc_ll = [], [], []
@@ -68,7 +56,11 @@ def gen_isf(q: float, shape: float, loc: float, scale: float) -> float:
 
 @timeit
 def plot_sample_exp(
-    samp: np.ndarray, shp: np.ndarray, loc: np.ndarray, scale: np.ndarray
+    samp: np.ndarray,
+    shp: np.ndarray,
+    loc: np.ndarray,
+    scale: np.ndarray,
+    figure_path: str = os.path.join(FIGURE_PATH, "gev_exp"),
 ) -> None:
     """Plot sample effect experiments on different graphs.
 
@@ -83,8 +75,6 @@ def plot_sample_exp(
     Returns:
         None: None.
     """
-
-    figure_path = os.path.join(FIGURE_PATH, "gev_exp")
     os.makedirs(figure_path, exist_ok=True)
     plot_defaults()
     print("samp.shape", "shp.shape", "loc.shape", "scale.shape")
@@ -131,9 +121,11 @@ def plot_sample_exp(
     plt.clf()
 
     def aep_setup() -> any:
-        fig, axs = plt.subplots(3, 1, sharex=True, sharey=True)
+        fig, axs = plt.subplots(3, 1, sharex=True, sharey=False)
         plt.xlim(10, 1000)
-        plt.ylim(0, 100)
+        axs[0].set_ylim(0, 300)
+        axs[1].set_ylim(0, 10_000)
+        axs[2].set_ylim(0, 1_000_000)
         axs[2].set_xlabel("Number of samples")
         axs[0].set_ylabel("100 years")
         axs[1].set_ylabel("1,000 year")
@@ -151,7 +143,12 @@ def plot_sample_exp(
                     exceedance_probability, shp[i, j], loc[i, j], scale[i, j]
                 )
         # return gen_isf(x, shp, loc, scale)
-        return heights
+        # np.sort(shp, axis=1)
+        return np.sort(heights, axis=1)
+
+    heights_100 = heights(1 / 100)
+    heights_1_000 = heights(1 / 1_000)
+    heights_100_000 = heights(1 / 100_000)
 
     axs[0].semilogx(samp, heights(1 / 100), linewidth=1, alpha=0.5, color="red")
     axs[1].semilogx(samp, heights(1 / 1_000), linewidth=1, alpha=0.5, color="blue")
@@ -160,24 +157,52 @@ def plot_sample_exp(
     plt.savefig(os.path.join(figure_path, "gev_exp_heights.png"))
     plt.clf()
 
+    # fill between plots
+    axs = aep_setup()
+    mn = np.mean(heights_100, axis=1)
+    std = np.std(heights_100, axis=1)
+    axs[0].semilogx(samp, mn, linewidth=1, alpha=0.5, color="red")
+    axs[0].semilogx(samp, heights_100[:, 49], "--", linewidth=1, alpha=0.5, color="red")
+    axs[0].fill_between(samp, mn - std, mn + std, alpha=0.5, color="red")
+    mn = np.mean(heights_1_000, axis=1)
+    std = np.std(heights_1_000, axis=1)
+    axs[1].semilogx(samp, mn, linewidth=1, alpha=0.5, color="blue")
+    axs[1].semilogx(
+        samp, heights_1_000[:, 49], "--", linewidth=1, alpha=0.5, color="blue"
+    )
+    axs[1].fill_between(samp, mn - std, mn + std, alpha=0.5, color="blue")
+    mn = np.mean(heights_100_000, axis=1)
+    std = np.std(heights_100_000, axis=1)
+    axs[2].semilogx(samp, mn, linewidth=1, alpha=0.5, color="green")
+    axs[2].semilogx(
+        samp, heights_100_000[:, 49], "--", linewidth=1, alpha=0.5, color="green"
+    )
+    axs[2].fill_between(samp, mn - std, mn + std, alpha=0.5, color="green")
+    plt.savefig(os.path.join(figure_path, "gev_exp_heights_mnstd.png"))
+    plt.clf()
 
-def exp_and_plot(data_calculated=False, shape=-1, location=1, scale=1) -> None:
+
+def exp_and_plot(
+    data_calculated=False, shape: float = -1, location: float = 1, scale: float = 1
+) -> None:
     """Generate samples and plot.
 
     Args:
         data_calculated (bool, optional): Whether data has already been calculated. Defaults to False.
-        shape (int, optional): Shape parameter. Defaults to -1.
-        location (int, optional): Location parameter. Defaults to 1.
-        scale (int, optional): Scale parameter. Defaults to 1.
+        shape (float, optional): Shape parameter. Defaults to -1.
+        location (float, optional): Location parameter. Defaults to 1.
+        scale (float, optional): Scale parameter. Defaults to 1.
 
     """
     path = f"gev_exp_{str(shape)}_{str(location)}_{str(scale)}"
     data_dir = os.path.join(DATA_PATH, path)
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir, exist_ok=True)
+    figure_dir = os.path.join(FIGURE_PATH, path)
+    for dir in [data_dir, figure_dir]:
+        if not os.path.exists(dir):
+            os.makedirs(dir, exist_ok=True)
 
     if not data_calculated:
-        samp, shp, loc, scale = sample_effect_exp()
+        samp, shp, loc, scale = sample_effect_exp(shape=shape, loc=location, size=scale)
         # save numpy arrays
         np.save(os.path.join(data_dir, "gev_samp.npy"), samp)
         np.save(os.path.join(data_dir, "gev_shp.npy"), shp)
@@ -192,7 +217,7 @@ def exp_and_plot(data_calculated=False, shape=-1, location=1, scale=1) -> None:
         scale = np.load(os.path.join(data_dir, "gev_scale.npy"))
 
     # plot
-    plot_sample_exp(samp, shp, loc, scale)
+    plot_sample_exp(samp, shp, loc, scale, figure_path=figure_dir)
 
 
 def example():
@@ -309,5 +334,5 @@ def ok():
 
 if __name__ == "__main__":
     # python src/models/gev.py
-    exp_and_plot()
+    exp_and_plot(data_calculated=False, shape=-1, location=1, scale=1)
     # example()
