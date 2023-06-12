@@ -106,6 +106,32 @@ def plot_sample_exp(
     plt.savefig(os.path.join(figure_path, "gev_exp_mnstd.png"))
     plt.clf()
 
+    def aep_setup() -> any:
+        fig, axs = plt.subplots(3, 1, sharex=True, sharey=True)
+        plt.xlim(10, 1000)
+        axs[2].set_xlabel("Number of samples")
+        axs[0].set_ylabel("100 years")
+        axs[1].set_ylabel("1,000 year")
+        axs[2].set_ylabel("10,000 year")
+        label_subplots(axs)
+        return axs
+
+    axs = aep_setup()
+
+    def heights(x: 0.01):
+        heights = np.zeros(np.shape(shp))
+        for i in range(np.shape(shp)[0]):
+            for j in range(np.shape(shp)[1]):
+                heights[i, j] = gev.isf(x, shp[i, j], loc[i, j], scale[i, j])
+        # return gen_isf(x, shp, loc, scale)
+        return heights
+
+    axs[0].semilogx(samp, heights(0.01), linewidth=1, alpha=0.5, color="red")
+    axs[1].semilogx(samp, heights(0.001), linewidth=1, alpha=0.5, color="blue")
+    axs[2].semilogx(samp, heights(0.0001), linewidth=1, alpha=0.5, color="blue")
+    plt.savefig(os.path.join(figure_path, "gev_exp_heights.png"))
+    plt.clf()
+
 
 def exp_and_plot(data_calculated=True) -> None:
     data_dir = os.path.join(DATA_PATH, "gev_exp")
@@ -245,5 +271,5 @@ def ok():
 
 if __name__ == "__main__":
     # python src/models/gev.py
-    # exp_and_plot()
-    example()
+    exp_and_plot()
+    # example()
