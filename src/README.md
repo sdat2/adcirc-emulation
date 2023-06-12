@@ -17,5 +17,3 @@ src
 │                     predictions
 └── tests          <- Scripts for unit tests of your functions
 ```
-
-This generic folder structure is useful for most project, but feel free to adapt it to your needs.

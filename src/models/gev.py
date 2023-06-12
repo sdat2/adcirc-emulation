@@ -1,6 +1,7 @@
 """
 GEV.
 
+Initially based on stackoverflow answer:
 https://stackoverflow.com/a/52460086
 """
 import os
@@ -26,11 +27,20 @@ def generate_samples(shape: float, loc: float, scale: float, size: int) -> np.ar
 
 
 @timeit
-def sample_effect_exp(num: int = 50) -> Tuple[np.array, np.array, np.array, np.array]:
-    """Sample effect exp.
+def sample_effect_exp(
+    num: int = 50, shape: int = -1, loc: int = 1, size: int = 1
+) -> Tuple[np.array, np.array, np.array, np.array]:
+    """
+    Sample effect exp.
 
     Args:
         num (int, optional): Number of samples. Defaults to 50.
+        shape (int, optional): Shape, $\xi$. Defaults to 1.
+        loc (int, optional): Location, $\mu$. Defaults to 1.
+        size (int, optional): Size, $\sigma$. Defaults to 1.
+
+    Returns:
+        Tuple[np.array, np.array, np.array, np.array]: Samples, shapes, locations, scales.
     """
     # O(num * samples * UB/2)
     samps = np.linspace(10, 1000, num=num, dtype=int)
@@ -38,7 +48,7 @@ def sample_effect_exp(num: int = 50) -> Tuple[np.array, np.array, np.array, np.a
     for j in samps:
         sh_l, l_l, sc_l = [], [], []
         for _ in range(100):
-            sh, l, sc = fit_gev(generate_samples(1, 1, 1, j))
+            sh, l, sc = fit_gev(generate_samples(shape, loc, size, j))
             sh_l.append(sh)
             l_l.append(l)
             sc_l.append(sc)
@@ -52,14 +62,28 @@ def sample_effect_exp(num: int = 50) -> Tuple[np.array, np.array, np.array, np.a
     return np.array(samps), np.array(sh_ll), np.array(l_ll), np.array(sc_ll)
 
 
-def gen_isf(x, shape, loc, scale):
-    return gev.isf(x, shape, loc, scale)
+def gen_isf(q: float, shape: float, loc: float, scale: float) -> float:
+    return gev.isf(q, shape, loc, scale)
 
 
 @timeit
 def plot_sample_exp(
     samp: np.ndarray, shp: np.ndarray, loc: np.ndarray, scale: np.ndarray
 ) -> None:
+    """Plot sample effect experiments on different graphs.
+
+    What difference does the number of samples make on the convergence of the GEV parameters?
+
+    Args:
+        samp (np.ndarray): Samples.
+        shp (np.ndarray): Shapes.
+        loc (np.ndarray): Locations.
+        scale (np.ndarray): Scales.
+
+    Returns:
+        None: None.
+    """
+
     figure_path = os.path.join(FIGURE_PATH, "gev_exp")
     os.makedirs(figure_path, exist_ok=True)
     plot_defaults()
@@ -109,10 +133,11 @@ def plot_sample_exp(
     def aep_setup() -> any:
         fig, axs = plt.subplots(3, 1, sharex=True, sharey=True)
         plt.xlim(10, 1000)
+        plt.ylim(0, 100)
         axs[2].set_xlabel("Number of samples")
         axs[0].set_ylabel("100 years")
         axs[1].set_ylabel("1,000 year")
-        axs[2].set_ylabel("10,000 year")
+        axs[2].set_ylabel("100,000 year")
         label_subplots(axs)
         return axs
 
@@ -128,15 +153,26 @@ def plot_sample_exp(
         # return gen_isf(x, shp, loc, scale)
         return heights
 
-    axs[0].semilogx(samp, heights(0.01), linewidth=1, alpha=0.5, color="red")
-    axs[1].semilogx(samp, heights(0.001), linewidth=1, alpha=0.5, color="blue")
-    axs[2].semilogx(samp, heights(0.0001), linewidth=1, alpha=0.5, color="blue")
+    axs[0].semilogx(samp, heights(1 / 100), linewidth=1, alpha=0.5, color="red")
+    axs[1].semilogx(samp, heights(1 / 1_000), linewidth=1, alpha=0.5, color="blue")
+    axs[2].semilogx(samp, heights(1 / 100_000), linewidth=1, alpha=0.5, color="green")
+
     plt.savefig(os.path.join(figure_path, "gev_exp_heights.png"))
     plt.clf()
 
 
-def exp_and_plot(data_calculated=True) -> None:
-    data_dir = os.path.join(DATA_PATH, "gev_exp")
+def exp_and_plot(data_calculated=False, shape=-1, location=1, scale=1) -> None:
+    """Generate samples and plot.
+
+    Args:
+        data_calculated (bool, optional): Whether data has already been calculated. Defaults to False.
+        shape (int, optional): Shape parameter. Defaults to -1.
+        location (int, optional): Location parameter. Defaults to 1.
+        scale (int, optional): Scale parameter. Defaults to 1.
+
+    """
+    path = f"gev_exp_{str(shape)}_{str(location)}_{str(scale)}"
+    data_dir = os.path.join(DATA_PATH, path)
     if not os.path.exists(data_dir):
         os.makedirs(data_dir, exist_ok=True)
 
