@@ -54,6 +54,56 @@ def gen_isf(q: float, shape: float, loc: float, scale: float) -> float:
     return gev.isf(q, shape, loc, scale)
 
 
+def gev_f(x: float, shape: float, loc: float, scale: float) -> float:
+    return gev.pdf(x, shape, loc, scale)
+
+
+def cost_function(
+    x: float,
+    alpha=1000,  # cost function
+    real_max=2,
+) -> callable:
+    """Cost function."""
+
+    def cf(p):
+        shp = p[0]
+        loc = p[1]
+        scale = p[2]
+        return (
+            np.sum(gev.pdf(x, shp, loc, scale))
+            + alpha * (scale / shp + loc - real_max) ** 2
+        )
+
+    return cf
+
+
+def minimize_wrt_gev(
+    x: float,
+    shape: float,  # initial guess
+    loc: float,
+    scale: float,
+    alpha=1000,  # cost function
+    real_max=2,
+) -> callable:
+    """Minimize wrt GEV."""
+    cf = cost_function(x, alpha=alpha, real_max=real_max)
+    import scipy.optimize as opt
+
+    big = 10
+
+    return opt.minimize(
+        cf,
+        [shape, loc, scale],
+        bounds=[(0, big), (-big, big), (0, big)],
+        # method="Nelder-Mead",
+    )
+
+
+def min_test() -> None:
+    p = minimize_wrt_gev(gev.rvs(1, 1, 1, size=1000), 0.9, 0.9, 0.9)
+    print(p)
+
+
 @timeit
 def plot_sample_exp(
     samp: np.ndarray,
@@ -144,9 +194,9 @@ def plot_sample_exp(
     def aep_setup() -> any:
         fig, axs = plt.subplots(3, 1, sharex=True, sharey=False)
         plt.xlim(10, 1000)
-        axs[0].set_ylim(0, heights_100[10, 97])
-        axs[1].set_ylim(0, heights_1_000[10, 97])
-        axs[2].set_ylim(0, heights_100_000[10, 97])
+        axs[0].set_ylim(0, heights_100[10, 98])
+        axs[1].set_ylim(0, heights_1_000[10, 99])
+        axs[2].set_ylim(0, heights_100_000[10, 99])
         axs[2].set_xlabel("Number of samples")
         axs[0].set_ylabel("100 years")
         axs[1].set_ylabel("1,000 year")
@@ -394,16 +444,19 @@ def ok():
     return_periods.sort_values("return period", ascending=False).head()
 
 
-if __name__ == "__main__":
-    # python src/models/gev.py
+def multiple_tests():
     exp_and_plot(data_calculated=True, shape=-1, location=1, scale=1)
-    exp_and_plot(data_calculated=False, shape=-0.5, location=1, scale=1)
+    exp_and_plot(data_calculated=True, shape=-0.5, location=1, scale=1)
     exp_and_plot(data_calculated=True, shape=-0.5, location=1, scale=1)
     exp_and_plot(data_calculated=True, shape=-0.25, location=1, scale=1)
     exp_and_plot(data_calculated=True, shape=-0, location=1, scale=1)
     exp_and_plot(data_calculated=True, shape=0.25, location=1, scale=1)
-    exp_and_plot(data_calculated=False, shape=0.5, location=1, scale=1)
-    exp_and_plot(data_calculated=False, shape=0.75, location=1, scale=1)
-    exp_and_plot(data_calculated=False, shape=1, location=1, scale=1)
+    exp_and_plot(data_calculated=True, shape=0.5, location=1, scale=1)
+    exp_and_plot(data_calculated=True, shape=0.75, location=1, scale=1)
+    exp_and_plot(data_calculated=True, shape=1, location=1, scale=1)
 
     # example()
+
+
+if __name__ == "__main__":
+    min_test()
