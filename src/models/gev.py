@@ -30,6 +30,14 @@ def generate_samples(shape: float, loc: float, scale: float, size: int) -> np.ar
 def sample_effect_exp(
     num: int = 50, shape: int = -1, loc: int = 1, size: int = 1
 ) -> Tuple[np.array, np.array, np.array, np.array]:
+    """Sample effect experiment.
+
+    Args:
+        num (int, optional): Number of samples. Defaults to 50.
+        shape (int, optional): Shape parameter. Defaults to -1.
+        loc (int, optional): Location parameter. Defaults to 1.
+        size (int, optional): Size parameter. Defaults to 1.
+    """
     # O(num * samples * UB/2)
     samps = np.linspace(10, 1000, num=num, dtype=int)
     sh_ll, l_ll, sc_ll = [], [], []
@@ -63,7 +71,16 @@ def cost_function(
     alpha=1000,  # cost function
     real_max=2,
 ) -> callable:
-    """Cost function."""
+    """Cost function.
+
+    Args:
+        x (float): Input data.
+        alpha (int, optional): Cost function parameter. Defaults to 1000.
+        real_max (int, optional): Cost function parameter. Defaults to 2.
+
+    Returns:
+        callable: Cost function.
+    """
 
     def cf(p):
         shp = p[0]
@@ -85,7 +102,18 @@ def minimize_wrt_gev(
     alpha=1000,  # cost function
     real_max=2,
 ) -> callable:
-    """Minimize wrt GEV."""
+    """Minimize wrt GEV.
+
+    Args:
+        x (float): Input data.
+        shape (float): Initial guess.
+        loc (float): Initial guess.
+        scale (float): Initial guess.
+        alpha (int, optional): Cost function parameter. Defaults to 1000.
+        real_max (int, optional): Cost function parameter. Defaults to 2.
+
+    Returns:
+        callable: Minimized function."""
     cf = cost_function(x, alpha=alpha, real_max=real_max)
     import scipy.optimize as opt
 

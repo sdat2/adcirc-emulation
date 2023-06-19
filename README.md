@@ -4,6 +4,8 @@
  <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
  [![Python package](https://github.com/sdat2/new-orleans/actions/workflows/pytest.yml/badge.svg)](https://github.com/sdat2/new-orleans/actions/workflows/pytest.yml)
 
+My thesis `Optimally Emulating a Hurricane Storm Surge Model for Risk Estimation and Sensitivity Analysis’ is based on emulating a realistic storm surge model (ADCIRC+SWAN).
+
 ## Requirements
 
 ### Necessary
@@ -65,6 +67,8 @@ conda env update --file environment.yml --name base
 ├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported.
 ├── src                <- Source code for use in this project.
 │   ├── __init__.py    <- Makes src a Python module.
+│   │
+│   ├── config         <- Config yaml files.
 │   │
 │   ├── data_loading   <- Scripts to download or generate data.
 │   │

@@ -9,6 +9,8 @@ src
 │
 ├── constants.py   <- Includes project wide constants for easy imports
 │
+├── config         <- Config folder.
+│
 ├── data_loading   <- Scripts to download or generate data
 |
 ├── preprocessing  <- Scripts to turn raw data into clean data and features for modeling
