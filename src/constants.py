@@ -6,7 +6,7 @@ from sithom.place import BoundingBox, Point
 from pint import UnitRegistry
 
 # Physical units.
-UREG = UnitRegistry()
+UREG = UnitRegistry()  # Common unit registry between all modules.
 RADIUS_EARTH = 6371.009 * UREG.kilometer
 
 # Note: constants should be UPPER_CASE

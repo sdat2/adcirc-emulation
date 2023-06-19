@@ -1,4 +1,4 @@
-"""ADCIRC Input reading (and writing).
+"""ADCIRC text file input reading and writing.
 
 
 https://coast.nd.edu/reports_papers/SELA_2007_IDS_2_FinalDraft/App%20D%20PBL-C%20WIN_PRE%20File%20Format.pdf
@@ -15,6 +15,7 @@ from src.constants import DATA_PATH, KAT_EX_PATH
 import netCDF4 as nc
 from adcircpy.outputs import Maxele, Fort63
 from sithom.place import BoundingBox
+from sithom.time import timeit
 from src.constants import KAT_EX_PATH, NEW_ORLEANS
 from src.preprocessing.sel import trim_tri
 
@@ -124,6 +125,7 @@ def read_owi_coord_line(line, names) -> dict:
     return result_dict
 
 
+@timeit
 def read_owi_windspeeds(windspeed_path: str) -> xr.Dataset:
     """
     Read windspeeds.
@@ -135,7 +137,6 @@ def read_owi_windspeeds(windspeed_path: str) -> xr.Dataset:
         xr.Dataset: uvel, vvel variables.
     """
     with open(windspeed_path) as file:
-
         wsp_list = [x for x in file]
         wsp_lol = []
 
@@ -196,6 +197,7 @@ def read_owi_windspeeds(windspeed_path: str) -> xr.Dataset:
         return ds
 
 
+@timeit
 def read_owi_pressures(pressure_path: str) -> xr.DataArray:
     """
     Read pressures.
@@ -207,7 +209,6 @@ def read_owi_pressures(pressure_path: str) -> xr.DataArray:
         xr.DataArray: _description_
     """
     with open(pressure_path) as file:
-
         pressure_list = [x for x in file]
         pressure_lol = []
 
@@ -315,6 +316,7 @@ def make_line(inp: List[float]) -> str:
     return "".join(list(map(entry, inp)))
 
 
+@timeit
 def write_owi_pressures(da: xr.DataArray, output_path: str) -> None:
     """
     Print pressure text files.
@@ -359,6 +361,7 @@ def write_owi_pressures(da: xr.DataArray, output_path: str) -> None:
     # iLat=  46iLong=  60DX=0.0500DY=0.0500SWLat=28.60000SWLon=-90.2800DT=200508250000
 
 
+@timeit
 def write_owi_windspeeds(wds: xr.Dataset, output_path: str) -> None:
     """
     Print windspeed.
@@ -387,7 +390,6 @@ def write_owi_windspeeds(wds: xr.Dataset, output_path: str) -> None:
     with open(output_path, "w") as file:
         file.write(first_line + "\n")
         for time in wds.time.values:
-
             dt = str(datetime_to_int(time))
             data_u10 = list(
                 wds.U10.sel(time=time).values.reshape(int(len(lons) * len(lats) / 8), 8)

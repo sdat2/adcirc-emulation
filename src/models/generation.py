@@ -271,7 +271,6 @@ def comp() -> None:
 
     # file = "fort.217"
     for file in pres_files + wind_files:
-
         file1 = os.path.join(KAT_EX_PATH, file)
         file2 = os.path.join(DATA_PATH, "mult1", file)
 
@@ -440,6 +439,9 @@ class ImpactSymmetricTC:
             vmax (float, optional): vmax. Defaults to 54.01667.
             point (Point, optional): point to hit. Defaults to NEW_ORLEANS.
             output_direc (str, optional): Output directory. Defaults to os.path.join(DATA_PATH, "kat_h80").
+            symetric_model (any, optional): Symetric model. Defaults to Holland08().
+            debug (bool, optional): Debug. Defaults to False.
+
         """
         self.angle = angle  # degrees
         self.trans_speed = trans_speed  # m s**-1
@@ -510,6 +512,12 @@ class ImpactSymmetricTC:
 
         @timeit
         def run_adcirc() -> int:
+            """
+            Run ADICRC.
+
+            Returns:
+                int: output of os system.
+            """
             print("Running ADCIRC", self.output_direc)
             command = f"cd {self.output_direc} \n {ADCIRC_EXE} > adcirc_log.txt"
             # Run ADCIRC in terminal
@@ -571,7 +579,7 @@ class ImpactSymmetricTC:
         )
         cda["lat"].attrs["units"] = "degrees_north"
         cda["lon"].attrs["units"] = "degrees_east"
-        print(cda)
+        # print(cda)
         if self.debug:
             pda.to_netcdf(os.path.join(self.output_direc, forts[0]) + ".nc")
             vds.to_netcdf(os.path.join(self.output_direc, forts[1]) + ".nc")
@@ -656,10 +664,10 @@ def run_katrina_holland() -> None:
 def run_katrina_h08() -> None:
     """Run the Katrina as Holland 2008."""
 
-    point = Point(NEW_ORLEANS.lon + 1.1, NEW_ORLEANS.lat)
+    point = Point(NEW_ORLEANS.lon + 0.4715, NEW_ORLEANS.lat)
     ImpactSymmetricTC(
         point=point,
-        output_direc=os.path.join(DATA_PATH, "kate_h08"),
+        output_direc=os.path.join(DATA_PATH, "katf_h08"),
         symetric_model=Holland08(),
         debug=True,
     ).run_impact()
