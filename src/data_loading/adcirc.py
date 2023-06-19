@@ -498,6 +498,13 @@ def timeseries_height_ds(
 ) -> xr.Dataset:
     """
     Open the fort.63.nc file in the path, read the contents, and get the dataset out.
+
+    Args:
+        path (str, optional): Path to fort.63.nc file. Defaults to KAT_EX_PATH.
+        bbox (BoundingBox, optional): Bounding box to trim to. Defaults to NEW_ORLEANS.bbox(3).
+
+    Returns:
+        xr.Dataset: Dataset of sea level heights.
     """
     f63 = Fort63(os.path.join(path, "fort.63.nc"))
     # Trim triangles
