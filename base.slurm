@@ -18,9 +18,9 @@
 #SBATCH --mail-user=sdat2@cam.ac.uk
 
 # Load modules
-module load PrgEnv-gnu/8.0.0
-module load cray-hdf5-parallel
-module load cray-netcdf-hdf5parallel
+module load PrgEnv-gnu/8.3.3
+module load cray-parallel-netcdf/1.12.3.1
+module load cray-hdf5-parallel/1.12.2.1
 
 # try to activate bashrc
 
@@ -38,4 +38,5 @@ echo "python --version"
 python --version
 
 # python new-orleans/src/models/emu6d.py samples=100 seed=31 dryrun=false
-python new-orleans/src/models/emu6d.py init_samples=29 active_samples=1 seed=40 dryrun=false
+python new-orleans/src/models/emu6d.py init_samples=49 active_samples=1 seed=100 dryrun=false
+# python src/models/emu6d.py init_samples=29 active_samples=1 seed=40 dryrun=false

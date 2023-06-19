@@ -20,10 +20,9 @@ echo $PATH
 echo pythonpath
 echo $PYTHONPATH
 
-module load PrgEnv-gnu/8.0.0
-module load cray-hdf5-parallel
-module load cray-netcdf-hdf5parallel
-# module load cray-python
+module load PrgEnv-gnu/8.3.3
+module load cray-parallel-netcdf/1.12.3.1
+module load cray-hdf5-parallel/1.12.2.1
 
 echo pythonpath
 echo $PYTHONPATH
