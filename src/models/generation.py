@@ -736,7 +736,6 @@ def cangles() -> None:
 
 def landfall_speed(speed: float, prefix="c", lon_diff=1.2) -> None:
     """Run the Katrina as Holland 2008."""
-
     point = Point(NEW_ORLEANS.lon + lon_diff, NEW_ORLEANS.lat)
     folder = os.path.join(DATA_PATH, "kat_landfall")
     if not os.path.exists(folder):
