@@ -7,7 +7,6 @@ import shutil
 import numpy as np
 import pandas as pd
 import xarray as xr
-from frozendict import frozendict
 import GPy
 from GPy import kern
 from GPy.kern import Linear, RBF, Matern32, Matern52
@@ -33,7 +32,7 @@ from sithom.time import timeit
 from sithom.place import Point
 from sithom.misc import in_notebook
 from src.models.generation import ImpactSymmetricTC, Holland08
-from src.constants import DATA_PATH, FIGURE_PATH, NEW_ORLEANS, NO_BBOX
+from src.constants import DATA_PATH, FIGURE_PATH, NEW_ORLEANS, NO_BBOX, PLACES_D
 
 
 @np.vectorize
@@ -319,7 +318,21 @@ def example_animation(tmp_dir: str = "tmp/") -> None:
 
 
 @np.vectorize
-def adcirc_func(angle: float, position: float, output_direc: str) -> float:
+def adcirc_func(
+    angle: float, position: float, output_direc: str, index_set: int = 27
+) -> float:
+    """
+    Run ADCIRC.
+
+    Args:
+        angle (float): Angle.
+        position (float): Position east and west of New Orleans.
+        output_direc (float): Where to store run.
+        index_set (optional, int): Which height index to sample.
+
+    Returns:
+        float: maximum sea surface height at index_set.
+    """
     point = Point(NEW_ORLEANS.lon + position, NEW_ORLEANS.lat)
     if os.path.exists(output_direc):
         shutil.rmtree(output_direc)
@@ -331,15 +344,15 @@ def adcirc_func(angle: float, position: float, output_direc: str) -> float:
     ).run_impact()
     path = os.path.join(output_direc, "maxele.63.nc")
     maxele = Maxele(path, crs="EPSG:4326")
-    index_set = 27
     indices = indices_in_bbox(maxele.x, maxele.y)
     return maxele.values[indices][index_set]
 
 
 class EmulationBearingPos:
     """2D emulation of the ADCIRC model for bearing and position.
-    Currently we're emulating the index point 27 in the maxele.63.nc file
-    which is a point to the North of New Orleans This is the point with the highest
+    Currently we're emulating the index point 27 in the maxele.63.nc
+    file which is a point to the North of New Orleans
+    This is the point with the highest
     storm surge in the 2005 Katrina event.
     """
 
@@ -352,6 +365,7 @@ class EmulationBearingPos:
         acqusition_class=ExpectedImprovement,
         loop_class=BayesianOptimizationLoop,
         kernel_class=RBF,
+        index: int = 27,
         x1_range: List[int] = [-90, 90],
         x2_range: List[int] = [-2, 3.2],
         path: str = "emu_angle_position",
@@ -362,12 +376,13 @@ class EmulationBearingPos:
             seed (int, optional): The seed for the random number generator.
             init_num (int, optional): The number of initial points to use for the emulation.
             active_num (int, optional): The number of active points to use for the emulation.
-            indices: The number of indices to use for the emulation.
+            indices (int): The number of indices to use for the emulation.
             acqusition_class (any, optional): The acquisition function to use for the emulation.
-            loop_class: The loop class to use for the emulation.
-            kernel_class: The kernel class to use for the emulation.
-            x1_range: The range of the bearing parameter [degrees North].
-            x2_range: The range of the position parameter [degrees East].
+            loop_class (any, optional): The loop class to use for the emulation.
+            kernel_class (any, optional): The kernel class to use for the emulation.
+            index_set (int, optional)
+            x1_range (List[int], optional): The range of the bearing parameter [degrees North].
+            x2_range (List[int], optional): The range of the position parameter [degrees East].
 
         """
         # add option to use fake cheap function for testing
@@ -389,6 +404,7 @@ class EmulationBearingPos:
         self.acqusition_class = acqusition_class
         self.kernel_class = kernel_class
         self.loop_class = loop_class
+        self.index = index
 
         for path in [self.figure_path, self.data_path]:
             if not os.path.exists(path):
@@ -403,7 +419,8 @@ class EmulationBearingPos:
         # could this not have been seperated into two or more functions?
 
     def setup_emulation(self) -> None:
-        """Setup the emulation by running the function for the inital samples."""
+        """Setup the emulation by running the
+        function for the inital samples."""
         # run initial data.
         self.init_x_data = self.design.get_samples(self.init_num).astype("float32")
         self.init_y_data = self.func(self.init_x_data)
@@ -503,6 +520,7 @@ class EmulationBearingPos:
             ds.to_netcdf(file_name)
 
     def run_loop(self, new_iterations: int) -> None:
+        """Run active learning loop."""
         self.loop.run_loop(self.func, new_iterations)
         self.active_x_data = self.loop.loop_state.X[len(self.init_x_data) :]
         self.active_y_data = self.loop.loop_state.Y[len(self.init_x_data) :]
@@ -520,7 +538,10 @@ class EmulationBearingPos:
         )
 
     def __repr__(self) -> str:
-        return f"seed = {self.seed}, init_num = {self.init_num}, active_num = {self.active_num}"
+        return str(
+            f"seed = {self.seed}, init_num = {self.init_num}"
+            + f"active_num = {self.active_num}"
+        )
 
     def to_gp_scale(
         self, x1: np.ndarray, x2: np.ndarray
@@ -553,7 +574,7 @@ class EmulationBearingPos:
             os.path.join(self.data_path, str(self.call_number + i)) for i in range(num)
         ]
         self.call_number += num
-        return -adcirc_func(angle, position, output_direc)
+        return -adcirc_func(angle, position, output_direc, index_set=self.index)
 
     def func(self, data: np.ndarray) -> float:
         output = self.ob_adcirc_func(*self.to_real_scale(*self.split(data)))
@@ -679,6 +700,113 @@ class EmulationBearingPos:
         ax.set_xlabel("Bearing [$^{\circ}$]")
 
 
+def plot():
+    data = xr.open_dataset(
+        os.path.join(DATA_PATH, "emulation_angle_pos_mves_no", "data.nc")
+    )
+    print(data)
+    plot_defaults()
+
+    ds_list = []
+    for i in range(len(data.anum)):
+        path = os.path.join(
+            DATA_PATH, "emulation_angle_pos_mves_no", f"plotting_data{50+i}.nc"
+        )
+        ds = xr.open_dataset(path)
+        ds_list.append(
+            ds.expand_dims(dim="data_point").assign_coords({"data_point": [i]})
+        )
+
+    ds = xr.merge(ds_list)
+    print(ds)
+    vmin_mean = np.min(ds.mean.values)
+    vmax_mean = np.max(ds.mean.values)
+    vmin_std = np.min(ds.std.values)
+    vmax_std = np.max(ds.std.values)
+    vmin_aq = np.min(ds.aq.values)
+    vmax_aq = np.max(ds.aq.values)
+    a = ds.a.values
+    b = ds.b.values
+    a_mesh, b_mesh = np.meshgrid(a, b)
+
+    def plot_index(index=0):
+        # ok, now we have the data, let's plot it
+
+        # Set up plot
+        fig, axs = plt.subplots(
+            2, 2, sharex=True, sharey=True  # , figsize=get_dim(ratio=1)
+        )
+        label_subplots(axs, override="outside")
+
+        dsa = ds.isel(data_point=index)
+
+        levels = np.linspace(vmin_aq, vmax_aq, num=400)
+        ax = axs[0, 1]
+        ax.set_title("Acqusition Function")
+        im = ax.contourf(
+            a_mesh, b_mesh, dsa.aq.values, vmin=vmin_aq, vmax=vmax_aq, levels=levels
+        )
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        fig.colorbar(im, cax=cax, orientation="vertical")
+
+        ax = axs[0, 0]
+        cmap = plt.get_cmap("viridis")
+        vmin = np.min(init_y)
+        vmax = np.max(init_y)
+        levels = np.linspace(vmin_mean, vmax_mean, num=400)
+        im = ax.scatter(
+            init_x[:, 0],
+            init_x[:, 1],
+            c=init_y,
+            vmin=vmin_mean,
+            vmax=vmax_mean,
+            marker="x",
+            label="Original data points",
+        )
+        ax.scatter(
+            active_x[:, 0],
+            active_x[:, 1],
+            c=active_y,
+            vmin=vmin_mean,
+            vmax=vmax_mean,
+            marker="+",
+            label="New data points",
+        )
+        divider = make_axes_locatable(ax)
+        ax.set_title("Samples [m]")
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        fig.colorbar(im, cax=cax, orientation="vertical")
+        ax.set_ylabel("Position [$^{\circ}$E]")
+
+        ax = axs[1, 0]
+        ax.set_title("Prediction Mean [m]")
+        levels = np.linspace(vmin_mean, vmax_mean, num=400)
+        im = ax.contourf(
+            a_mesh,
+            b_mesh,
+            dsa.mean.values,
+            vmin=vmin_mean,
+            vmax=vmax_mean,
+            levels=levels,
+        )  # , vmin=0, vmax=5.6)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        fig.colorbar(im, cax=cax, orientation="vertical")
+        ax.set_ylabel("Position [$^{\circ}$E]")
+        ax.set_xlabel("Bearing [$^{\circ}$]")
+        ax = axs[1, 1]
+        ax.set_title("Prediction $\sigma$ [m]")
+        levels = np.linspace(vmin_std, vmax_std, num=400)
+        im = ax.contourf(
+            a_mesh, b_mesh, dsa.std.values, vmin=vmin_std, vmax=vmax_std, levels=levels
+        )
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        fig.colorbar(im, cax=cax, orientation="vertical")
+        ax.set_xlabel("Bearing [$^{\circ}$]")
+
+
 def poi():
     EmulationBearingPos(
         acqusition_class=ProbabilityOfImprovement, path="emulation_angle_pos_poi"
@@ -770,6 +898,34 @@ def mat32expimprovement():
     e.active_learning()
 
 
+def mat32expimprovementno():
+    e = EmulationBearingPos(
+        path="emulation_angle_pos_ei_no",
+        seed=107,
+        init_num=50,
+        active_num=30,
+        index=PLACES_D["new_orleans"],
+        kernel_class=Matern32,
+        acqusition_class=ExpectedImprovement,
+    )
+    e.setup_emulation()
+    e.active_learning()
+
+
+def mat32mvesno():
+    e = EmulationBearingPos(
+        path="emulation_angle_pos_mves_no",
+        seed=107,
+        init_num=50,
+        active_num=30,
+        index=PLACES_D["new_orleans"],
+        kernel_class=Matern32,
+        acqusition_class=MaxValueEntropySearch,
+    )
+    e.setup_emulation()
+    e.active_learning()
+
+
 def test():
     e = EmulationBearingPos(
         path="emulation_angle_pos_t3",
@@ -789,6 +945,7 @@ if __name__ == "__main__":
     # example_animation()
     # example_plot()
     plot_defaults()
-    mat32expimprovement()
+    # mat32mvesno()
+    plot()
     # mves()
     # test()
