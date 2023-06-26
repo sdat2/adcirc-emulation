@@ -1,0 +1,18 @@
+# mac version only for now
+prefix: ./trieste
+channels:
+  - conda-forge
+  - defaults
+  - apple
+dependencies:
+  - python=3.9
+  - cartopy
+  - tensorflow-dep
+  - pip
+  - pip:
+    - tensorflow-macos
+    - tensorflow-metal
+    - gpflow
+    - trieste
+    - hydra-core
+    - -r dev-requirements.txt

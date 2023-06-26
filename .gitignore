@@ -17,6 +17,7 @@ artifacts/
 # Distribution / packaging
 .Python
 env/
+trieste/
 build/
 develop-eggs/
 dist/
