@@ -22,7 +22,7 @@ REQUIRED: List[str] = [
     "hydra-core",
     "wandb",
     "comet-ml",
-    "sklearn",
+    "scikit-learn",
     "imageio",
 ]
 

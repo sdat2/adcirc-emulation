@@ -3,15 +3,12 @@ prefix: ./trieste
 channels:
   - conda-forge
   - defaults
-  - apple
 dependencies:
   - python=3.9
   - cartopy
-  - tensorflow-dep
+  - tensorflow
   - pip
   - pip:
-    - tensorflow-macos
-    - tensorflow-metal
     - gpflow
     - trieste
     - hydra-core
