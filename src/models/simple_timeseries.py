@@ -2,9 +2,10 @@
 Simple timeseries models.
 """
 import os
-from typing import Tuple
+from typing import Tuple, List
 import numpy as np
 import xarray as xr
+import matplotlib.pyplot as plt
 import wandb
 import omegaconf
 from omegaconf import OmegaConf, DictConfig
@@ -13,13 +14,16 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 from sithom.time import timeit
 from sithom.place import BoundingBox
-from src.constants import CONFIG_PATH, DATA_PATH, NO_BBOX
+from sithom.plot import plot_defaults
+from src.constants import CONFIG_PATH, DATA_PATH, NO_BBOX, FIGURE_PATH
+
 
 # FEATURE_LIST = [#
-FEATURE_LIST = ["angle", "speed", "point_east", "rmax", "pc", "xn"]
+FEATURE_LIST: List[str] = ["angle", "speed", "point_east", "rmax", "pc", "xn"]
+DEFAULT_INDEX = 27
 
 
-def make_8d_data(num=400, bbox: BoundingBox = NO_BBOX) -> None:
+def make_8d_data(num=200, bbox: BoundingBox = NO_BBOX) -> None:
     """
     Make 8d data netcdf for reading by the script.
 
@@ -48,6 +52,7 @@ def make_8d_data(num=400, bbox: BoundingBox = NO_BBOX) -> None:
         artifact = run.use_artifact(
             f"sdat2/6d_individual_version2/output_dataset:v{version}", type="dataset"
         )
+        print(f"artifact: {version}")
         artifact_dir = artifact.download()
         cds_a = xr.open_dataset(os.path.join(artifact_dir, "combined_ds.nc"))
 
@@ -190,6 +195,25 @@ def rescale_ds(ds8: xr.Dataset) -> xr.Dataset:
 
     return ds8r
 
+def descale_x(x: np.ndarray, ds: xr.Dataset, node=DEFAULT_INDEX) -> np.ndarray:
+    print(ds)
+    print(x.shape)
+    mu_x = ds.mu_x.values
+    sigma_x = ds.sigma_x.values
+    xn = np.copy(x)
+    for i in range(len(mu_x)):
+        xn[:, i] = xn[:, i] * sigma_x[i] + mu_x[i]
+    return xn
+
+
+def descale_y(y: np.ndarray, ds: xr.Dataset, node=DEFAULT_INDEX) -> np.ndarray:
+    print("descale")
+    print(y.shape)
+    print(ds)
+    mu_y = ds.mu_y.isel(node=node).values[0]
+    sigma_y = ds.sigma_y.isel(node=node).values[0]
+    return y * sigma_y + mu_y
+
 
 @timeit
 def get_simple_split(
@@ -257,6 +281,7 @@ def get_exp_split(
     return x_train, x_test, y_train, y_test
 
 
+@timeit
 def train_mlp(x_train: np.ndarray, y_train: np.ndarray) -> any:
     """
     Train a multi-layer perceptron with x_train, y_train.
@@ -271,6 +296,8 @@ def train_mlp(x_train: np.ndarray, y_train: np.ndarray) -> any:
     model = MLPRegressor(hidden_layer_sizes=(100, 100), max_iter=500).fit(
         x_train, y_train
     )
+    print("loss", model.loss_)
+
     return model
 
 
@@ -291,21 +318,22 @@ def pred_mlp(x_test: np.ndarray, model: any) -> np.ndarray:
 
 if "__main__" == __name__:
     # python src/models/simple_timeseries.py
-    make_8d_data()
+    # make_8d_data()
     ds8r = rescale_ds(load_8d_data())
     a = get_simple_split(ds8r)
     for i in a:
         print(i.shape)
 
-    # go through all of the possible nodes.
-    for i in range(len(ds8r.node.values)):
-        a = get_exp_split(ds8r, index=i)
-        for j in a:
-            print(j.shape)
+    if False:
+        # go through all of the possible nodes.
+        for i in range(len(ds8r.node.values)):
+            x_train, x_test, y_train, y_test = get_exp_split(ds8r, index=i, split_index=150)
+            for j in (x_train, x_test, y_train, y_test):
+                print(j.shape)
 
     # Get Experiment Split..
-    x_train, x_test, y_train, y_test = get_exp_split(ds8r)
-    for i in a:
+    x_train, x_test, y_train, y_test = get_exp_split(ds8r, index=DEFAULT_INDEX, split_index=150)
+    for i in (x_train, x_test, y_train, y_test):
         # x_train, x_test, y_train, y_test
         print(i.shape)
 
@@ -313,4 +341,20 @@ if "__main__" == __name__:
     # train a model
     model = train_mlp(x_train, y_train)
     # test a model
-    predictions = pred_mlp(x_test, y_test, model)
+    y_pred = pred_mlp(x_test, model)
+    print(y_pred)
+    xtr = descale_x(x_test, ds8r, node=DEFAULT_INDEX)
+    ytr = descale_y(y_test, ds8r, node=DEFAULT_INDEX)
+    ypr = descale_y(y_pred, ds8r, node=DEFAULT_INDEX)
+
+    score = model.score(x_test, y_test)
+    # descale(x, y, ds8r)
+    plot_defaults()
+    plt.plot([ymin, ymax], [ymin, ymax], color="black")
+    plt.scatter(ytr, ypr, s=2)
+    ymin = min(min(ytr), min(ypr))
+    ymax = max(max(ytr), max(ypr))
+    plt.text(ymin, ymax, "{:.3f}".format(score))
+    plt.xlabel("Physical Model, SSH [m]")
+    plt.ylabel("Statistical Model, SSH [m]")
+    plt.savefig(os.path.join(FIGURE_PATH, "pred.png"))
