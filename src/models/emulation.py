@@ -719,15 +719,18 @@ def plot():
 
     ds = xr.merge(ds_list)
     print(ds)
-    vmin_mean = np.min(ds.mean.values)
-    vmax_mean = np.max(ds.mean.values)
-    vmin_std = np.min(ds.std.values)
-    vmax_std = np.max(ds.std.values)
-    vmin_aq = np.min(ds.aq.values)
-    vmax_aq = np.max(ds.aq.values)
+    vmin_mean = np.min(ds["mean"].values)
+    vmax_mean = np.max(ds["mean"].values)
+    vmin_std = np.min(ds["std"].values)
+    vmax_std = np.max(ds["std"].values)
+    vmin_aq = np.min(ds["aq"].values)
+    vmax_aq = np.max(ds["aq"].values)
     a = ds.a.values
     b = ds.b.values
     a_mesh, b_mesh = np.meshgrid(a, b)
+    # print(data.init_x, data.init_y)
+    print(a_mesh.shape)
+    print(ds["mean"].values.shape)
 
     def plot_index(index=0):
         # ok, now we have the data, let's plot it
@@ -752,22 +755,22 @@ def plot():
 
         ax = axs[0, 0]
         cmap = plt.get_cmap("viridis")
-        vmin = np.min(init_y)
-        vmax = np.max(init_y)
+        vmin = np.min(data.init_y)
+        vmax = np.max(data.init_y)
         levels = np.linspace(vmin_mean, vmax_mean, num=400)
         im = ax.scatter(
-            init_x[:, 0],
-            init_x[:, 1],
-            c=init_y,
+            data.init_x[:, 0],
+            data.init_x[:, 1],
+            c=data.init_y,
             vmin=vmin_mean,
             vmax=vmax_mean,
             marker="x",
             label="Original data points",
         )
         ax.scatter(
-            active_x[:, 0],
-            active_x[:, 1],
-            c=active_y,
+            data.active_x[:index, 0],
+            data.active_x[:index, 1],
+            c=data.active_y[:index],
             vmin=vmin_mean,
             vmax=vmax_mean,
             marker="+",
@@ -785,7 +788,7 @@ def plot():
         im = ax.contourf(
             a_mesh,
             b_mesh,
-            dsa.mean.values,
+            dsa["mean"].values,
             vmin=vmin_mean,
             vmax=vmax_mean,
             levels=levels,
@@ -799,12 +802,34 @@ def plot():
         ax.set_title("Prediction $\sigma$ [m]")
         levels = np.linspace(vmin_std, vmax_std, num=400)
         im = ax.contourf(
-            a_mesh, b_mesh, dsa.std.values, vmin=vmin_std, vmax=vmax_std, levels=levels
+            a_mesh,
+            b_mesh,
+            dsa["std"].values,
+            vmin=vmin_std,
+            vmax=vmax_std,
+            levels=levels,
         )
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         fig.colorbar(im, cax=cax, orientation="vertical")
         ax.set_xlabel("Bearing [$^{\circ}$]")
+
+    path = os.path.join(FIGURE_PATH, "gifs", "fig")
+    os.makedirs(path, exist_ok=True)
+
+    for i in range(30):
+        plot_index(index=i)
+        plt.savefig(os.path.join(path, str(i) + ".png"))
+        plt.clf()
+
+
+def animate():
+    path = os.path.join("gifs", "fig")
+    with io.get_writer(f"{path}.gif", mode="I", duration=0.5) as writer:
+        for file_name in [os.path.join(path, f"{i}.png") for i in range(30)]:
+            image = io.imread(file_name)
+            writer.append_data(image)
+    writer.close()
 
 
 def poi():
@@ -946,6 +971,7 @@ if __name__ == "__main__":
     # example_plot()
     plot_defaults()
     # mat32mvesno()
-    plot()
+    # plot()
+    animate()
     # mves()
     # test()
