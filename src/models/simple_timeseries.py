@@ -257,22 +257,41 @@ def get_exp_split(
     return x_train, x_test, y_train, y_test
 
 
-def train_mlp(x_train: np.ndarray, y_test: np.ndarray) -> any:
+def train_mlp(x_train: np.ndarray, y_train: np.ndarray) -> any:
     """
     Train a multi-layer perceptron with x_train, y_train.
 
     Args:
         x_train (np.ndarray): x training data.
-        y_test (np.ndarray): y training data.
+        y_train (np.ndarray): y training data.
 
     Returns:
         any: Trained multi layer perceptron.
     """
-    raise NotImplementedError
+    model = MLPRegressor(hidden_layer_sizes=(100, 100), max_iter=500).fit(
+        x_train, y_train
+    )
+    return model
+
+
+def pred_mlp(x_test: np.ndarray, model: any) -> np.ndarray:
+    """
+    Test a multi-layer perceptron with x_test, model.
+
+    Args:
+        x_test (np.ndarray): x test data.
+        model (any): trained model.
+
+    Returns:
+        np.ndarray: predictions.
+    """
+    predictions = model.predict(x_test)
+    return predictions
 
 
 if "__main__" == __name__:
     # python src/models/simple_timeseries.py
+    make_8d_data()
     ds8r = rescale_ds(load_8d_data())
     a = get_simple_split(ds8r)
     for i in a:
@@ -285,9 +304,13 @@ if "__main__" == __name__:
             print(j.shape)
 
     # Get Experiment Split..
-    a = get_exp_split(ds8r)
+    x_train, x_test, y_train, y_test = get_exp_split(ds8r)
     for i in a:
         # x_train, x_test, y_train, y_test
         print(i.shape)
 
     print(len(ds8r.node.values))
+    # train a model
+    model = train_mlp(x_train, y_train)
+    # test a model
+    predictions = pred_mlp(x_test, y_test, model)
