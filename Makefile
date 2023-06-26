@@ -54,8 +54,11 @@ else
 	@echo ">>> New virtualenv created. Activate with:\nworkon $(PROJECT_NAME)"
 endif
 
-trieste:
+trieste_mac:
 	CONDA_SUBDIR=osx-arm64 conda env create --prefix=./trieste -f requirements/trieste.yml
+
+trieste:
+	conda env create --prefix=./trieste -f requirements/trieste.yml
 
 ## Install and set up handy jupyter notebook extensions
 jupyter_pro:
