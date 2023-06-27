@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import wandb
 import omegaconf
 from omegaconf import OmegaConf, DictConfig
+from uncertainties import ufloat
 import hydra
 from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
@@ -282,7 +283,7 @@ def get_exp_split(
 
 
 @timeit
-def train_mlp(x_train: np.ndarray, y_train: np.ndarray) -> any:
+def train_mlp(x_train: np.ndarray, y_train: np.ndarray, seed=0) -> any:
     """
     Train a multi-layer perceptron with x_train, y_train.
 
@@ -293,6 +294,7 @@ def train_mlp(x_train: np.ndarray, y_train: np.ndarray) -> any:
     Returns:
         any: Trained multi layer perceptron.
     """
+    np.random.seed(seed)
     model = MLPRegressor(hidden_layer_sizes=(100, 100), max_iter=500).fit(
         x_train, y_train
     )
@@ -315,14 +317,91 @@ def pred_mlp(x_test: np.ndarray, model: any) -> np.ndarray:
     predictions = model.predict(x_test)
     return predictions
 
+@timeit
+def single_model_pred() -> None:
+    ds8r = rescale_ds(load_8d_data())
+
+    # Get Experiment Split..
+    x_train, x_test, y_train, y_test = get_exp_split(ds8r, index=DEFAULT_INDEX, split_index=150)
+    for i in (x_train, x_test, y_train, y_test):
+        # x_train, x_test, y_train, y_test
+        print(i.shape)
+
+    print(len(ds8r.node.values))
+    # train a model
+    model = train_mlp(x_train, y_train)
+    # test a model
+    y_pred = pred_mlp(x_test, model)
+    print(y_pred)
+    xtst = descale_x(x_test, ds8r, node=DEFAULT_INDEX)
+    ytst = descale_y(y_test, ds8r, node=DEFAULT_INDEX)
+    ypr = descale_y(y_pred, ds8r, node=DEFAULT_INDEX)
+
+    score = model.score(x_test, y_test)
+    # descale(x, y, ds8r)
+    plot_defaults()
+    ymin = min(min(ytst), min(ypr))
+    ymax = max(max(ytst), max(ypr))
+    plt.plot([ymin, ymax], [ymin, ymax], color="black")
+    plt.scatter(ytst, ypr, s=2)
+    plt.text(ymin, ymax -0.5, "$r^2=${:.3f}".format(score) + ",  n={:}".format(len(ypr)))
+    plt.xlabel("Physical Model, SSH [m]")
+    plt.ylabel("Statistical Model, SSH [m]")
+    plt.savefig(os.path.join(FIGURE_PATH, "pred.png"))
+    plt.clf()
+
+def ensemble_pred(ensemble_size=30, index=DEFAULT_INDEX) -> ufloat:
+    ds8r = rescale_ds(load_8d_data())
+
+    # Get Experiment Split.
+    x_train, x_test, y_train, y_test = get_exp_split(ds8r, index=index, split_index=150)
+    for i in (x_train, x_test, y_train, y_test):
+        # x_train, x_test, y_train, y_test
+        print(i.shape)
+
+    print(len(ds8r.node.values))
+    # train a model
+    models = [train_mlp(x_train, y_train, seed=x) for x in range(ensemble_size)]
+    # test a model
+    y_preds = [pred_mlp(x_test, model) for model in models]
+    # print(y_pred)
+    xtst = descale_x(x_test, ds8r, node=DEFAULT_INDEX)
+    ytst = descale_y(y_test, ds8r, node=DEFAULT_INDEX)
+    yprs = [descale_y(y_pred, ds8r, node=DEFAULT_INDEX) for y_pred in y_preds]
+    scores = [model.score(x_test, y_test) for model in models]
+    print(scores)
+    # descale(x, y, ds8r)
+    plot_defaults()
+    ymin = min(min(ytst), min([min(ypr) for ypr in yprs]))
+    ymax = max(max(ytst), max([max(ypr) for ypr in yprs]))
+    plt.plot([ymin, ymax], [ymin, ymax], color="black")
+    plt.scatter(ytst, yprs[0], s=2)
+    plt.text(ymin, ymax -0.5, "$r^2=${:.3f}".format(scores[0]) + ",  n={:}".format(len(ytst)))
+    plt.xlabel("Physical Model, SSH [m]")
+    plt.ylabel("Statistical Model, SSH [m]")
+    plt.savefig(os.path.join(FIGURE_PATH, "pred.png"))
+    plt.clf()
+    plt.plot([ymin, ymax], [ymin, ymax], color="black")
+    plt.text(ymin, ymax - 0.5, "$r^2=${:.3f}".format(np.mean(scores))+"$\pm${:.3f}".format(np.std(scores)) + ",  n={:}".format(len(ytst)))
+
+    yprs = np.array(yprs)
+    print(yprs.shape)
+    mn = np.mean(yprs, axis=0)
+    std = np.std(yprs, axis=0)
+    plt.errorbar(ytst, mn, yerr=std, color="green", fmt="x" )
+    plt.scatter(ytst, np.mean(yprs, axis=0), s=2)
+    plt.xlabel("Physical Model, SSH [m]")
+    plt.ylabel("Statistical Model, SSH [m]")
+    plt.savefig(os.path.join(FIGURE_PATH, "ensemble_pred.png"))
+    plt.clf()
+    return ufloat(np.mean(scores), np.std(scores))
+
 
 if "__main__" == __name__:
     # python src/models/simple_timeseries.py
     # make_8d_data()
+
     ds8r = rescale_ds(load_8d_data())
-    a = get_simple_split(ds8r)
-    for i in a:
-        print(i.shape)
 
     if False:
         # go through all of the possible nodes.
@@ -339,22 +418,40 @@ if "__main__" == __name__:
 
     print(len(ds8r.node.values))
     # train a model
-    model = train_mlp(x_train, y_train)
+    models = [train_mlp(x_train, y_train, seed=x) for x in range(30)]
     # test a model
-    y_pred = pred_mlp(x_test, model)
-    print(y_pred)
-    xtr = descale_x(x_test, ds8r, node=DEFAULT_INDEX)
-    ytr = descale_y(y_test, ds8r, node=DEFAULT_INDEX)
-    ypr = descale_y(y_pred, ds8r, node=DEFAULT_INDEX)
-
-    score = model.score(x_test, y_test)
+    y_preds = [pred_mlp(x_test, model) for model in models]
+    # print(y_pred)
+    xtst = descale_x(x_test, ds8r, node=DEFAULT_INDEX)
+    ytst = descale_y(y_test, ds8r, node=DEFAULT_INDEX)
+    yprs = [descale_y(y_pred, ds8r, node=DEFAULT_INDEX) for y_pred in y_preds]
+    scores = [model.score(x_test, y_test) for model in models]
     # descale(x, y, ds8r)
     plot_defaults()
-    ymin = min(min(ytr), min(ypr))
-    ymax = max(max(ytr), max(ypr))
+    ymin = min(min(ytst), min([min(ypr) for ypr in yprs]))
+    ymax = max(max(ytst), max([max(ypr) for ypr in yprs]))
     plt.plot([ymin, ymax], [ymin, ymax], color="black")
-    plt.scatter(ytr, ypr, s=2)
-    plt.text(ymin, ymax, "$r^2=${:.3f}".format(score))
+    plt.scatter(ytst, yprs[0], s=2)
+    plt.text(ymin, ymax -0.5, "$r^2=${:.3f}".format(scores[0]) + ",  n={:}".format(len(ytst)))
     plt.xlabel("Physical Model, SSH [m]")
     plt.ylabel("Statistical Model, SSH [m]")
     plt.savefig(os.path.join(FIGURE_PATH, "pred.png"))
+    plt.clf()
+    plt.plot([ymin, ymax], [ymin, ymax], color="black")
+    plt.text(ymin, ymax - 0.5, "$r^2=${:.3f}".format(np.mean(scores))+"$\pm${:.3f}".format(np.std(scores)) + ",  n={:}".format(len(ytst)))
+
+    yprs = np.array(yprs)
+    print(yprs.shape)
+    mn = np.mean(yprs, axis=0)
+    std = np.std(yprs, axis=0)
+    plt.errorbar(ytst, mn, yerr=std, color="green", fmt="x" )
+    plt.scatter(ytst, np.mean(yprs, axis=0), s=2)
+    plt.xlabel("Physical Model, SSH [m]")
+    plt.ylabel("Statistical Model, SSH [m]")
+    plt.savefig(os.path.join(FIGURE_PATH, "ensemble_pred.png"))
+    plt.clf()
+
+
+
+
+
