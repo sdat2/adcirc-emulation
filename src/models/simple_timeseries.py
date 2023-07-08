@@ -418,22 +418,31 @@ def ensemble_pred(ensemble_size=30, index=DEFAULT_INDEX) -> ufloat:
 
 def train_lstm(x_train, y_train, look_back=1, epochs=10, batch_size=1):
     """Train an LSTM model."""
-    model = Sequential()
+    model = Sequential()  # Sequential Keras Model
     model.add(LSTM(4, input_shape=(8, look_back)))
     model.add(Dense(1))
     model.compile(loss="mean_squared_error", optimizer="adam")
-    model.fit(x_train, y_train, epochs=10, batch_size=1, verbose=2)
+    model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, verbose=2)
     return model
 
 
 def lstm_data_loader(
     split_index: int = 150, index: int = DEFAULT_INDEX, look_back: int = 1
 ):
-    """Load data into format needed for RNN setup, for single point timeseries.
+    """Load data into format needed for LSTM setup, for single point timeseries.
 
-    Args:"""
+    The previous timesteps are added as an additional dimension, length look_back.
 
-    def create_dataset(xt, yt, look_back=1):
+    Args:
+        split_index (int): Where to split the experiments. Defaults to 150.
+        index (int): Which node to choose to model. Default to 27.
+        look_back (int): How long to allow LSTM to look back.
+
+    Returns:
+        Tuple[np.array, np.array, np.array, np.array]: x_train, x_test, y_train, y_test.
+    """
+
+    def create_dataset(xt, yt, look_back=look_back):
         dataX, dataY = [], []
         for i in range(len(xt) - look_back - 1):
             dataX.append(xt[i : (i + look_back), 0])
