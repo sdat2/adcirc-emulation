@@ -17,7 +17,8 @@ from sithom.time import timeit
 from sithom.place import BoundingBox
 from sithom.plot import plot_defaults
 from src.constants import CONFIG_PATH, DATA_PATH, NO_BBOX, FIGURE_PATH
-
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, LSTM
 
 # FEATURE_LIST = [#
 FEATURE_LIST: List[str] = ["angle", "speed", "point_east", "rmax", "pc", "xn"]
@@ -196,6 +197,7 @@ def rescale_ds(ds8: xr.Dataset) -> xr.Dataset:
 
     return ds8r
 
+
 def descale_x(x: np.ndarray, ds: xr.Dataset, node=DEFAULT_INDEX) -> np.ndarray:
     print(ds)
     print(x.shape)
@@ -317,12 +319,15 @@ def pred_mlp(x_test: np.ndarray, model: any) -> np.ndarray:
     predictions = model.predict(x_test)
     return predictions
 
+
 @timeit
 def single_model_pred() -> None:
     ds8r = rescale_ds(load_8d_data())
 
     # Get Experiment Split..
-    x_train, x_test, y_train, y_test = get_exp_split(ds8r, index=DEFAULT_INDEX, split_index=150)
+    x_train, x_test, y_train, y_test = get_exp_split(
+        ds8r, index=DEFAULT_INDEX, split_index=150
+    )
     for i in (x_train, x_test, y_train, y_test):
         # x_train, x_test, y_train, y_test
         print(i.shape)
@@ -344,11 +349,14 @@ def single_model_pred() -> None:
     ymax = max(max(ytst), max(ypr))
     plt.plot([ymin, ymax], [ymin, ymax], color="black")
     plt.scatter(ytst, ypr, s=2)
-    plt.text(ymin, ymax -0.5, "$r^2=${:.3f}".format(score) + ",  n={:}".format(len(ypr)))
+    plt.text(
+        ymin, ymax - 0.5, "$r^2=${:.3f}".format(score) + ",  n={:}".format(len(ypr))
+    )
     plt.xlabel("Physical Model, SSH [m]")
     plt.ylabel("Statistical Model, SSH [m]")
     plt.savefig(os.path.join(FIGURE_PATH, "pred.png"))
     plt.clf()
+
 
 def ensemble_pred(ensemble_size=30, index=DEFAULT_INDEX) -> ufloat:
     ds8r = rescale_ds(load_8d_data())
@@ -376,19 +384,30 @@ def ensemble_pred(ensemble_size=30, index=DEFAULT_INDEX) -> ufloat:
     ymax = max(max(ytst), max([max(ypr) for ypr in yprs]))
     plt.plot([ymin, ymax], [ymin, ymax], color="black")
     plt.scatter(ytst, yprs[0], s=2)
-    plt.text(ymin, ymax -0.5, "$r^2=${:.3f}".format(scores[0]) + ",  n={:}".format(len(ytst)))
+    plt.text(
+        ymin,
+        ymax - 0.5,
+        "$r^2=${:.3f}".format(scores[0]) + ",  n={:}".format(len(ytst)),
+    )
     plt.xlabel("Physical Model, SSH [m]")
     plt.ylabel("Statistical Model, SSH [m]")
     plt.savefig(os.path.join(FIGURE_PATH, "pred.png"))
     plt.clf()
     plt.plot([ymin, ymax], [ymin, ymax], color="black")
-    plt.text(ymin, ymax - 0.5, "$r^2=${:.3f}".format(np.mean(scores))+"$\pm${:.3f}".format(np.std(scores)) + ",  n={:}".format(len(ytst)))
+    plt.text(
+        ymin,
+        ymax - 0.5,
+        "$r^2=${:.3f}".format(np.mean(scores))
+        + "$\pm${:.3f}".format(np.std(scores))
+        + ",  n={:}".format(len(ytst)),
+    )
 
     yprs = np.array(yprs)
     print(yprs.shape)
+    # plot predictions
     mn = np.mean(yprs, axis=0)
     std = np.std(yprs, axis=0)
-    plt.errorbar(ytst, mn, yerr=std, color="green", fmt="x" )
+    plt.errorbar(ytst, mn, yerr=std, color="green", fmt="x")
     plt.scatter(ytst, np.mean(yprs, axis=0), s=2)
     plt.xlabel("Physical Model, SSH [m]")
     plt.ylabel("Statistical Model, SSH [m]")
@@ -397,21 +416,74 @@ def ensemble_pred(ensemble_size=30, index=DEFAULT_INDEX) -> ufloat:
     return ufloat(np.mean(scores), np.std(scores))
 
 
+def train_lstm(x_train, y_train, look_back=1, epochs=10, batch_size=1):
+    """Train an LSTM model."""
+    model = Sequential()
+    model.add(LSTM(4, input_shape=(8, look_back)))
+    model.add(Dense(1))
+    model.compile(loss="mean_squared_error", optimizer="adam")
+    model.fit(x_train, y_train, epochs=10, batch_size=1, verbose=2)
+    return model
+
+
+def lstm_data_loader(
+    split_index: int = 150, index: int = DEFAULT_INDEX, look_back: int = 1
+):
+    """Load data into format needed for RNN setup, for single point timeseries.
+
+    Args:"""
+
+    def create_dataset(xt, yt, look_back=1):
+        dataX, dataY = [], []
+        for i in range(len(xt) - look_back - 1):
+            dataX.append(xt[i : (i + look_back), 0])
+            dataY.append(yt[i + look_back, 0])
+        return np.array(dataX), np.array(dataY)
+
+    ds8r = rescale_ds(load_8d_data())
+    ex8d = ds8r.isel(node=index, exp=slice(0, split_index), output=0)
+    x_values = ex8d.x.values
+    y_values = ex8d.y.values
+    x_train = x_values
+    y_train = y_values
+    # x_train = x_values.reshape(-1, x_values.shape[-1])
+    # y_train = np.nan_to_num(y_values.reshape(-1, y_values.shape[-1]).ravel())
+    x_train, y_train = create_dataset(x_train, y_train)
+    ex8d = ds8r.isel(node=index, exp=slice(split_index, 286), output=0)
+    x_values = ex8d.x.values
+    y_values = ex8d.y.values
+    x_test = x_values
+    y_test = y_values
+    # x_test = x_values.reshape(-1, x_values.shape[-1])
+    # y_test = np.nan_to_num(y_values.reshape(-1, y_values.shape[-1]).ravel())
+    x_test, y_test = create_dataset(x_test, y_test)
+
+    return x_train, x_test, y_train, y_test
+
+
 if "__main__" == __name__:
     # python src/models/simple_timeseries.py
     # make_8d_data()
+    for a in lstm_data_loader():
+        print(a.shape)
 
+
+def other():
     ds8r = rescale_ds(load_8d_data())
 
     if False:
         # go through all of the possible nodes.
         for i in range(len(ds8r.node.values)):
-            x_train, x_test, y_train, y_test = get_exp_split(ds8r, index=i, split_index=150)
+            x_train, x_test, y_train, y_test = get_exp_split(
+                ds8r, index=i, split_index=150
+            )
             for j in (x_train, x_test, y_train, y_test):
                 print(j.shape)
 
     # Get Experiment Split..
-    x_train, x_test, y_train, y_test = get_exp_split(ds8r, index=DEFAULT_INDEX, split_index=150)
+    x_train, x_test, y_train, y_test = get_exp_split(
+        ds8r, index=DEFAULT_INDEX, split_index=150
+    )
     for i in (x_train, x_test, y_train, y_test):
         # x_train, x_test, y_train, y_test
         print(i.shape)
@@ -432,26 +504,31 @@ if "__main__" == __name__:
     ymax = max(max(ytst), max([max(ypr) for ypr in yprs]))
     plt.plot([ymin, ymax], [ymin, ymax], color="black")
     plt.scatter(ytst, yprs[0], s=2)
-    plt.text(ymin, ymax -0.5, "$r^2=${:.3f}".format(scores[0]) + ",  n={:}".format(len(ytst)))
+    plt.text(
+        ymin,
+        ymax - 0.5,
+        "$r^2=${:.3f}".format(scores[0]) + ",  n={:}".format(len(ytst)),
+    )
     plt.xlabel("Physical Model, SSH [m]")
     plt.ylabel("Statistical Model, SSH [m]")
     plt.savefig(os.path.join(FIGURE_PATH, "pred.png"))
     plt.clf()
     plt.plot([ymin, ymax], [ymin, ymax], color="black")
-    plt.text(ymin, ymax - 0.5, "$r^2=${:.3f}".format(np.mean(scores))+"$\pm${:.3f}".format(np.std(scores)) + ",  n={:}".format(len(ytst)))
+    plt.text(
+        ymin,
+        ymax - 0.5,
+        "$r^2=${:.3f}".format(np.mean(scores))
+        + "$\pm${:.3f}".format(np.std(scores))
+        + ",  n={:}".format(len(ytst)),
+    )
 
     yprs = np.array(yprs)
     print(yprs.shape)
     mn = np.mean(yprs, axis=0)
     std = np.std(yprs, axis=0)
-    plt.errorbar(ytst, mn, yerr=std, color="green", fmt="x" )
+    plt.errorbar(ytst, mn, yerr=std, color="green", fmt="x")
     plt.scatter(ytst, np.mean(yprs, axis=0), s=2)
     plt.xlabel("Physical Model, SSH [m]")
     plt.ylabel("Statistical Model, SSH [m]")
     plt.savefig(os.path.join(FIGURE_PATH, "ensemble_pred.png"))
     plt.clf()
-
-
-
-
-
