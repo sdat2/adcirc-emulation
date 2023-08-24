@@ -23,9 +23,11 @@ from tensorflow.keras.layers import Dense, LSTM
 # FEATURE_LIST = [#
 FEATURE_LIST: List[str] = ["angle", "speed", "point_east", "rmax", "pc", "xn"]
 DEFAULT_INDEX = 27
+# weird mac issue
+DATA_PATH = "Users/simon/new-orleans/data"
 
 
-def make_8d_data(num=200, bbox: BoundingBox = NO_BBOX) -> None:
+def make_8d_data(num: int = 200, bbox: BoundingBox = NO_BBOX) -> None:
     """
     Make 8d data netcdf for reading by the script.
 
@@ -124,6 +126,7 @@ def load_8d_data() -> xr.Dataset:
     Returns:
         xr.Dataset: xarray dataset.
     """
+    print("PATH:", os.path.join(DATA_PATH, "ds8.nc"))
     ds8 = xr.open_dataset(os.path.join(DATA_PATH, "ds8.nc"))
     return ds8
 
@@ -198,7 +201,7 @@ def rescale_ds(ds8: xr.Dataset) -> xr.Dataset:
     return ds8r
 
 
-def descale_x(x: np.ndarray, ds: xr.Dataset, node=DEFAULT_INDEX) -> np.ndarray:
+def descale_x(x: np.ndarray, ds: xr.Dataset, node: int = DEFAULT_INDEX) -> np.ndarray:
     print(ds)
     print(x.shape)
     mu_x = ds.mu_x.values
@@ -209,7 +212,7 @@ def descale_x(x: np.ndarray, ds: xr.Dataset, node=DEFAULT_INDEX) -> np.ndarray:
     return xn
 
 
-def descale_y(y: np.ndarray, ds: xr.Dataset, node=DEFAULT_INDEX) -> np.ndarray:
+def descale_y(y: np.ndarray, ds: xr.Dataset, node: int = DEFAULT_INDEX) -> np.ndarray:
     print("descale")
     print(y.shape)
     print(ds)
@@ -220,7 +223,7 @@ def descale_y(y: np.ndarray, ds: xr.Dataset, node=DEFAULT_INDEX) -> np.ndarray:
 
 @timeit
 def get_simple_split(
-    ds8r: xr.Dataset, index=26
+    ds8r: xr.Dataset, index: int = 26
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Simple train test split using sklearn.
@@ -285,16 +288,17 @@ def get_exp_split(
 
 
 @timeit
-def train_mlp(x_train: np.ndarray, y_train: np.ndarray, seed=0) -> any:
+def train_mlp(x_train: np.ndarray, y_train: np.ndarray, seed: int = 0) -> any:
     """
     Train a multi-layer perceptron with x_train, y_train.
 
     Args:
         x_train (np.ndarray): x training data.
         y_train (np.ndarray): y training data.
+        seed (int): random seed to initialize weights.
 
     Returns:
-        any: Trained multi layer perceptron.
+        any: Trained multi layer perceptron model.
     """
     np.random.seed(seed)
     model = MLPRegressor(hidden_layer_sizes=(100, 100), max_iter=500).fit(
@@ -338,7 +342,7 @@ def single_model_pred() -> None:
     # test a model
     y_pred = pred_mlp(x_test, model)
     print(y_pred)
-    xtst = descale_x(x_test, ds8r, node=DEFAULT_INDEX)
+    # xtst = descale_x(x_test, ds8r, node=DEFAULT_INDEX)
     ytst = descale_y(y_test, ds8r, node=DEFAULT_INDEX)
     ypr = descale_y(y_pred, ds8r, node=DEFAULT_INDEX)
 
@@ -358,7 +362,7 @@ def single_model_pred() -> None:
     plt.clf()
 
 
-def ensemble_pred(ensemble_size=30, index=DEFAULT_INDEX) -> ufloat:
+def ensemble_pred(ensemble_size: int = 30, index: int = DEFAULT_INDEX) -> ufloat:
     ds8r = rescale_ds(load_8d_data())
 
     # Get Experiment Split.
@@ -416,7 +420,13 @@ def ensemble_pred(ensemble_size=30, index=DEFAULT_INDEX) -> ufloat:
     return ufloat(np.mean(scores), np.std(scores))
 
 
-def train_lstm(x_train, y_train, look_back=1, epochs=10, batch_size=1):
+def train_lstm(
+    x_train: np.array,
+    y_train: np.array,
+    look_back: int = 1,
+    epochs: int = 10,
+    batch_size: int = 1,
+):
     """Train an LSTM model."""
     model = Sequential()  # Sequential Keras Model
     model.add(LSTM(4, input_shape=(8, look_back)))
