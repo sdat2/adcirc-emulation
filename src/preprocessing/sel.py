@@ -55,6 +55,8 @@ def trim_tri(
     """
     Trim triangular mesh to x and y points within an area.
 
+    # TODO: at the moment, this breaks for large meshes. Need to fix.
+
     Args:
         x (np.ndarray): longitude [degrees East].
         y (np.ndarray): latitude [degrees North].
@@ -66,8 +68,9 @@ def trim_tri(
         Union[
             Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
             Tuple[np.ndarray, np.ndarray, np.ndarray],
-             ]: trimmed x, y, tri, and z.
+             ]: trimmed x, y, tri, (and z).
     """
+    print("num_old_indices", len(x))
 
     @np.vectorize
     def in_bbox(xi: float, yi: float) -> bool:
@@ -84,6 +87,9 @@ def trim_tri(
     neg_indices = np.where(~tindices)[0]
     tri_list = tri.tolist()
     new_tri_list = []
+    print("old_new_indices", len(new_indices))
+    print("Trimming mesh...")
+
     for el in tri_list:
         if np.any([x in neg_indices for x in el]):
             continue
@@ -91,7 +97,7 @@ def trim_tri(
             new_tri_list.append(el)
 
     tri_new = np.array(new_tri_list)
-    # should there be an off by one error here?
+    # should there be an off by one error here? I think not, graphs look fine.
     tri_new = np.select(
         [tri_new == x for x in indices.tolist()], new_indices.tolist(), tri_new
     )
@@ -103,3 +109,32 @@ def trim_tri(
         return x[indices], y[indices], tri_new, z[:, indices]
     else:
         return None
+
+
+def test_trim():
+    """Test trim_tri."""
+    x = np.array(
+        [
+            0,  # knock out
+            1,
+            2,
+            2.5,
+            3,  # knock out
+        ]
+    )
+    new_x = np.array([1, 2, 2.5])
+    y = np.array([0, 1, 2, 2.5, 3.0])
+    new_y = np.array([1, 2, 2.5])
+    tri = np.array([[0, 1, 2], [1, 2, 3], [2, 3, 4], [0, 2, 4], [0, 1, 5]])
+    new_tri = np.array([[0, 1, 2]])  # relabel and knock out
+    bbox = BoundingBox(lon=[0.5, 2.6], lat=[0.5, 2.6])
+    test_x, test_y, test_tri = trim_tri(x, y, tri, bbox)
+    print(test_x, test_y, test_tri)
+    assert np.allclose(test_x, new_x)
+    assert np.allclose(test_y, new_y)
+    assert np.allclose(test_tri, new_tri)
+
+
+if __name__ == "__main__":
+    # python src/preprocessing/sel.py
+    test_trim()
