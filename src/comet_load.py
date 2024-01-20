@@ -419,7 +419,6 @@ def normalize_max_d(max_d: dict) -> dict:
 
 
 def max_plots() -> None:
-
     line_styles = ["b-", "r-", "g-", "y--", "k--", "m--", "c--"]
     plot_defaults()
     fig, axs = plt.subplots(1, 2)  #  # subplot_kw=dict(projection="polar"))

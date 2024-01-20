@@ -296,7 +296,6 @@ def monthly_water_var_ds() -> xr.Dataset:
 
 
 def namibia():
-
     c = cdsapi.Client()
 
     c.retrieve(

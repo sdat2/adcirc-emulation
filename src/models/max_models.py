@@ -106,7 +106,6 @@ def make_all_plots(regenerate=True) -> None:
     # print("oa_mult.shape", oa_mult.shape)
 
     def return_importances(index: int = 27) -> np.ndarray:
-        
         # TODO: Replace with GP version!!!
         # print(index)
         model = DecisionTreeRegressor()

@@ -57,9 +57,15 @@ from sithom.time import timeit
 from sithom.place import Point
 from sithom.misc import in_notebook
 from src.models.generation import ImpactSymmetricTC, Holland08
-from src.constants import DATA_PATH, FIGURE_PATH, NEW_ORLEANS, NO_BBOX, CONFIG_PATH, PLACES_D
+from src.constants import (
+    DATA_PATH,
+    FIGURE_PATH,
+    NEW_ORLEANS,
+    NO_BBOX,
+    CONFIG_PATH,
+    PLACES_D,
+)
 from src.models.generation import vmax_from_pressure_holliday
-
 
 
 @typechecked

@@ -117,10 +117,8 @@ def E04_outerwind_r0input_nondim_MM0(
 
     # Integrate inwards from r0 to obtain profile of M/M0 vs. r/r0
     for ii in range(0, int(Nr) - 2, 1):  # first two nodes already done above
-
         # Calculate C_d varying with V, if desired
         if Cdvary:
-
             # Calculate V at this r/r0 (for variable C_d only)
             V_temp = (M0 / r0) * ((MfracM0_temp / rfracr0_temp) - rfracr0_temp)
 
@@ -262,7 +260,6 @@ def ER11_radprof(
     # or else rmax values at exactly dr/2 intervals (e.g. 10.5 for dr=1 km)
     # will not converge
     while (np.abs(drin_temp) > dr / 2) or (np.abs(dVmax_temp / Vmax_save) >= 10**-2):
-
         # drin_temp/1000
 
         n_iter = n_iter + 1
@@ -279,7 +276,6 @@ def ER11_radprof(
 
         # Vmax second
         while np.abs(dVmax_temp / Vmax) >= 10**-2:  # if error is sufficiently large
-
             #                    dVmax_temp
 
             # Adjust estimate of Vmax according to error
@@ -763,7 +759,6 @@ def ER11E04_nondim_rfitinput(
     Mfit = rfit * Vfit + 0.5 * fcor * rfit**2
     soln_converged = 0
     while soln_converged == 0:
-
         rmaxrfit_min = 0.01
         rmaxrfit_max = 1.0
         rmaxrfit_new = (rmaxrfit_max + rmaxrfit_min) / 2  # first guess -- in the middle
