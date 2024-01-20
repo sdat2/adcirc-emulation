@@ -87,7 +87,7 @@ def trim_tri(
     neg_indices = np.where(~tindices)[0]
     tri_list = tri.tolist()
     new_tri_list = []
-    print("old_new_indices", len(new_indices))
+    print("num_new_indices", len(new_indices))
     print("Trimming mesh...")
 
     for el in tri_list:
@@ -111,30 +111,44 @@ def trim_tri(
         return None
 
 
-def test_trim():
+def test_trim(plot: bool = False):
     """Test trim_tri."""
-    x = np.array(
-        [
-            0,  # knock out
-            1,
-            2,
-            2.5,
-            3,  # knock out
-        ]
+    x = np.array([0, 1, 2, 2.5, 2, 2.2])  # knock out  # knock out
+    new_x = np.array([1, 2, 2.5, 2.2])
+    y = np.array([0, 1.2, 1, 2.5, 4.5, 1.2])
+    new_y = np.array([1.2, 1, 2.5, 1.2])
+    tri = np.array(
+        [[0, 1, 2], [1, 2, 3], [2, 3, 4], [0, 2, 4], [0, 1, 4], [1, 2, 5], [2, 3, 5]]
     )
-    new_x = np.array([1, 2, 2.5])
-    y = np.array([0, 1, 2, 2.5, 3.0])
-    new_y = np.array([1, 2, 2.5])
-    tri = np.array([[0, 1, 2], [1, 2, 3], [2, 3, 4], [0, 2, 4], [0, 1, 5]])
-    new_tri = np.array([[0, 1, 2]])  # relabel and knock out
+    new_tri = np.array([[0, 1, 2], [0, 1, 3], [1, 2, 3]])  # relabel and knock out
     bbox = BoundingBox(lon=[0.5, 2.6], lat=[0.5, 2.6])
     test_x, test_y, test_tri = trim_tri(x, y, tri, bbox)
-    print(test_x, test_y, test_tri)
+    # print(test_x, test_y, test_tri)
     assert np.allclose(test_x, new_x)
     assert np.allclose(test_y, new_y)
     assert np.allclose(test_tri, new_tri)
+    if plot:
+        import matplotlib.pyplot as plt
+        import matplotlib.patches as patches
+
+        plt.triplot(x, y, tri, color="grey", label="old")
+        rect = patches.Rectangle(
+            (bbox.lon[0], bbox.lat[0]),
+            bbox.lon[1] - bbox.lon[0],  # width
+            bbox.lat[1] - bbox.lat[0],  # height
+            color="red",
+            rotation_point="xy",
+            facecolor="none",
+            fill=False,
+        )
+        plt.gca().add_patch(rect)
+        plt.triplot(test_x, test_y, test_tri, color="green", label="new")
+        plt.legend()
+        plt.xlabel("Longitude")
+        plt.ylabel("Latitude")
+        plt.show()
 
 
 if __name__ == "__main__":
     # python src/preprocessing/sel.py
-    test_trim()
+    test_trim(plot=True)
