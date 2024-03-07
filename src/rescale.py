@@ -10,6 +10,7 @@ Which config file can be specified, but the default is the sixd.yaml config file
 
 TODO: add a test for inverse.
 """
+
 import os
 import numpy as np
 from omegaconf import OmegaConf
@@ -17,7 +18,9 @@ from emukit.core import ContinuousParameter, ParameterSpace
 from src.constants import CONFIG_PATH
 
 
-def rescale(input: np.ndarray, config_name: str = "sixd") -> np.ndarray:
+def rescale(
+    input: np.ndarray, config_name: str = "sixd", verbose: bool = False
+) -> np.ndarray:
     """Rescale the numbers to fall in 0.0 to 1.0 range.
 
     Should write a test that the inverse works.
@@ -39,20 +42,28 @@ def rescale(input: np.ndarray, config_name: str = "sixd") -> np.ndarray:
     diffs = np.array(
         [config[i].max - config[i].min for i in config]
     )  # .reshape(input.shape[0], 1)
-    print("diffs", diffs)
+    if verbose:
+        print("diffs", diffs)
     mins = np.array([config[i].min for i in config])  # .reshape(input.shape[0], 1)
-    print("mins", mins)
-    print(diffs.shape, mins.shape, input.shape, ones.shape)
+    if verbose:
+        print("mins", mins)
+        print(diffs.shape, mins.shape, input.shape, ones.shape)
     # return (input - np.dot(ones, mins)) * np.dot(ones, 1 / diffs)
     output = []
     for i in range(input.shape[0]):
-        print(input[i], mins[i], diffs[i])
+        if verbose:
+            print(input[i], mins[i], diffs[i])
         output.append((input[i] - mins[i]) / diffs[i])
-    print("Output", output)
-    return (input - mins) / diffs
+    if verbose:
+        print("Output", output)
+    output = (input - mins) / diffs
+    assert np.all(output >= 0) and np.all(output <= 1)
+    return output
 
 
-def rescale_inverse(input: np.ndarray, config_name: str = "sixd") -> np.ndarray:
+def rescale_inverse(
+    input: np.ndarray, config_name: str = "sixd", verbose: bool = False
+) -> np.ndarray:
     """Rescale back the numbers to fall in original range.
 
     Args:
@@ -66,6 +77,9 @@ def rescale_inverse(input: np.ndarray, config_name: str = "sixd") -> np.ndarray:
     ones = np.ones((input.shape[0]))  # , 1
     diffs = np.array([config[i].max - config[i].min for i in config])
     mins = np.array([config[i].min for i in config])
-    print(diffs.shape, mins.shape, input.shape, ones.shape)
+    if verbose:
+        print("diffs", diffs)
+        print("mins", mins)
+        print(diffs.shape, mins.shape, input.shape, ones.shape)
     return input * diffs + mins
     # return np.dot(input, np.dot(ones, diffs)) + np.dot(ones, mins)
