@@ -94,7 +94,7 @@ def make_8d_data(
                 "windx",
                 "windy",
                 "pressure",
-                "triangles",
+                "triangle",
                 "depth",
                 "lon",
                 "lat",
