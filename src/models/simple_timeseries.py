@@ -1,6 +1,7 @@
 """
 Simple timeseries models.
 """
+
 import os
 from typing import Tuple, List
 import numpy as np
@@ -17,17 +18,22 @@ from sithom.time import timeit
 from sithom.place import BoundingBox
 from sithom.plot import plot_defaults
 from src.constants import CONFIG_PATH, DATA_PATH, NO_BBOX, FIGURE_PATH
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, LSTM
+
+# from tensorflow.keras.models import Sequential
+# from tensorflow.keras.layers import Dense, LSTM
 
 # FEATURE_LIST = [#
 FEATURE_LIST: List[str] = ["angle", "speed", "point_east", "rmax", "pc", "xn"]
 DEFAULT_INDEX = 27
+ART_PATH = os.path.join(DATA_PATH, "artifacts")
+os.makedirs(ART_PATH, exist_ok=True)
 # weird mac issue
-DATA_PATH = "Users/simon/new-orleans/data"
+# DATA_PATH = "Users/simon/new-orleans/data"
 
 
-def make_8d_data(num: int = 200, bbox: BoundingBox = NO_BBOX) -> None:
+def make_8d_data(
+    num: int = 200, bbox: BoundingBox = NO_BBOX, filter_by_bbox: bool = False
+) -> None:
     """
     Make 8d data netcdf for reading by the script.
 
@@ -57,8 +63,10 @@ def make_8d_data(num: int = 200, bbox: BoundingBox = NO_BBOX) -> None:
             f"sdat2/6d_individual_version2/output_dataset:v{version}", type="dataset"
         )
         print(f"artifact: {version}")
-        artifact_dir = artifact.download()
+        artifact_dir = artifact.download(root=ART_PATH)
         cds_a = xr.open_dataset(os.path.join(artifact_dir, "combined_ds.nc"))
+        print("cds_a", cds_a)
+        print(cds_a.data_vars)
 
         # turn 6 parameters into array
         parray = cds_a[FEATURE_LIST].to_array().values
@@ -78,12 +86,23 @@ def make_8d_data(num: int = 200, bbox: BoundingBox = NO_BBOX) -> None:
         # value order is: angle, speed, point_east, rmax, pc, vmax, xn, clat, clon
 
         ### output array
-        oa = cds_a[["zeta", "u-vel", "v-vel"]].interp(
-            {"output_time": cds_a["input_time"]}
-        )
-
-        (indices,) = NO_BBOX.indices_inside(cds_a["lon"].values, cds_a["lat"].values)
-        oa = oa.isel(node=indices)
+        oa = cds_a[
+            [
+                "zeta",
+                "u-vel",
+                "v-vel",
+                "windx",
+                "windy",
+                "pressure",
+                "triangle",
+                "depth",
+                "lon",
+                "lat",
+            ]
+        ].interp({"output_time": cds_a["input_time"]})
+        if filter_by_bbox:
+            indices = bbox.indices_inside(cds_a["lon"].values, cds_a["lat"].values)
+            oa = oa.isel(node=indices)
 
         output_array = oa.to_array().values.transpose()
 
@@ -116,6 +135,12 @@ def make_8d_data(num: int = 200, bbox: BoundingBox = NO_BBOX) -> None:
     )
 
     ds8.to_netcdf(os.path.join(DATA_PATH, "ds8.nc"))
+
+
+if "__main__" == __name__:
+    # python src/models/simple_timeseries.py
+    make_8d_data(num=100)
+    pass
 
 
 @timeit
@@ -483,8 +508,9 @@ def lstm_data_loader(
 if "__main__" == __name__:
     # python src/models/simple_timeseries.py
     # make_8d_data()
-    for a in lstm_data_loader():
-        print(a.shape)
+    # for a in lstm_data_loader():
+    #     print(a.shape)
+    pass
 
 
 def other():

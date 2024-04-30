@@ -1,4 +1,4 @@
-"""ADCIRC text file input reading and writing.
+"""ADCIRC Input reading (and writing).
 
 
 https://coast.nd.edu/reports_papers/SELA_2007_IDS_2_FinalDraft/App%20D%20PBL-C%20WIN_PRE%20File%20Format.pdf
@@ -15,7 +15,6 @@ from src.constants import DATA_PATH, KAT_EX_PATH
 import netCDF4 as nc
 from adcircpy.outputs import Maxele, Fort63
 from sithom.place import BoundingBox
-from sithom.time import timeit
 from src.constants import KAT_EX_PATH, NEW_ORLEANS
 from src.preprocessing.sel import trim_tri
 
@@ -125,7 +124,6 @@ def read_owi_coord_line(line, names) -> dict:
     return result_dict
 
 
-@timeit
 def read_owi_windspeeds(windspeed_path: str) -> xr.Dataset:
     """
     Read windspeeds.
@@ -137,6 +135,7 @@ def read_owi_windspeeds(windspeed_path: str) -> xr.Dataset:
         xr.Dataset: uvel, vvel variables.
     """
     with open(windspeed_path) as file:
+
         wsp_list = [x for x in file]
         wsp_lol = []
 
@@ -176,13 +175,12 @@ def read_owi_windspeeds(windspeed_path: str) -> xr.Dataset:
         data = np.array(wsp_lol).reshape(len(dates), 2, len(lats), len(lons))
         ds = xr.Dataset(
             data_vars=dict(
-                # TODO, are these the right way round?
-                U10=(["time", "lat", "lon"], data[:, 0, :, :]),
-                V10=(["time", "lat", "lon"], data[:, 1, :, :]),
+                U10=(["time", "lat", "lon"], data[:, 0, :, :], {"units": "m s**-1", "long_name": "Zonal 10m windspeed"}),
+                V10=(["time", "lat", "lon"], data[:, 1, :, :], {"units": "m s**-1", "long_name": "Meridional 10m windspeed"}),
             ),
             coords=dict(
-                lon=(["lon"], lons),
-                lat=(["lat"], lats),
+                lon=(["lon"], lons, {"units": "degree_East", "long_name": "Longitude"}),
+                lat=(["lat"], lats, {"units": "degree_North", "long_name": "Latitude"}),
                 time=dates,
             ),
             attrs=dict(
@@ -190,14 +188,9 @@ def read_owi_windspeeds(windspeed_path: str) -> xr.Dataset:
                 grid_var=str(coords),
             ),
         )
-        ds.V10.attrs = {"units": "m s**-1", "long_name": "Meridional 10m windspeed"}
-        ds.U10.attrs = {"units": "m s**-1", "long_name": "Zonal 10m windspeed"}
-        ds.lat.attrs = {"units": "degree_North", "long_name": "Latitude"}
-        ds.lon.attrs = {"units": "degree_East", "long_name": "Longitude"}
         return ds
 
 
-@timeit
 def read_owi_pressures(pressure_path: str) -> xr.DataArray:
     """
     Read pressures.
@@ -209,15 +202,11 @@ def read_owi_pressures(pressure_path: str) -> xr.DataArray:
         xr.DataArray: _description_
     """
     with open(pressure_path) as file:
+
         pressure_list = [x for x in file]
         pressure_lol = []
 
         len_pressure = len(pressure_list)
-        # print ("len pressure", len_pressure)
-        # print (pressure_list[0])
-        # print (pressure_list[1])
-        # print (pressure_list[2])
-        # print (read_owi_data_line(pressure_list[2]))
 
         names = ["iLat", "iLong", "DX", "DY", "SWLat", "SWLon", "DT"]
         coords = read_owi_coord_line(pressure_list[1], names)
@@ -251,8 +240,8 @@ def read_owi_pressures(pressure_path: str) -> xr.DataArray:
             data=np.array(pressure_lol).reshape(len(dates), len(lats), len(lons)),
             dims=["time", "lat", "lon"],
             coords=dict(
-                lon=(["lon"], lons),
-                lat=(["lat"], lats),
+                lon=(["lon"], lons, {"units": "degree_East", "long_name": "Longitude"}),
+                lat=(["lat"], lats, {"units": "degree_North", "long_name": "Latitude"}),
                 time=dates,
             ),
             attrs=dict(
@@ -261,8 +250,6 @@ def read_owi_pressures(pressure_path: str) -> xr.DataArray:
                 units="mb",
             ),
         )
-        da.lat.attrs = {"units": "degree_North", "long_name": "Latitude"}
-        da.lon.attrs = {"units": "degree_East", "long_name": "Longitude"}
         return da
 
 
@@ -316,7 +303,6 @@ def make_line(inp: List[float]) -> str:
     return "".join(list(map(entry, inp)))
 
 
-@timeit
 def write_owi_pressures(da: xr.DataArray, output_path: str) -> None:
     """
     Print pressure text files.
@@ -361,7 +347,6 @@ def write_owi_pressures(da: xr.DataArray, output_path: str) -> None:
     # iLat=  46iLong=  60DX=0.0500DY=0.0500SWLat=28.60000SWLon=-90.2800DT=200508250000
 
 
-@timeit
 def write_owi_windspeeds(wds: xr.Dataset, output_path: str) -> None:
     """
     Print windspeed.
@@ -390,6 +375,7 @@ def write_owi_windspeeds(wds: xr.Dataset, output_path: str) -> None:
     with open(output_path, "w") as file:
         file.write(first_line + "\n")
         for time in wds.time.values:
+
             dt = str(datetime_to_int(time))
             data_u10 = list(
                 wds.U10.sel(time=time).values.reshape(int(len(lons) * len(lats) / 8), 8)
@@ -498,13 +484,6 @@ def timeseries_height_ds(
 ) -> xr.Dataset:
     """
     Open the fort.63.nc file in the path, read the contents, and get the dataset out.
-
-    Args:
-        path (str, optional): Path to fort.63.nc file. Defaults to KAT_EX_PATH.
-        bbox (BoundingBox, optional): Bounding box to trim to. Defaults to NEW_ORLEANS.bbox(3).
-
-    Returns:
-        xr.Dataset: Dataset of sea level heights.
     """
     f63 = Fort63(os.path.join(path, "fort.63.nc"))
     # Trim triangles
