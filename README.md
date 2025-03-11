@@ -1,10 +1,9 @@
-# New Orleans
+# ADCIRC Emulation Project
 
  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
  <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
  [![Python package](https://github.com/sdat2/new-orleans/actions/workflows/pytest.yml/badge.svg)](https://github.com/sdat2/new-orleans/actions/workflows/pytest.yml)
 
-My thesis `Optimally Emulating a Hurricane Storm Surge Model for Risk Estimation and Sensitivity Analysis’ is based on emulating a realistic storm surge model (ADCIRC+SWAN).
 
 ## Requirements
 
