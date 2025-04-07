@@ -37,6 +37,6 @@ which python
 echo "python --version"
 python --version
 
-# python new-orleans/src/models/emu6d.py samples=100 seed=31 dryrun=false
-python new-orleans/src/models/emu6d.py init_samples=49 active_samples=1 seed=100 dryrun=false
+# python adcirc-emulation/src/models/emu6d.py samples=100 seed=31 dryrun=false
+python adcirc-emulation/src/models/emu6d.py init_samples=49 active_samples=1 seed=100 dryrun=false
 # python src/models/emu6d.py init_samples=29 active_samples=1 seed=40 dryrun=false
