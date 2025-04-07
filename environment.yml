@@ -5,6 +5,7 @@ dependencies:
   - pip
   - cartopy
   - pytest
+  - unittest2
   - pygeos
   - geos  # sometimes needed for pygeos
   - pip:

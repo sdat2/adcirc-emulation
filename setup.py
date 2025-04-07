@@ -16,6 +16,7 @@ REQUIRED: List[str] = [
     "eccodes==1.3.3",
     "adcircpy",
     "pyschism",
+    "unittest2",
     "pyDOE",
     "hydra-core",
     "wandb",
