@@ -19,7 +19,6 @@
 - `uncertainties`
 - `cartopy`
 - `eccodes=1.3.3`
-- `wandb`
 - `comet-ml`
 
 ### Optional
@@ -63,7 +62,7 @@ conda env update --file environment.yml --name base
 ├── requirements       <- Directory containing the requirement files.
 │
 ├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported.
-├── src                <- Source code for use in this project.
+├── ademu                <- Source code for use in this project.
 │   ├── __init__.py    <- Makes src a Python module.
 │   │
 │   ├── config         <- Config yaml files.
