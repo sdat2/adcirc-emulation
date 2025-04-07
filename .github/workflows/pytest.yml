@@ -24,7 +24,7 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies # Proj method from https://stackoverflow.com/a/72442088
+    - name: Install dependencies
       run: |
         $CONDA/bin/conda env update --file environment.yml --name base
     - name: Test with pytest
