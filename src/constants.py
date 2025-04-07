@@ -1,4 +1,5 @@
 """`src/constants.py`."""
+
 # Place all your constants here
 import os
 from typing import List
@@ -52,7 +53,7 @@ WGS84: str = "EPSG:4326"  # WGS84 standard crs (latitude, longitude)
 KATRINA_TIDE_NC: str = os.path.join(DATA_PATH, "katrina_tides.nc")
 KATRINA_ERA5_NC: str = os.path.join(DATA_PATH, "katrina_era5.nc")
 KATRINA_WATER_ERA5_NC: str = os.path.join(DATA_PATH, "katrina_water_era5.nc")
-IBTRACS_NC: str = os.path.join(DATA_PATH, "IBTrACS.ALL.v04r00.nc")
+IBTRACS_NC: str = os.path.join(DATA_PATH, "IBTrACS.ALL.v04r01.nc")
 MID_KATRINA_TIME: str = "2005-08-29T10:00:00"
 
 # regional bounding boxes for ERA5 download.
