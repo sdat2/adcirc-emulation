@@ -17,7 +17,6 @@
 - `netCDF4`
 - `dask`
 - `uncertainties`
-- `climada`
 - `cartopy`
 - `eccodes=1.3.3`
 - `wandb`
