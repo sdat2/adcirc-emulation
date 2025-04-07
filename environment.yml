@@ -6,6 +6,5 @@ dependencies:
   - pip
   - cartopy
   - pytest
-  - unittest2
   - pip:
     - -e .
