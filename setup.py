@@ -1,4 +1,5 @@
 """Setup script for new-orleans python package."""
+
 from setuptools import find_packages, setup
 from typing import List
 
@@ -28,7 +29,7 @@ REQUIRED: List[str] = [
 
 
 setup(
-    name="src",
+    name="ademu",
     version="0.0.0",
     author="sdat2",
     author_email="sdat2@cam.ac.uk",
